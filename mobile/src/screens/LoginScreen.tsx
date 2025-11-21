@@ -23,8 +23,11 @@ import { Image } from "expo-image";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isPasswordConfirmVisible, setIsPasswordConfirmVisible] =
+    useState(false);
 
   // Kayıt/Giriş geçişi için state (Şimdilik tasarım Login odaklı ama mantığı koruyoruz)
   const [isRegistering, setIsRegistering] = useState(false);
@@ -46,6 +49,10 @@ export default function LoginScreen() {
         "Uyarı",
         "Lütfen Kullanım Koşulları ve Gizlilik Politikasını kabul edin."
       );
+      if (isRegistering && password !== passwordConfirm) {
+        Alert.alert("Hata", "Şifreler uyuşmuyor.");
+        return;
+      }
       return;
     }
 
@@ -148,6 +155,37 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+            {isRegistering && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Şifre Tekrar</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Şifreni onayla"
+                    placeholderTextColor={COLORS.textGrey}
+                    value={passwordConfirm}
+                    onChangeText={setPasswordConfirm}
+                    secureTextEntry={!isPasswordConfirmVisible}
+                  />
+                  <TouchableOpacity
+                    onPress={() =>
+                      setIsPasswordConfirmVisible(!isPasswordConfirmVisible)
+                    }
+                    style={styles.eyeIcon}
+                  >
+                    <MaterialIcons
+                      name={
+                        isPasswordConfirmVisible
+                          ? "visibility"
+                          : "visibility-off"
+                      }
+                      size={24}
+                      color={COLORS.textGrey}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             {isRegistering ? (
               <View style={styles.termsContainer}>
