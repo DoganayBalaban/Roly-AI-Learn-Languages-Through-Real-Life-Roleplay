@@ -165,3 +165,29 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     console.error("Error in getMe controller:", error);
   }
 };
+export const updatePreferences = async (req: AuthRequest, res: Response) => {
+  try {
+    const { targetLanguage, nativeLanguage } = req.body;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Sadece gelen veriyi güncelle
+    if (targetLanguage) user.preferences.targetLanguage = targetLanguage;
+    if (nativeLanguage) user.preferences.nativeLanguage = nativeLanguage;
+
+    await user.save();
+
+    // Güncel kullanıcıyı dön (Password hariç)
+    const updatedUser = await User.findById(userId).select('-password');
+    res.json(updatedUser);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Update failed" });
+  }
+};

@@ -24,4 +24,8 @@ export const COLORS = {
   success: "#4ade80", // Green-400
   borderColor: "rgba(255, 255, 255, 0.1)", // Hafif Çerçeve
   barBg: "rgba(43, 238, 121, 0.2)", // Grafik Çubuk Arka Planı
+  danger: "#ef4444", // Kırmızı (Çıkış/Silme)
+  iconGreen: "#2bee79", // İkon Yeşili
+  modalOverlay: "rgba(0,0,0,0.7)",
+  modalBg: "#1c2e24"
 };
