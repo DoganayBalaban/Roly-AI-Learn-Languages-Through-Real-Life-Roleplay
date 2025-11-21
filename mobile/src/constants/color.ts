@@ -16,4 +16,10 @@ export const COLORS = {
   levelEasy: "#4ade80", // Green-400
   levelMedium: "#facc15", // Yellow-400
   levelHard: "#f87171", // Red-400
+  bubbleBot: "#1f2937",        // Bot Balonu (Gray-800)
+  bubbleUser: "#2bee79",       // User Balonu
+  textBlack: "#000000",
+  buttonGrey: "rgba(31, 41, 55, 1)", // Bitir butonu
+  error: "#fb923c", // Orange-400
+  success: "#4ade80", // Green-400
 };
