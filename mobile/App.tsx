@@ -3,7 +3,8 @@ import { View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { COLORS } from "./src/constants/color";
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
@@ -22,22 +23,37 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false, // Tab sayfalarının kendi header'ı olmasın (Chat hariç)
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: COLORS.tabBarBg,
+          borderTopWidth: 0, // Çizgiyi kaldır
+          elevation: 0,
+          height: 80, // Biraz daha yüksek
+          paddingBottom: 20,
+          paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
+          marginTop: 4,
+        },
+        tabBarActiveTintColor: COLORS.primary, // Seçiliyken Neon Yeşil
+        tabBarInactiveTintColor: COLORS.textGrey, // Seçili değilken Gri
+
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = "home";
+          let iconName: keyof typeof MaterialIcons.glyphMap = "home";
 
           if (route.name === "Ana Sayfa") {
-            iconName = focused ? "home" : "home-outline";
+            iconName = "home";
           } else if (route.name === "İlerleme") {
-            iconName = focused ? "stats-chart" : "stats-chart-outline";
+            // HTML'de 'leaderboard' kullanılmış
+            iconName = "leaderboard";
           } else if (route.name === "Profil") {
-            iconName = focused ? "person" : "person-outline";
+            iconName = "person";
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <MaterialIcons name={iconName} size={28} color={color} />;
         },
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "gray",
       })}
     >
       <Tab.Screen name="Ana Sayfa" component={HomeScreen} />
