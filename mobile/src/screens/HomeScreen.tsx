@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,24 +7,51 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import api from "../services/api";
 
-// Tasarımdaki Renk Paleti
-import { COLORS } from "../constants/color";
+const COLORS = {
+  primary: "#2bee79",
+  backgroundDark: "#102217",
+  cardBg: "rgba(255, 255, 255, 0.05)",
+  textWhite: "#FFFFFF",
+  textGrey: "#9db9a8",
+  iconBg: "rgba(43, 238, 121, 0.1)",
+};
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
+  const [lastSession, setLastSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Örnek Veriler (Backend'den gelebilir)
-  const lastSession = {
-    title: "Restoranda Sipariş Verme",
-    progress: 0.75, // %75
+  // useFocusEffect: Ekran her odaklandığında (geri gelince) çalışır
+  useFocusEffect(
+    useCallback(() => {
+      fetchLastSession();
+    }, [])
+  );
+
+  const fetchLastSession = async () => {
+    try {
+      const res = await api.get("/chat/last");
+      setLastSession(res.data); // Veri yoksa null döner
+    } catch (error) {
+      console.log("Son oturum çekilemedi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // İlerleme yüzdesini mesaj sayısına göre uyduralım (Örn: 20 mesaj %100 olsun)
+  const calculateProgress = (msgCount: number) => {
+    const percent = Math.min(msgCount * 5, 100); // Her mesaj %5
+    return percent + "%";
   };
 
   const recommendedScenarios = [
@@ -34,17 +61,19 @@ export default function HomeScreen() {
       description:
         "Farklı konularda pratik yapabileceğin diyalog senaryolarını keşfet.",
       icon: "chat-bubble-outline",
-      action: () => Alert.alert("Yakında", "Senaryo listesi açılacak"), // Burayı ScenarioList sayfasına yönlendirebilirsin
+      action: () => navigation.navigate("ScenarioList"), // ARTIK YENİ SAYFAYA GİDİYOR
     },
     {
       id: "2",
       title: "Sana Özel Senaryo: Taksi Çağırma",
       description: "Şehirde gezinirken ihtiyacın olacak temel ifadeleri öğren.",
-      icon: "auto-awesome", // Sparkles ikonu
+      icon: "auto-awesome",
       action: () =>
         navigation.navigate("Chat", {
-          sessionId: "taxi",
+          sessionId: null, // Yeni başlatacağı için ID yok, backendde create lazım olur
           title: "Taksi Çağırma",
+          isQuickStart: true, // Bu parametreyi ChatScreen'de yakalayıp start atabilirsin (Opsiyonel)
+          // Şimdilik basit olsun, direkt senaryo listesine de atabiliriz:
         }),
     },
   ];
@@ -59,7 +88,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* --- HEADER --- */}
+        {/* HEADER */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>
@@ -69,7 +98,6 @@ export default function HomeScreen() {
               Bugün hangi senaryoyu denemek istersin?
             </Text>
           </View>
-          {/* Profil Resmi (Yoksa ikon göster) */}
           <View style={styles.avatarContainer}>
             <Image
               source={{
@@ -83,53 +111,75 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* --- SON PRATİK KARTI --- */}
-        <View style={styles.activeCard}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardLabel}>Son Pratiğine Devam Et</Text>
-            <MaterialIcons
-              name="more-horiz"
-              size={24}
-              color={COLORS.textGrey}
-            />
-          </View>
-
-          <View style={styles.cardBody}>
-            {/* İkon */}
-            <View style={styles.iconBox}>
+        {/* --- DİNAMİK SON PRATİK KARTI --- */}
+        {loading ? (
+          <ActivityIndicator
+            color={COLORS.primary}
+            style={{ marginBottom: 20 }}
+          />
+        ) : lastSession ? (
+          <TouchableOpacity
+            style={styles.activeCard}
+            onPress={() =>
+              navigation.navigate("Chat", {
+                sessionId: lastSession._id,
+                title: lastSession.scenario,
+              })
+            }
+          >
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardLabel}>Son Pratiğine Devam Et</Text>
               <MaterialIcons
-                name="restaurant-menu"
-                size={28}
-                color={COLORS.primary}
+                name="more-horiz"
+                size={24}
+                color={COLORS.textGrey}
               />
             </View>
 
-            {/* Bilgi ve Progress */}
-            <View style={styles.cardInfo}>
-              <Text style={styles.cardTitle}>{lastSession.title}</Text>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${lastSession.progress * 100}%` },
-                  ]}
+            <View style={styles.cardBody}>
+              <View style={styles.iconBox}>
+                <MaterialIcons
+                  name="restaurant-menu"
+                  size={28}
+                  color={COLORS.primary}
+                />
+              </View>
+
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle}>{lastSession.scenario}</Text>
+                <View style={styles.progressBarBg}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      { width: calculateProgress(lastSession.messages.length) },
+                    ]}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.playButtonSmall}>
+                <MaterialIcons
+                  name="play-arrow"
+                  size={28}
+                  color={COLORS.backgroundDark}
                 />
               </View>
             </View>
-
-            {/* Play Butonu */}
-            <TouchableOpacity style={styles.playButtonSmall}>
-              <MaterialIcons
-                name="play-arrow"
-                size={28}
-                color={COLORS.backgroundDark}
-              />
-            </TouchableOpacity>
+          </TouchableOpacity>
+        ) : (
+          // Oturum yoksa boş bir alan veya mesaj gösterebiliriz
+          <View style={[styles.activeCard, { opacity: 0.5 }]}>
+            <Text style={{ color: "white", textAlign: "center" }}>
+              Henüz bir pratiğin yok.
+            </Text>
           </View>
-        </View>
+        )}
 
-        {/* --- YENİ PRATİK BUTONU (BÜYÜK) --- */}
-        <TouchableOpacity style={styles.bigButton}>
+        {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
+        <TouchableOpacity
+          style={styles.bigButton}
+          onPress={() => navigation.navigate("ScenarioList")}
+        >
           <MaterialIcons
             name="play-arrow"
             size={24}
@@ -147,7 +197,6 @@ export default function HomeScreen() {
               onPress={item.action}
             >
               <View style={styles.iconBox}>
-                {/* auto-awesome MaterialIcons'da yoksa 'stars' kullanabiliriz */}
                 <MaterialIcons
                   name={item.icon as any}
                   size={24}
@@ -167,15 +216,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.backgroundDark,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100, // Tab barın altında kalmasın
-  },
-  // Header
+  container: { flex: 1, backgroundColor: COLORS.backgroundDark },
+  scrollContent: { padding: 20, paddingBottom: 100 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -189,11 +231,7 @@ const styles = StyleSheet.create({
     color: COLORS.textWhite,
     marginBottom: 8,
   },
-  subGreeting: {
-    fontSize: 14,
-    color: COLORS.textGrey,
-    maxWidth: 250,
-  },
+  subGreeting: { fontSize: 14, color: COLORS.textGrey, maxWidth: 250 },
   avatarContainer: {
     width: 50,
     height: 50,
@@ -202,12 +240,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.1)",
   },
-  avatar: {
-    width: "100%",
-    height: "100%",
-  },
+  avatar: { width: "100%", height: "100%" },
 
-  // Active Card (Son Pratik)
   activeCard: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 20,
@@ -219,16 +253,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  cardLabel: {
-    color: COLORS.textGrey,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  cardBody: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
+  cardLabel: { color: COLORS.textGrey, fontSize: 13, fontWeight: "600" },
+  cardBody: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconBox: {
     width: 48,
     height: 48,
@@ -237,20 +263,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cardInfo: {
-    flex: 1,
-  },
+  cardInfo: { flex: 1 },
   cardTitle: {
     color: COLORS.textWhite,
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 8,
   },
-  cardDescription: {
-    color: COLORS.textGrey,
-    fontSize: 13,
-    lineHeight: 18,
-  },
+  cardDescription: { color: COLORS.textGrey, fontSize: 13, lineHeight: 18 },
   progressBarBg: {
     height: 6,
     backgroundColor: "rgba(255,255,255,0.1)",
@@ -271,7 +291,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Big Button
   bigButton: {
     flexDirection: "row",
     backgroundColor: COLORS.primary,
@@ -280,7 +299,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
-    // Gölge (Neon efekti)
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -294,10 +312,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // List Items
-  listContainer: {
-    gap: 16,
-  },
+  listContainer: { gap: 16 },
   scenarioCard: {
     flexDirection: "row",
     backgroundColor: COLORS.cardBg,
@@ -306,8 +321,5 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 16,
   },
-  textContainer: {
-    flex: 1,
-    justifyContent: "center",
-  },
+  textContainer: { flex: 1, justifyContent: "center" },
 });

@@ -14,6 +14,7 @@ import HomeScreen from "./src/screens/HomeScreen";
 import ChatScreen from "./src/screens/ChatScreen";
 import ProgressScreen from "./src/screens/ProgressScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
+import ScenarioListScreen from "./src/screens/ScenarioListScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -93,6 +94,11 @@ const AppNavigator = () => {
               name="Chat"
               component={ChatScreen}
               options={{ headerBackTitle: "Geri" }}
+            />
+            <Stack.Screen
+              name="ScenarioList"
+              component={ScenarioListScreen}
+              options={{ headerShown: false }}
             />
           </>
         ) : (

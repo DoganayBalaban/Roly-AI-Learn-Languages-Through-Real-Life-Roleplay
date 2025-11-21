@@ -12,7 +12,9 @@ import {
   Alert,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons"; // İkon için ekledim
 import api from "../services/api";
+import * as Speech from "expo-speech";
 
 interface Message {
   id: string;
@@ -20,31 +22,67 @@ interface Message {
   sender: "user" | "bot";
 }
 
+// Renkler
+const COLORS = {
+  primary: "#2bee79",
+  backgroundDark: "#102217",
+  userBubble: "#2bee79",
+  botBubble: "rgba(255,255,255,0.1)",
+  textWhite: "#FFFFFF",
+};
+
 export default function ChatScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation();
-  const { sessionId, title } = route.params; // HomeScreen'den gelen veriler
+  const { sessionId, title } = route.params;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetchingHistory, setFetchingHistory] = useState(true); // İlk açılış yüklemesi
   const flatListRef = useRef<FlatList>(null);
 
+  // --- 1. ESKİ MESAJLARI YÜKLEME MANTIĞI ---
   useEffect(() => {
-    // Ekran başlığını ayarla
     navigation.setOptions({ title: title || "Chat" });
 
-    // İlk sistem mesajını (Botun başlangıcını) manuel ekleyelim mi?
-    // Şimdilik boş başlıyor, kullanıcı "Hi" diyecek.
-  }, []);
+    const loadSessionHistory = async () => {
+      if (!sessionId) {
+        setFetchingHistory(false);
+        return;
+      }
 
+      try {
+        const response = await api.get(`/chat/${sessionId}`);
+        const sessionData = response.data;
+
+        // Backend mesajlarını UI formatına çevir
+        const history: Message[] = sessionData.messages
+          .filter((msg: any) => msg.role !== "system") // System mesajını gizle
+          .map((msg: any) => ({
+            id: msg._id || Math.random().toString(),
+            text: msg.content,
+            sender: msg.role === "assistant" ? "bot" : "user",
+          }));
+
+        setMessages(history);
+      } catch (error) {
+        console.log("Geçmiş yüklenemedi", error);
+      } finally {
+        setFetchingHistory(false);
+      }
+    };
+
+    loadSessionHistory();
+  }, [sessionId]);
+
+  // --- 2. MESAJ GÖNDERME ---
   const sendMessage = async () => {
     if (!inputText.trim()) return;
 
     const userMsgText = inputText;
-    setInputText(""); // Inputu temizle
+    setInputText("");
 
-    // 1. Kullanıcı mesajını ekrana bas (Optimistic UI)
     const userMsg: Message = {
       id: Date.now().toString(),
       text: userMsgText,
@@ -54,19 +92,21 @@ export default function ChatScreen() {
 
     setLoading(true);
     try {
-      // 2. Backend'e gönder
       const response = await api.post("/chat/message", {
         sessionId,
         message: userMsgText,
       });
 
-      // 3. Botun cevabını ekrana bas
+      const botReply = response.data.reply;
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.data.reply,
+        text: botReply,
         sender: "bot",
       };
       setMessages((prev) => [...prev, botMsg]);
+
+      // Seslendirme (Opsiyonel)
+      Speech.speak(botReply, { language: "en-US", rate: 0.9 });
     } catch (error) {
       Alert.alert("Hata", "Mesaj gönderilemedi.");
     } finally {
@@ -74,29 +114,47 @@ export default function ChatScreen() {
     }
   };
 
+  // --- 3. OTURUMU BİTİRME ---
   const endSession = async () => {
     try {
       const response = await api.post("/chat/end", { sessionId });
       Alert.alert(
-        "Oturum Bitti",
-        `Puanın: ${response.data.score}\n\nÖneri: ${response.data.overallComment}`,
-        [{ text: "Tamam", onPress: () => navigation.goBack() }]
+        "Tebrikler! 🎉",
+        `Pratiği tamamladın.\n\nPuanın: ${response.data.score}/100\n\nÖneri: ${response.data.overallComment}`,
+        [{ text: "Ana Sayfaya Dön", onPress: () => navigation.goBack() }]
       );
     } catch (error) {
       Alert.alert("Hata", "Analiz alınamadı.");
     }
   };
 
+  if (fetchingHistory) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={{ color: "white", marginTop: 10 }}>
+          Sohbet yükleniyor...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={90} // Header yüksekliği kadar
+      keyboardVerticalOffset={90}
     >
-      {/* Üst Bar: Bitir Butonu */}
+      {/* Üst Bar (Custom Header) */}
       <View style={styles.topBar}>
+        <Text style={styles.headerTitle}>{title}</Text>
         <TouchableOpacity onPress={endSession} style={styles.endButton}>
-          <Text style={styles.endButtonText}>Bitir & Analiz Et</Text>
+          <Text style={styles.endButtonText}>Bitir</Text>
         </TouchableOpacity>
       </View>
 
@@ -129,7 +187,7 @@ export default function ChatScreen() {
 
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#666" />
+          <ActivityIndicator size="small" color={COLORS.primary} />
           <Text style={styles.loadingText}>Yazıyor...</Text>
         </View>
       )}
@@ -140,10 +198,10 @@ export default function ChatScreen() {
           value={inputText}
           onChangeText={setInputText}
           placeholder="Mesaj yaz..."
-          placeholderTextColor="#999"
+          placeholderTextColor="#666"
         />
         <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Go</Text>
+          <MaterialIcons name="send" size={24} color={COLORS.backgroundDark} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -151,58 +209,69 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f2f2f2" },
+  container: { flex: 1, backgroundColor: COLORS.backgroundDark },
   topBar: {
-    padding: 10,
-    backgroundColor: "#fff",
-    alignItems: "flex-end",
-    borderBottomWidth: 1,
-    borderColor: "#eee",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    marginTop: Platform.OS === "ios" ? 0 : 30,
   },
-  endButton: { backgroundColor: "#ff9800", padding: 8, borderRadius: 5 },
-  endButtonText: { color: "white", fontWeight: "bold", fontSize: 12 },
-  list: { padding: 20 },
-  bubble: { maxWidth: "80%", padding: 12, borderRadius: 15, marginBottom: 10 },
+  headerTitle: { color: "white", fontSize: 18, fontWeight: "bold" },
+  endButton: {
+    backgroundColor: "rgba(255, 68, 68, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  endButtonText: { color: "#ff4444", fontWeight: "bold", fontSize: 14 },
+
+  list: { padding: 20, paddingBottom: 40 },
+  bubble: { maxWidth: "80%", padding: 14, borderRadius: 20, marginBottom: 12 },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#007AFF",
-    borderBottomRightRadius: 2,
+    backgroundColor: COLORS.userBubble,
+    borderBottomRightRadius: 4,
   },
   botBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#fff",
-    borderBottomLeftRadius: 2,
+    backgroundColor: COLORS.botBubble,
+    borderBottomLeftRadius: 4,
   },
-  text: { fontSize: 16 },
-  userText: { color: "white" },
-  botText: { color: "#333" },
+
+  text: { fontSize: 16, lineHeight: 22 },
+  userText: { color: COLORS.backgroundDark, fontWeight: "500" },
+  botText: { color: COLORS.textWhite },
+
   inputContainer: {
     flexDirection: "row",
-    padding: 10,
-    backgroundColor: "#fff",
+    padding: 15,
+    backgroundColor: COLORS.backgroundDark,
     alignItems: "center",
   },
   input: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     marginRight: 10,
+    color: "white",
   },
   sendButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 20,
-    padding: 10,
-    width: 45,
+    backgroundColor: COLORS.primary,
+    borderRadius: 25,
+    padding: 12,
     alignItems: "center",
+    justifyContent: "center",
   },
-  sendButtonText: { color: "white", fontWeight: "bold" },
+
   loadingContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 20,
     marginBottom: 10,
   },
-  loadingText: { marginLeft: 5, color: "#666", fontSize: 12 },
+  loadingText: { marginLeft: 8, color: COLORS.primary, fontSize: 12 },
 });
