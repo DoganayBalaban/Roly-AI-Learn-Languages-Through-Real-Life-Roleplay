@@ -101,7 +101,7 @@ const SCENARIOS = [
 ];
 
 export default function HomeScreen() {
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const navigation = useNavigation<any>();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -148,9 +148,6 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcomeText}>Merhaba, {user?.fullName}</Text>
-        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Çıkış</Text>
-        </TouchableOpacity>
       </View>
 
       <Text style={styles.sectionTitle}>Bir senaryo seç:</Text>

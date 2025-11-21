@@ -9,17 +9,27 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  SafeAreaView,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import { MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+
+// Tasarımdaki Renk Paleti
+import { COLORS } from "../constants/color";
+import { Image } from "expo-image";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false); // Kayıt mı Giriş mi?
   const [loading, setLoading] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
+  // Kayıt/Giriş geçişi için state (Şimdilik tasarım Login odaklı ama mantığı koruyoruz)
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const { login, register } = useAuth();
 
   const handleSubmit = async () => {
@@ -27,9 +37,15 @@ export default function LoginScreen() {
       Alert.alert("Hata", "Lütfen tüm alanları doldurun.");
       return;
     }
-
     if (isRegistering && !fullName) {
       Alert.alert("Hata", "İsim alanı zorunludur.");
+      return;
+    }
+    if (isRegistering && !isTermsAccepted) {
+      Alert.alert(
+        "Uyarı",
+        "Lütfen Kullanım Koşulları ve Gizlilik Politikasını kabul edin."
+      );
       return;
     }
 
@@ -40,18 +56,8 @@ export default function LoginScreen() {
       } else {
         await login(email, password);
       }
-      // Başarılı olursa AuthContext state'i günceller ve App.tsx otomatik yönlendirir.
     } catch (error: any) {
-      console.log("------ TAM HATA OBJESİ ------");
-      // Objenin tamamını string'e çevirip görelim
-      console.log(JSON.stringify(error, null, 2));
-      console.log("-----------------------------");
-
-      // Hata mesajını yakalamak için güvenli yöntem:
-      // Backend bazen { message: "..." } bazen { error: "..." } dönebilir.
-      const errorMessage =
-        error.message || error.error || "Bilinmeyen bir hata oluştu";
-
+      const errorMessage = error.message || error.error || "Bir hata oluştu";
       Alert.alert("Hata", errorMessage);
     } finally {
       setLoading(false);
@@ -59,128 +65,375 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>
-          {isRegistering ? "RolyAI Kayıt" : "RolyAI Giriş"}
-        </Text>
-        <Text style={styles.subtitle}>Yapay zeka ile dil öğrenmeye başla</Text>
-
-        {isRegistering && (
-          <TextInput
-            style={styles.input}
-            placeholder="Adın Soyadın"
-            value={fullName}
-            onChangeText={setFullName}
-            autoCapitalize="words"
-          />
-        )}
-
-        <TextInput
-          style={styles.input}
-          placeholder="E-posta"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Şifre"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit}
-          disabled={loading}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="light" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>
-              {isRegistering ? "Kayıt Ol" : "Giriş Yap"}
+          {/* --- LOGO & HEADER --- */}
+          <View style={styles.headerContainer}>
+            {/* Logo ve İsim Yan Yana (Sol Üst) */}
+            <View style={styles.brandContainer}>
+              <View style={styles.logoCircle}>
+                <Image
+                  source={require("../../assets/logo.png")}
+                  style={styles.logo}
+                  contentFit="contain"
+                  transition={1000}
+                />
+              </View>
+              <Text style={styles.appName}>Roly AI</Text>
+            </View>
+
+            {/* Hoşgeldin Yazısı (Ortada veya Altta kalabilir) */}
+            <Text style={styles.welcomeText}>
+              {isRegistering ? "Aramıza Katıl!" : "Tekrar Hoş Geldin!"}
             </Text>
-          )}
-        </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity
-          onPress={() => setIsRegistering(!isRegistering)}
-          style={styles.switchButton}
-        >
-          <Text style={styles.switchText}>
-            {isRegistering
-              ? "Zaten hesabın var mı? Giriş Yap"
-              : "Hesabın yok mu? Kayıt Ol"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+          {/* --- FORM --- */}
+          <View style={styles.formContainer}>
+            {isRegistering && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Ad Soyad</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Adını gir"
+                  placeholderTextColor={COLORS.textGrey}
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="words"
+                />
+              </View>
+            )}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>E-posta</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="E-postanı gir"
+                placeholderTextColor={COLORS.textGrey}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Şifre</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Şifreni gir"
+                  placeholderTextColor={COLORS.textGrey}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!isPasswordVisible}
+                />
+                <TouchableOpacity
+                  onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                  style={styles.eyeIcon}
+                >
+                  <MaterialIcons
+                    name={isPasswordVisible ? "visibility" : "visibility-off"}
+                    size={24}
+                    color={COLORS.textGrey}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {isRegistering ? (
+              <View style={styles.termsContainer}>
+                <TouchableOpacity
+                  onPress={() => setIsTermsAccepted(!isTermsAccepted)}
+                  style={styles.checkboxContainer}
+                >
+                  <MaterialIcons
+                    name={
+                      isTermsAccepted
+                        ? "check-circle"
+                        : "radio-button-unchecked"
+                    }
+                    size={28}
+                    color={isTermsAccepted ? COLORS.primary : "#334155"} // Seçiliyse Yeşil, değilse Koyu Gri
+                  />
+                </TouchableOpacity>
+                <Text style={styles.termsText}>
+                  <Text style={styles.linkText}>Kullanım Koşulları</Text> ve{" "}
+                  <Text style={styles.linkText}>Gizlilik Politikası</Text>'nı
+                  kabul ediyorum.
+                </Text>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.forgotPassword}>
+                <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* --- ANA BUTON --- */}
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={COLORS.backgroundDark} />
+              ) : (
+                <Text style={styles.primaryButtonText}>
+                  {isRegistering ? "Kayıt Ol" : "Giriş Yap"}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* --- DIVIDER --- */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.line} />
+              <Text style={styles.orText}>veya</Text>
+              <View style={styles.line} />
+            </View>
+
+            {/* --- SOCIAL BUTTONS --- */}
+            <View style={styles.socialContainer}>
+              <TouchableOpacity style={styles.googleButton}>
+                <AntDesign
+                  name="google"
+                  size={20}
+                  color="white"
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={styles.socialTextGoogle}>Google ile Devam Et</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.appleButton}>
+                <AntDesign
+                  name="apple"
+                  size={20}
+                  color="black"
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={styles.socialTextApple}>Apple ile Devam Et</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* --- BOTTOM LINK --- */}
+            <View style={styles.footerContainer}>
+              <Text style={styles.footerText}>
+                {isRegistering ? "Zaten hesabın var mı? " : "Hesabın yok mu? "}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setIsRegistering(!isRegistering)}
+              >
+                <Text style={styles.footerLink}>
+                  {isRegistering ? "Giriş Yap" : "Kayıt Ol"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    justifyContent: "center",
-    padding: 20,
+    backgroundColor: COLORS.backgroundDark,
   },
-  formContainer: {
-    backgroundColor: "white",
-    padding: 30,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20, // Biraz daha yukarı aldım
+    paddingBottom: 40,
+    // alignItems: 'center', // <-- DİKKAT: Bunu silmelisin! Yoksa sola yaslanmaz.
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
+  headerContainer: {
+    width: "100%", // Tüm genişliği kaplasın
     marginBottom: 30,
-    textAlign: "center",
   },
-  input: {
-    backgroundColor: "#f9f9f9",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#eee",
+  // --- YENİ EKLENEN: Logo ve Yazıyı yan yana tutan kutu ---
+  brandContainer: {
+    flexDirection: "row", // Yan yana dizer
+    alignItems: "center", // Dikeyde ortalar
+    alignSelf: "flex-start", // Sola yaslar
+    marginBottom: 20,
   },
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 10,
+  logoCircle: {
+    width: 48, // Biraz küçülttük (daha zarif dursun)
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
     alignItems: "center",
+    marginRight: 12, // Logo ile Yazı arasındaki boşluk
+    // marginBottom sildik, çünkü yan yana geldiler
+  },
+  logo: {
+    width: 150, // İkon boyutu
+    height: 150,
+  },
+  appName: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: COLORS.textWhite,
+    // marginBottom sildik
+  },
+  welcomeText: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: COLORS.textWhite,
+    textAlign: "left", // İstersen 'center' yapabilirsin
     marginTop: 10,
   },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
+  formContainer: {
+    width: "100%",
+    maxWidth: 400,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    color: COLORS.textWhite,
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: COLORS.inputBg,
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder,
+    borderRadius: 16,
+    height: 56,
+    paddingHorizontal: 16,
+    color: COLORS.textWhite,
     fontSize: 16,
   },
-  switchButton: {
-    marginTop: 20,
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.inputBg,
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder,
+    borderRadius: 16,
+    height: 56,
+    paddingHorizontal: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    color: COLORS.textWhite,
+    fontSize: 16,
+    height: "100%",
+  },
+  eyeIcon: {
+    padding: 4,
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
+    color: COLORS.textGrey,
+    textDecorationLine: "underline",
+    fontSize: 14,
+  },
+  primaryButton: {
+    backgroundColor: COLORS.primary,
+    height: 56,
+    borderRadius: 28, // Tam yuvarlak köşeler
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  primaryButtonText: {
+    color: COLORS.backgroundDark,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#334155", // Slate-700 benzeri
+  },
+  orText: {
+    color: COLORS.textGrey,
+    paddingHorizontal: 16,
+    fontSize: 14,
+  },
+  socialContainer: {
+    gap: 16,
+    marginBottom: 32,
+  },
+  googleButton: {
+    flexDirection: "row",
+    backgroundColor: COLORS.googleBtn,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  socialTextGoogle: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  appleButton: {
+    flexDirection: "row",
+    backgroundColor: COLORS.appleBtn,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
     alignItems: "center",
   },
-  switchText: {
-    color: "#007AFF",
+  socialTextApple: {
+    color: "black",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  footerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  footerText: {
+    color: COLORS.textGrey,
     fontSize: 14,
+  },
+  footerLink: {
+    color: COLORS.primary,
+    fontWeight: "bold",
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
+
+  termsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+    paddingHorizontal: 4,
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  termsText: {
+    flex: 1, // Metin uzun olursa alt satıra geçsin
+    color: COLORS.textGrey, // Silik gri renk
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  linkText: {
+    color: COLORS.primary, // Neon Yeşil
+    fontWeight: "bold",
   },
 });
