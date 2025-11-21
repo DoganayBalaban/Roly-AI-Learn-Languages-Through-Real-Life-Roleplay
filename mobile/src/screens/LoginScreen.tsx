@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -41,7 +42,17 @@ export default function LoginScreen() {
       }
       // Başarılı olursa AuthContext state'i günceller ve App.tsx otomatik yönlendirir.
     } catch (error: any) {
-      Alert.alert("Hata", error.message || "Bir sorun oluştu.");
+      console.log("------ TAM HATA OBJESİ ------");
+      // Objenin tamamını string'e çevirip görelim
+      console.log(JSON.stringify(error, null, 2));
+      console.log("-----------------------------");
+
+      // Hata mesajını yakalamak için güvenli yöntem:
+      // Backend bazen { message: "..." } bazen { error: "..." } dönebilir.
+      const errorMessage =
+        error.message || error.error || "Bilinmeyen bir hata oluştu";
+
+      Alert.alert("Hata", errorMessage);
     } finally {
       setLoading(false);
     }
