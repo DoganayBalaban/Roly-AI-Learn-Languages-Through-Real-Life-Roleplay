@@ -4,8 +4,89 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import dotenv from "dotenv";
+import Session from "../models/Session";
 dotenv.config();
+const calculateLevel = (xp: number) => {
+  // Basit bir seviye sistemi:
+  if (xp < 500) return { current: 'A1', next: 'A2', progress: (xp / 500) * 100 };
+  if (xp < 1500) return { current: 'A2', next: 'B1', progress: ((xp - 500) / 1000) * 100 };
+  if (xp < 3000) return { current: 'B1', next: 'B2', progress: ((xp - 1500) / 1500) * 100 };
+  if (xp < 5000) return { current: 'B2', next: 'C1', progress: ((xp - 3000) / 2000) * 100 };
+  return { current: 'C1', next: 'C2', progress: 100 };
+};
 
+export const getUserStats = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user._id;
+
+    // 1. Kullanıcı Bilgileri (XP ve Kelimeler)
+    const user = await User.findById(userId);
+    const totalWords = user?.savedWords.length || 0;
+    const xp = user?.stats.xp || 0;
+    const levelInfo = calculateLevel(xp);
+
+    // 2. Toplam Oturum Sayısı (Tamamlanmış)
+    const totalSessions = await Session.countDocuments({ userId, status: 'completed' });
+
+    // 3. Tahmini Pratik Süresi (Her mesajı ortalama 1 dakika sayalım)
+    // Tüm sessionlardaki mesaj sayısını topla
+    const allSessions = await Session.find({ userId, status: 'completed' });
+    let totalMessages = 0;
+    allSessions.forEach(sess => totalMessages += sess.messages.length);
+    const totalHours = Math.floor(totalMessages / 60); // Dakikayı saate çevir (Örn: 120 msg = 2 saat)
+
+    // 4. Son 3 Geri Bildirim
+    const recentReports = await Session.find({ userId, status: 'completed' })
+      .sort({ updatedAt: -1 })
+      .limit(3)
+      .select('scenario updatedAt difficultyLevel'); // Sadece lazım olan alanlar
+
+    // 5. Haftalık Aktivite Grafiği (Son 7 Gün)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const weeklySessions = await Session.find({
+      userId,
+      updatedAt: { $gte: sevenDaysAgo }
+    });
+
+    // Grafiği oluştur (Pzt: 2, Sal: 0 vs.)
+    const days = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+    const chartData = Array(7).fill(0).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i)); // Bugünden geriye doğru
+      const dayName = days[d.getDay()];
+      
+      // O günkü session sayısını bul
+      const count = weeklySessions.filter(s => {
+        const sDate = new Date(s.updatedAt);
+        return sDate.getDate() === d.getDate() && sDate.getMonth() === d.getMonth();
+      }).length;
+
+      // Grafik yüzdesi (Max 5 session %100 olsun)
+      const percent = Math.min((count / 5) * 100, 100); 
+      
+      return { day: dayName, percent, count };
+    });
+
+    // Response Hazırla
+    res.json({
+      level: levelInfo,
+      stats: {
+        completedSessions: totalSessions,
+        learnedWords: totalWords,
+        practiceHours: totalHours || 1, // Hiç yoksa 1 göster motive olsun
+        weeklyCount: weeklySessions.length
+      },
+      chart: chartData,
+      recentReports
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Stats failed" });
+  }
+};
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, fullName } = req.body;

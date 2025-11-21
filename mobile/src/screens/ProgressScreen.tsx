@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,39 +7,68 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import { COLORS } from "../constants/color";
-// Örnek Grafik Verisi (Haftalık)
-const WEEKLY_DATA = [
-  { day: "Pzt", percent: 40 },
-  { day: "Sal", percent: 20 },
-  { day: "Çar", percent: 80 },
-  { day: "Per", percent: 100 },
-  { day: "Cum", percent: 50 },
-  { day: "Cmt", percent: 80 },
-  { day: "Paz", percent: 20 },
-];
 
-// Örnek Son Bildirimler
-const RECENT_REPORTS = [
-  { id: "1", title: "Restoranda Sipariş Verme", date: "1 gün önce" },
-  { id: "2", title: "Otelde Check-in Yapma", date: "3 gün önce" },
-  { id: "3", title: "Havaalanında Yön Sorma", date: "5 gün önce" },
-];
+// Tarihi formatla (Örn: "2 gün önce")
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Bugün";
+  if (diffDays === 1) return "Dün";
+  return `${diffDays} gün önce`;
+};
 
 export default function ProgressScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
+
+  // Ekran her odaklandığında veriyi yenile
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats();
+    }, [])
+  );
+
+  const fetchStats = async () => {
+    try {
+      const res = await api.get("/auth/stats"); // Backend route'unu buraya bağladık
+      setStats(res.data);
+    } catch (error) {
+      console.log("Stats fetch error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
 
-      {/* --- HEADER --- */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -63,64 +92,81 @@ export default function ProgressScreen() {
             source={{
               uri:
                 "https://api.dicebear.com/9.x/avataaars/png?seed=" +
-                (user?.fullName || "Cem"),
+                (user?.fullName || "User"),
             }}
             style={styles.avatar}
           />
           <View>
-            <Text style={styles.userName}>
-              {user?.fullName || "Cem Yılmaz"}
+            <Text style={styles.userName}>{user?.fullName}</Text>
+            <Text style={styles.userStatus}>
+              {stats?.level.current} Seviyesine Ulaştın!
             </Text>
-            <Text style={styles.userStatus}>B2 Seviyesine Ulaştın!</Text>
           </View>
         </View>
 
         {/* --- SEVİYE PROGRESS --- */}
         <View style={styles.card}>
           <View style={styles.rowBetween}>
-            <Text style={styles.cardLabel}>Mevcut İngilizce Seviyen: B1</Text>
-            <Text style={styles.cardLabel}>65%</Text>
+            <Text style={styles.cardLabel}>
+              Mevcut İngilizce Seviyen: {stats?.level.current}
+            </Text>
+            <Text style={styles.cardLabel}>
+              {Math.round(stats?.level.progress)}%
+            </Text>
           </View>
           <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: "65%" }]} />
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${stats?.level.progress}%` },
+              ]}
+            />
           </View>
-          <Text style={styles.helperText}>B2 seviyesine %35 kaldı</Text>
+          <Text style={styles.helperText}>
+            {stats?.level.next} seviyesine %
+            {100 - Math.round(stats?.level.progress)} kaldı
+          </Text>
         </View>
 
         {/* --- İSTATİSTİK GRID --- */}
         <View style={styles.statsGrid}>
-          {/* Senaryolar */}
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Tamamlanan Senaryolar</Text>
-            <Text style={styles.statValue}>42</Text>
+            <Text style={styles.statValue}>
+              {stats?.stats.completedSessions}
+            </Text>
           </View>
-          {/* Kelimeler */}
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Öğrenilen Kelimeler</Text>
-            <Text style={styles.statValue}>210</Text>
+            <Text style={styles.statValue}>{stats?.stats.learnedWords}</Text>
           </View>
-          {/* Süre (Tam Genişlik) */}
           <View style={[styles.statCard, { width: "100%" }]}>
-            <Text style={styles.statLabel}>Pratik Süresi</Text>
-            <Text style={styles.statValue}>12 sa</Text>
+            <Text style={styles.statLabel}>Pratik Süresi (Tahmini)</Text>
+            <Text style={styles.statValue}>
+              {stats?.stats.practiceHours} sa
+            </Text>
           </View>
         </View>
 
         {/* --- HAFTALIK AKTİVİTE GRAFİĞİ --- */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Haftalık Aktivite</Text>
-          <Text style={styles.bigStat}>15 Senaryo</Text>
+          <Text style={styles.bigStat}>{stats?.stats.weeklyCount} Senaryo</Text>
           <View style={styles.trendRow}>
             <Text style={styles.helperText}>Son 7 Gün</Text>
-            <Text style={styles.trendPositive}>+5%</Text>
+            {/* Burası statik kalabilir veya önceki haftaya göre hesaplanabilir */}
+            <Text style={styles.trendPositive}>Aktif</Text>
           </View>
 
-          {/* Grafik Barları */}
           <View style={styles.chartContainer}>
-            {WEEKLY_DATA.map((item, index) => (
+            {stats?.chart.map((item: any, index: number) => (
               <View key={index} style={styles.barWrapper}>
+                {/* Barın yüksekliği dinamik */}
                 <View
-                  style={[styles.barFill, { height: `${item.percent}%` }]}
+                  style={[
+                    styles.barFill,
+                    { height: `${Math.max(item.percent, 5)}%` },
+                  ]}
                 />
                 <Text style={styles.barLabel}>{item.day}</Text>
               </View>
@@ -131,19 +177,37 @@ export default function ProgressScreen() {
         {/* --- SON GERİ BİLDİRİMLER --- */}
         <Text style={styles.sectionTitle}>Son Geri Bildirimlerin</Text>
         <View style={styles.recentList}>
-          {RECENT_REPORTS.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.recentItem}>
-              <View>
-                <Text style={styles.recentTitle}>{item.title}</Text>
-                <Text style={styles.recentDate}>{item.date}</Text>
-              </View>
-              <MaterialIcons
-                name="chevron-right"
-                size={24}
-                color={COLORS.textGrey}
-              />
-            </TouchableOpacity>
-          ))}
+          {stats?.recentReports.length > 0 ? (
+            stats?.recentReports.map((item: any) => (
+              <TouchableOpacity
+                key={item._id}
+                style={styles.recentItem}
+                // Tıklayınca o raporun detayına (Chat geçmişine) gidebiliriz
+                onPress={() =>
+                  navigation.navigate("Chat", {
+                    sessionId: item._id,
+                    title: item.scenario,
+                  })
+                }
+              >
+                <View>
+                  <Text style={styles.recentTitle}>{item.scenario}</Text>
+                  <Text style={styles.recentDate}>
+                    {formatDate(item.updatedAt)}
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={COLORS.textGrey}
+                />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={{ color: COLORS.textGrey, fontStyle: "italic" }}>
+              Henüz tamamlanmış bir rapor yok.
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -152,8 +216,6 @@ export default function ProgressScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-
-  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -169,10 +231,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   headerTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textWhite },
-
   scrollContent: { padding: 16, paddingBottom: 40 },
 
-  // Profile
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -194,7 +254,6 @@ const styles = StyleSheet.create({
   },
   userStatus: { fontSize: 16, color: COLORS.textGrey },
 
-  // General Card
   card: {
     backgroundColor: COLORS.cardBg,
     borderColor: COLORS.borderColor,
@@ -210,7 +269,6 @@ const styles = StyleSheet.create({
   },
   cardLabel: { fontSize: 14, color: COLORS.textWhite, fontWeight: "600" },
 
-  // Progress Bar
   progressBarBg: {
     height: 10,
     backgroundColor: "#334155",
@@ -225,7 +283,6 @@ const styles = StyleSheet.create({
   },
   helperText: { fontSize: 14, color: COLORS.textGrey },
 
-  // Stats Grid
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -244,7 +301,6 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 13, color: COLORS.textGrey, marginBottom: 8 },
   statValue: { fontSize: 28, fontWeight: "bold", color: COLORS.textWhite },
 
-  // Chart
   bigStat: {
     fontSize: 32,
     fontWeight: "bold",
@@ -272,11 +328,10 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: COLORS.barBg,
     borderRadius: 20,
-    minHeight: 10,
+    minHeight: 5,
   },
   barLabel: { fontSize: 12, color: COLORS.textGrey, fontWeight: "bold" },
 
-  // Recent Reports
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",

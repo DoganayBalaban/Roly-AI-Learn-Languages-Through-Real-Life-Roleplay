@@ -1,42 +1,62 @@
-import mongoose from "mongoose"
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IUser extends mongoose.Document {
-    email: string;
-    password: string; // Hashlenmiş hali burada duracak
-    fullName: string;
-    preferences: {
-      targetLanguage: string;
-      nativeLanguage: string;
-      difficultyLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
-    };
-    stats: {
-      xp: number;
-      streak: number;
-      totalSessions: number;
-    };
-    savedWords: string[];
-    createdAt: Date;
+// Kelime Defteri için detaylı yapı
+interface ISavedWord {
+  word: string;
+  translation: string; // Türkçe anlamı
+  contextSentence?: string; // Hangi cümlede geçti?
+  savedAt: Date;
 }
-const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    fullName: { type: String, required: true },
-    preferences: {
-        targetLanguage: { type: String, default: 'English' }, // Varsayılan İngilizce
-        nativeLanguage: { type: String, default: 'Turkish' }, // Varsayılan Türkçe
-        difficultyLevel: { 
-            type: String, 
-            enum: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], // Sadece bunları kabul et
-            default: 'A1' // Varsayılan Başlangıç
-        },
+
+export interface IUser extends Document {
+  email: string;
+  password: string;
+  fullName: string;
+  preferences: {
+    targetLanguage: string;
+    nativeLanguage: string;
+    difficultyLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  };
+  stats: {
+    xp: number;
+    streak: number;
+    totalSessions: number;
+    lastActivityDate?: Date; // <--- YENİ: Seriyi (Streak) hesaplamak için şart
+  };
+  savedWords: ISavedWord[]; // <--- GÜNCELLENDİ: Sadece string değil, obje tutacak
+  createdAt: Date;
+}
+
+const userSchema = new Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  fullName: { type: String, required: true },
+  
+  preferences: {
+    targetLanguage: { type: String, default: 'English' },
+    nativeLanguage: { type: String, default: 'Turkish' },
+    difficultyLevel: { 
+      type: String, 
+      enum: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], 
+      default: 'A1' 
     },
-    
-    stats: {
-        xp: { type: Number, default: 0 },
-        streak: { type: Number, default: 0 },
-        totalSessions: { type: Number, default: 0 }}
-},{
-    timestamps: true,
-})
+  },
+
+  stats: {
+    xp: { type: Number, default: 0 },
+    streak: { type: Number, default: 0 },
+    totalSessions: { type: Number, default: 0 },
+    lastActivityDate: { type: Date, default: null } // <--- EKLENDİ
+  },
+
+  // Kelimeleri detaylı saklayalım
+  savedWords: [{
+    word: { type: String, required: true },
+    translation: { type: String, required: true },
+    contextSentence: { type: String },
+    savedAt: { type: Date, default: Date.now }
+  }]
+
+}, { timestamps: true });
 
 export default mongoose.model<IUser>("User", userSchema);
