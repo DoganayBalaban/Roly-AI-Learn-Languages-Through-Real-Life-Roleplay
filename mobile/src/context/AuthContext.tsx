@@ -1,4 +1,4 @@
-import {
+import React, {
   ReactNode,
   createContext,
   useContext,
@@ -6,12 +6,23 @@ import {
   useState,
 } from "react";
 import * as SecureStore from "expo-secure-store";
-import api from "../services/api"; // Az önce oluşturduğumuz axios instance
+import api from "../services/api";
+
+// 1. User Interface'ini Güncelledik (Preferences ekledik)
 interface User {
   id: string;
+  _id?: string; // Backend bazen _id dönebilir
   email: string;
   fullName: string;
+  preferences: {
+    targetLanguage: string;
+    nativeLanguage: string;
+    difficultyLevel?: string;
+  };
+  // İleride stats vs. eklenirse buraya yazılır
 }
+
+// 2. Context Tipine updateUser'ı Ekledik
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -22,23 +33,29 @@ interface AuthContextType {
     password: string
   ) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (userData: User) => void; // <-- YENİ EKLENEN FONKSİYON TANIMI
 }
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     checkLoginStatus();
   }, []);
+
   const checkLoginStatus = async () => {
     try {
       const token = await SecureStore.getItemAsync("user_token");
       if (token) {
+        // Geçici başlangıç verisi
         setUser({
           id: "temp",
           fullName: "",
           email: "",
+          preferences: { targetLanguage: "English", nativeLanguage: "Turkish" },
         });
         await fetchUserProfile();
       }
@@ -48,15 +65,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
+
   const fetchUserProfile = async () => {
     try {
       const res = await api.get("/auth/me");
       setUser(res.data);
     } catch (error) {
       console.log("User data fetch failed");
-      logout(); // Token geçersizse çıkış yap
+      logout();
     }
   };
+
+  // 3. updateUser Fonksiyonunu Yazdık
+  const updateUser = (userData: User) => {
+    setUser(userData);
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const res = await api.post("/auth/login", {
@@ -70,6 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error.response?.data || { message: "Login failed" };
     }
   };
+
   const register = async (
     fullName: string,
     email: string,
@@ -88,10 +113,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error.response?.data || { message: "Registration failed" };
     }
   };
+
   const logout = async () => {
     await SecureStore.deleteItemAsync("user_token");
     setUser(null);
   };
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,12 +127,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
+        updateUser, // <-- 4. Dışarıya Açtık
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

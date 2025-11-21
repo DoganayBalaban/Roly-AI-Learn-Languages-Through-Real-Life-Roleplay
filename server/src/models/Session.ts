@@ -25,6 +25,7 @@ export interface ISession extends Document {
   messages: IMessage[];
   feedback?: IFeedback; // Başta boş, bitince dolacak
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const sessionSchema = new mongoose.Schema(

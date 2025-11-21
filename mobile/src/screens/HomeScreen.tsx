@@ -1,203 +1,325 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  FlatList,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
   ActivityIndicator,
-  Alert,
 } from "react-native";
+import { Image } from "expo-image";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
-import { useNavigation } from "@react-navigation/native";
 
-// Sabit Senaryolar (İstersen bunları da backendden çekebilirsin ama şimdilik böyle hızlı olur)
-const SCENARIOS = [
-  {
-    id: "1",
-    title: "Paris Cafe",
-    role: "Grumpy Waiter",
-    level: "A2",
-    icon: "☕",
-  },
-  {
-    id: "2",
-    title: "Job Interview",
-    role: "Strict HR Manager",
-    level: "B2",
-    icon: "💼",
-  },
-  {
-    id: "3",
-    title: "Airport Check-in",
-    role: "Helpful Staff",
-    level: "B1",
-    icon: "✈️",
-  },
-  {
-    id: "4",
-    title: "Grocery Store",
-    role: "Chatty Cashier",
-    level: "A1",
-    icon: "🍎",
-  },
-  {
-    id: "5",
-    title: "Hotel Reception",
-    role: "Polite Receptionist",
-    level: "A2",
-    icon: "🏨",
-  },
-  {
-    id: "6",
-    title: "Doctor Appointment",
-    role: "Busy Doctor",
-    level: "B1",
-    icon: "🩺",
-  },
-  {
-    id: "7",
-    title: "Tech Support Call",
-    role: "Patient Technician",
-    level: "B2",
-    icon: "💻",
-  },
-  {
-    id: "8",
-    title: "Subway Ticket Purchase",
-    role: "Uninterested Clerk",
-    level: "A1",
-    icon: "🚇",
-  },
-  {
-    id: "9",
-    title: "Restaurant Reservation",
-    role: "Professional Host",
-    level: "A2",
-    icon: "🍽️",
-  },
-  {
-    id: "10",
-    title: "Clothing Store",
-    role: "Friendly Salesperson",
-    level: "A2",
-    icon: "👕",
-  },
-  {
-    id: "11",
-    title: "Phone Repair Shop",
-    role: "Sarcastic Technician",
-    level: "B1",
-    icon: "📱",
-  },
-  {
-    id: "12",
-    title: "Library Inquiry",
-    role: "Quiet Librarian",
-    level: "A2",
-    icon: "📚",
-  },
-];
+const COLORS = {
+  primary: "#2bee79",
+  backgroundDark: "#102217",
+  cardBg: "rgba(255, 255, 255, 0.05)",
+  textWhite: "#FFFFFF",
+  textGrey: "#9db9a8",
+  iconBg: "rgba(43, 238, 121, 0.1)",
+};
 
 export default function HomeScreen() {
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const navigation = useNavigation<any>();
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [lastSession, setLastSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleStartScenario = async (item: any) => {
-    setLoadingId(item.id);
+  // useFocusEffect: Ekran her odaklandığında (geri gelince) çalışır
+  useFocusEffect(
+    useCallback(() => {
+      fetchLastSession();
+    }, [])
+  );
+
+  const fetchLastSession = async () => {
     try {
-      // 1. Backend'de oturumu başlat
-      const response = await api.post("/chat/start", {
-        scenario: item.title,
-        role: item.role,
-        difficultyLevel: item.level,
-      });
-
-      // 2. Session ID'yi al
-      const sessionId = response.data._id;
-
-      // 3. Chat ekranına yönlendir ve ID'yi gönder
-      navigation.navigate("Chat", { sessionId, title: item.title });
+      const res = await api.get("/chat/last");
+      setLastSession(res.data); // Veri yoksa null döner
     } catch (error) {
-      Alert.alert("Hata", "Senaryo başlatılamadı.");
+      console.log("Son oturum çekilemedi");
     } finally {
-      setLoadingId(null);
+      setLoading(false);
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => handleStartScenario(item)}
-      disabled={!!loadingId}
-    >
-      <Text style={styles.cardIcon}>{item.icon}</Text>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardSubtitle}>
-          {item.role} • {item.level}
-        </Text>
-      </View>
-      {loadingId === item.id && <ActivityIndicator color="#007AFF" />}
-    </TouchableOpacity>
-  );
+  // İlerleme yüzdesini mesaj sayısına göre uyduralım (Örn: 20 mesaj %100 olsun)
+  const calculateProgress = (msgCount: number) => {
+    const percent = Math.min(msgCount * 5, 100); // Her mesaj %5
+    return percent + "%";
+  };
+
+  const recommendedScenarios = [
+    {
+      id: "1",
+      title: "Senaryo Seçimi",
+      description:
+        "Farklı konularda pratik yapabileceğin diyalog senaryolarını keşfet.",
+      icon: "chat-bubble-outline",
+      action: () => navigation.navigate("ScenarioList"), // ARTIK YENİ SAYFAYA GİDİYOR
+    },
+    {
+      id: "2",
+      title: "Sana Özel Senaryo: Taksi Çağırma",
+      description: "Şehirde gezinirken ihtiyacın olacak temel ifadeleri öğren.",
+      icon: "auto-awesome",
+      action: () =>
+        navigation.navigate("Chat", {
+          sessionId: null, // Yeni başlatacağı için ID yok, backendde create lazım olur
+          title: "Taksi Çağırma",
+          isQuickStart: true, // Bu parametreyi ChatScreen'de yakalayıp start atabilirsin (Opsiyonel)
+          // Şimdilik basit olsun, direkt senaryo listesine de atabiliriz:
+        }),
+    },
+  ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Merhaba, {user?.fullName}</Text>
-        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Çıkış</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sectionTitle}>Bir senaryo seç:</Text>
-
-      <FlatList
-        data={SCENARIOS}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.list}
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={COLORS.backgroundDark}
       />
-    </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>
+              Merhaba, {user?.fullName?.split(" ")[0] || "Misafir"}!
+            </Text>
+            <Text style={styles.subGreeting}>
+              Bugün hangi senaryoyu denemek istersin?
+            </Text>
+          </View>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{
+                uri:
+                  "https://api.dicebear.com/9.x/avataaars/png?seed=" +
+                  (user?.fullName || "User"),
+              }}
+              style={styles.avatar}
+              contentFit="cover"
+            />
+          </View>
+        </View>
+
+        {/* --- DİNAMİK SON PRATİK KARTI --- */}
+        {loading ? (
+          <ActivityIndicator
+            color={COLORS.primary}
+            style={{ marginBottom: 20 }}
+          />
+        ) : lastSession ? (
+          <TouchableOpacity
+            style={styles.activeCard}
+            onPress={() =>
+              navigation.navigate("Chat", {
+                sessionId: lastSession._id,
+                title: lastSession.scenario,
+              })
+            }
+          >
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardLabel}>Son Pratiğine Devam Et</Text>
+              <MaterialIcons
+                name="more-horiz"
+                size={24}
+                color={COLORS.textGrey}
+              />
+            </View>
+
+            <View style={styles.cardBody}>
+              <View style={styles.iconBox}>
+                <MaterialIcons
+                  name="restaurant-menu"
+                  size={28}
+                  color={COLORS.primary}
+                />
+              </View>
+
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle}>{lastSession.scenario}</Text>
+                <View style={styles.progressBarBg}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      { width: calculateProgress(lastSession.messages.length) },
+                    ]}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.playButtonSmall}>
+                <MaterialIcons
+                  name="play-arrow"
+                  size={28}
+                  color={COLORS.backgroundDark}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+        ) : (
+          // Oturum yoksa boş bir alan veya mesaj gösterebiliriz
+          <View style={[styles.activeCard, { opacity: 0.5 }]}>
+            <Text style={{ color: "white", textAlign: "center" }}>
+              Henüz bir pratiğin yok.
+            </Text>
+          </View>
+        )}
+
+        {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
+        <TouchableOpacity
+          style={styles.bigButton}
+          onPress={() => navigation.navigate("ScenarioList")}
+        >
+          <MaterialIcons
+            name="play-arrow"
+            size={24}
+            color={COLORS.backgroundDark}
+          />
+          <Text style={styles.bigButtonText}>Yeni Pratik Başlat</Text>
+        </TouchableOpacity>
+
+        {/* --- DİĞER KARTLAR --- */}
+        <View style={styles.listContainer}>
+          {recommendedScenarios.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.scenarioCard}
+              onPress={item.action}
+            >
+              <View style={styles.iconBox}>
+                <MaterialIcons
+                  name={item.icon as any}
+                  size={24}
+                  color={COLORS.primary}
+                />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardDescription}>{item.description}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-  },
+  container: { flex: 1, backgroundColor: COLORS.backgroundDark },
+  scrollContent: { padding: 20, paddingBottom: 100 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+    alignItems: "flex-start",
+    marginBottom: 30,
+    marginTop: 10,
   },
-  welcomeText: { fontSize: 18, fontWeight: "bold", color: "#333" },
-  logoutButton: { padding: 8, backgroundColor: "#ffcccc", borderRadius: 8 },
-  logoutText: { color: "#d9534f", fontWeight: "600" },
-  sectionTitle: { fontSize: 16, color: "#666", marginBottom: 10 },
-  list: { paddingBottom: 20 },
-  card: {
-    backgroundColor: "white",
+  greeting: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: COLORS.textWhite,
+    marginBottom: 8,
+  },
+  subGreeting: { fontSize: 14, color: COLORS.textGrey, maxWidth: 250 },
+  avatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  avatar: { width: "100%", height: "100%" },
+
+  activeCard: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+  },
+  cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    marginBottom: 15,
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 3,
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
-  cardIcon: { fontSize: 30, marginRight: 15 },
-  cardContent: { flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: "bold", color: "#333" },
-  cardSubtitle: { color: "#888", marginTop: 4 },
+  cardLabel: { color: COLORS.textGrey, fontSize: 13, fontWeight: "600" },
+  cardBody: { flexDirection: "row", alignItems: "center", gap: 12 },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: COLORS.iconBg,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cardInfo: { flex: 1 },
+  cardTitle: {
+    color: COLORS.textWhite,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  cardDescription: { color: COLORS.textGrey, fontSize: 13, lineHeight: 18 },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 3,
+    width: "100%",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: COLORS.primary,
+    borderRadius: 3,
+  },
+  playButtonSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  bigButton: {
+    flexDirection: "row",
+    backgroundColor: COLORS.primary,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  bigButtonText: {
+    color: COLORS.backgroundDark,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+
+  listContainer: { gap: 16 },
+  scenarioCard: {
+    flexDirection: "row",
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "flex-start",
+    gap: 16,
+  },
+  textContainer: { flex: 1, justifyContent: "center" },
 });
