@@ -22,4 +22,6 @@ export const COLORS = {
   buttonGrey: "rgba(31, 41, 55, 1)", // Bitir butonu
   error: "#fb923c", // Orange-400
   success: "#4ade80", // Green-400
+  borderColor: "rgba(255, 255, 255, 0.1)", // Hafif Çerçeve
+  barBg: "rgba(43, 238, 121, 0.2)", // Grafik Çubuk Arka Planı
 };
