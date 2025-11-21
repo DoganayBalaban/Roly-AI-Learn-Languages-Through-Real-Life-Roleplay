@@ -42,6 +42,62 @@ const SCENARIOS = [
     level: "A1",
     icon: "🍎",
   },
+  {
+    id: "5",
+    title: "Hotel Reception",
+    role: "Polite Receptionist",
+    level: "A2",
+    icon: "🏨",
+  },
+  {
+    id: "6",
+    title: "Doctor Appointment",
+    role: "Busy Doctor",
+    level: "B1",
+    icon: "🩺",
+  },
+  {
+    id: "7",
+    title: "Tech Support Call",
+    role: "Patient Technician",
+    level: "B2",
+    icon: "💻",
+  },
+  {
+    id: "8",
+    title: "Subway Ticket Purchase",
+    role: "Uninterested Clerk",
+    level: "A1",
+    icon: "🚇",
+  },
+  {
+    id: "9",
+    title: "Restaurant Reservation",
+    role: "Professional Host",
+    level: "A2",
+    icon: "🍽️",
+  },
+  {
+    id: "10",
+    title: "Clothing Store",
+    role: "Friendly Salesperson",
+    level: "A2",
+    icon: "👕",
+  },
+  {
+    id: "11",
+    title: "Phone Repair Shop",
+    role: "Sarcastic Technician",
+    level: "B1",
+    icon: "📱",
+  },
+  {
+    id: "12",
+    title: "Library Inquiry",
+    role: "Quiet Librarian",
+    level: "A2",
+    icon: "📚",
+  },
 ];
 
 export default function HomeScreen() {
