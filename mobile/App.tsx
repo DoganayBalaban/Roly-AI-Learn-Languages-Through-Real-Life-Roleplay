@@ -16,6 +16,7 @@ import ProgressScreen from "./src/screens/ProgressScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ScenarioListScreen from "./src/screens/ScenarioListScreen";
 import FeedbackScreen from "./src/screens/FeedbackScreen";
+import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -109,11 +110,18 @@ const AppNavigator = () => {
           </>
         ) : (
           // GİRİŞ YAPMAMIŞ KULLANICI
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
+          <>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+              options={{ headerShown: false }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

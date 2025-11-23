@@ -12,6 +12,8 @@ export interface IUser extends Document {
   email: string;
   password: string;
   fullName: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   preferences: {
     targetLanguage: string;
     nativeLanguage: string;
@@ -31,6 +33,8 @@ const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   fullName: { type: String, required: true },
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
   
   preferences: {
     targetLanguage: { type: String, default: 'English' },
@@ -46,10 +50,9 @@ const userSchema = new Schema({
     xp: { type: Number, default: 0 },
     streak: { type: Number, default: 0 },
     totalSessions: { type: Number, default: 0 },
-    lastActivityDate: { type: Date, default: null } // <--- EKLENDİ
+    lastActivityDate: { type: Date, default: null }
   },
 
-  // Kelimeleri detaylı saklayalım
   savedWords: [{
     word: { type: String, required: true },
     translation: { type: String, required: true },

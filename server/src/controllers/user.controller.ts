@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import dotenv from "dotenv";
 import Session from "../models/Session";
+import crypto from "crypto";
 dotenv.config();
 const calculateLevel = (xp: number) => {
   // Basit bir seviye sistemi:
@@ -191,3 +192,68 @@ export const updatePreferences = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Update failed" });
   }
 };
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const {email} = req.body
+    const user = await User.findOne({email})
+    if (!user) {
+      return res.status(404).json({message: "User not found"})
+    }
+    const resetToken = crypto.randomInt(100000, 999999).toString()
+    user.resetPasswordToken = resetToken
+    user.resetPasswordExpires = new Date(Date.now() + 3600000)
+    await user.save()
+
+    console.log(`[RESET CODE] ${email} için kod: ${resetToken}`)
+
+    res.json({ 
+      message: "Doğrulama kodu e-posta adresinize gönderildi.",
+      debugCode: resetToken 
+    });
+    
+    
+  } catch (error) {
+    console.error("Error in forgotPassword controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+export const verifyResetCode = async (req: Request, res: Response) => {
+  try {
+    const {email, code}= req.body
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: code,
+      resetPasswordExpires: { $gt: Date.now() }
+    })
+    if (!user) {
+      return res.status(400).json({message: "Invalid or expired code"})
+    }
+    res.json({message: "Code verified successfully"})
+  } catch (error) {
+    console.error("Error in verifyResetCode controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const {email, code, newPassword} = req.body
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: code,
+      resetPasswordExpires: { $gt: Date.now() }
+    })
+    if (!user) {
+      return res.status(400).json({message: "Invalid or expired code"})
+    }
+    const salt = await bcrypt.genSalt(10)
+    user.password = await bcrypt.hash(newPassword, salt)
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+    await user.save()
+    res.json({message: "Password reset successfully"})
+    
+  } catch (error) {
+    console.error("Error in resetPassword controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

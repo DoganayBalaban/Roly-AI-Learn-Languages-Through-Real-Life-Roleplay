@@ -15,6 +15,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+import { useNavigation } from "@react-navigation/native";
 
 // Tasarımdaki Renk Paleti
 import { COLORS } from "../constants/color";
@@ -34,6 +35,8 @@ export default function LoginScreen() {
   const [fullName, setFullName] = useState("");
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const { login, register } = useAuth();
+
+  const navigation = useNavigation<any>();
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -210,7 +213,10 @@ export default function LoginScreen() {
                 </Text>
               </View>
             ) : (
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => navigation.navigate("ForgotPassword")}
+              >
                 <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
               </TouchableOpacity>
             )}
