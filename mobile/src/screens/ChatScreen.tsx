@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ActivityIndicator,
   StatusBar,
   Animated,
   Alert,
@@ -75,6 +76,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
 
   // DİNAMİK KİŞİLİK STATE'LERİ
   const [botRole, setBotRole] = useState<string>("Asistan"); // Varsayılan
@@ -154,13 +156,14 @@ export default function ChatScreen() {
 
   const endSession = async () => {
     try {
+      setLoadingFeedback(true);
       const response = await api.post("/chat/end", { sessionId });
 
-      // Alert yerine Feedback sayfasına yönlendir
-      // Backend'den gelen tüm raporu (response.data) parametre olarak gönderiyoruz
       navigation.navigate("Feedback", { feedback: response.data });
     } catch (error) {
       Alert.alert("Hata", "Rapor alınamadı.");
+    } finally {
+      setLoadingFeedback(false);
     }
   };
 
@@ -239,7 +242,13 @@ export default function ChatScreen() {
       >
         <View style={styles.footer}>
           <TouchableOpacity onPress={endSession} style={styles.endButton}>
-            <Text style={styles.endButtonText}>Konuşmayı Bitir</Text>
+            <Text style={styles.endButtonText}>
+              {loadingFeedback ? (
+                <ActivityIndicator size="small" color={COLORS.textWhite} />
+              ) : (
+                "Konuşmayı Bitir"
+              )}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.inputRow}>
