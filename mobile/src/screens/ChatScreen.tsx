@@ -159,7 +159,10 @@ export default function ChatScreen() {
       setLoadingFeedback(true);
       const response = await api.post("/chat/end", { sessionId });
 
-      navigation.navigate("Feedback", { feedback: response.data });
+      navigation.navigate("Feedback", {
+        feedback: response.data,
+        xpEarned: response.data.xpEarned || 0,
+      });
     } catch (error) {
       Alert.alert("Hata", "Rapor alınamadı.");
     } finally {

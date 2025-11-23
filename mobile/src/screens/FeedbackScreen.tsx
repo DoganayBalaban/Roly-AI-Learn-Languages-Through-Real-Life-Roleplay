@@ -12,7 +12,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { COLORS } from "../constants/color";
 
-// --- ACCORDION COMPONENT (Gramer Hataları İçin) ---
+// --- ACCORDION COMPONENT ---
 const GrammarItem = ({ original, correction, explanation }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -48,11 +48,7 @@ const GrammarItem = ({ original, correction, explanation }: any) => {
               color={COLORS.success}
               style={{ marginTop: 2 }}
             />
-            <Text style={styles.correctionText}>
-              {/* Düzeltilen kelimeyi vurgulamak zor olduğu için basit string basıyoruz, 
-                  gelişmiş versiyonda kelime kelime diff alınabilir */}
-              {correction}
-            </Text>
+            <Text style={styles.correctionText}>{correction}</Text>
           </View>
           <Text style={styles.explanationText}>{explanation}</Text>
         </View>
@@ -65,32 +61,16 @@ export default function FeedbackScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
-  // ChatScreen'den gelen veriler (Yoksa varsayılan verilerle test et)
-  const { feedback } = route.params || { feedback: {} };
+  // Parametreleri al (XP eklendi)
+  const { feedback, xpEarned } = route.params || { feedback: {}, xpEarned: 0 };
 
-  // Eğer feedback boş gelirse (Test amaçlı dummy data)
   const data = {
-    score: feedback?.score || 75,
-    cefr: feedback?.cefr || "A2",
-    grammarMistakes: feedback?.grammarMistakes || [
-      {
-        original: "I is going to the market.",
-        correction: "I am going to the market.",
-        explanation: '"I" öznesi ile "am" kullanılır.',
-      },
-      {
-        original: "She have two cats.",
-        correction: "She has two cats.",
-        explanation: '3. tekil şahıs (she) için "has" kullanılır.',
-      },
-    ],
-    suggestions: feedback?.suggestions || [
-      // "Daha Akıcı Konuş"
-      "I'm feeling a bit peckish. (I want to eat now)",
-      "That's outstanding! (It is very good)",
-    ],
-    vocabulary: feedback?.vocabularySuggestions || ["Essential", "Collaborate"],
-    comment: feedback?.overallComment || "Harika bir ilerleme kaydettin!",
+    score: feedback?.score || 0,
+    cefr: feedback?.cefr || "A1",
+    grammarMistakes: feedback?.grammarMistakes || [],
+    suggestions: feedback?.suggestions || [],
+    vocabulary: feedback?.vocabularySuggestions || [],
+    comment: feedback?.overallComment || "Pratik tamamlandı.",
   };
 
   return (
@@ -123,14 +103,30 @@ export default function FeedbackScreen() {
           </Text>
         </View>
 
-        {/* --- SKOR KARTI --- */}
+        {/* --- SKOR KARTI (XP BURADA GÖSTERİLİYOR) --- */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Genel Puan</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.cardTitle}>Genel Puan</Text>
+
+            {/* --- YENİ: XP BADGE --- */}
+            {xpEarned > 0 && (
+              <View style={styles.xpBadge}>
+                <Text style={styles.xpText}>🔥 +{xpEarned} XP</Text>
+              </View>
+            )}
+          </View>
+
           <View style={styles.scoreRow}>
             <Text style={styles.cefrText}>CEFR Seviyesi ({data.cefr})</Text>
             <Text style={styles.scoreText}>{data.score}/100</Text>
           </View>
-          {/* Progress Bar */}
+
           <View style={styles.progressBarBg}>
             <View
               style={[styles.progressBarFill, { width: `${data.score}%` }]}
@@ -139,7 +135,7 @@ export default function FeedbackScreen() {
           <Text style={styles.commentText}>{data.comment}</Text>
         </View>
 
-        {/* --- GRAMER İNCELEMESİ --- */}
+        {/* --- GRAMER --- */}
         {data.grammarMistakes.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -158,7 +154,7 @@ export default function FeedbackScreen() {
           </View>
         )}
 
-        {/* --- DAHA AKICI KONUŞ (Suggestions) --- */}
+        {/* --- ÖNERİLER --- */}
         {data.suggestions.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -182,7 +178,7 @@ export default function FeedbackScreen() {
           </View>
         )}
 
-        {/* --- KELİME HAZİNESİ --- */}
+        {/* --- KELİMELER --- */}
         {data.vocabulary.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -204,7 +200,6 @@ export default function FeedbackScreen() {
                   />
                   <View>
                     <Text style={styles.vocabWord}>{word}</Text>
-                    {/* Backend sadece kelime dönüyorsa açıklama kısmı boş kalabilir veya AI'dan istenebilir */}
                     <Text style={styles.vocabDesc}>
                       Bu kelimeyi cümle içinde kullanmayı dene.
                     </Text>
@@ -215,10 +210,10 @@ export default function FeedbackScreen() {
           </View>
         )}
 
-        {/* --- ANA SAYFA BUTONU --- */}
+        {/* --- BUTON --- */}
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => navigation.navigate("MainTabs")} // Veya 'Home'
+          onPress={() => navigation.navigate("MainTabs")}
         >
           <Text style={styles.secondaryButtonText}>Ana Sayfaya Dön</Text>
         </TouchableOpacity>
@@ -242,9 +237,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textWhite },
-
   scrollContent: { padding: 20, paddingBottom: 40 },
-
   headlineContainer: { alignItems: "center", marginBottom: 24 },
   headline: {
     fontSize: 28,
@@ -254,6 +247,7 @@ const styles = StyleSheet.create({
   },
   subHeadline: { fontSize: 16, color: COLORS.textGrey },
 
+  // Kart Stilleri
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 16,
@@ -266,16 +260,23 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  cardHeaderCenter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
   cardTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textWhite },
 
-  // Score Card
+  // --- XP Badge Stili ---
+  xpBadge: {
+    backgroundColor: "rgba(43, 238, 121, 0.2)", // Silik yeşil
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  xpText: {
+    color: COLORS.primary,
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+
   scoreRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
   },
   commentText: { fontSize: 14, color: COLORS.textGrey },
 
-  // Accordion
+  // Accordion & Listeler
   gap12: { gap: 12 },
   accordionContainer: {
     backgroundColor: "rgba(255,255,255,0.03)",
@@ -333,8 +334,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   explanationText: { color: COLORS.textGrey, fontSize: 14, paddingLeft: 32 },
-
-  // Suggestions
   suggestionText: {
     color: COLORS.textWhite,
     fontSize: 16,
@@ -345,36 +344,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.1)",
     marginVertical: 12,
   },
-
-  // Vocab
   vocabRow: { flexDirection: "row", gap: 12 },
   vocabWord: { color: COLORS.textWhite, fontSize: 16, fontWeight: "600" },
   vocabDesc: { color: COLORS.textGrey, fontSize: 14 },
-
-  // CTA Card
-  ctaCard: {
-    backgroundColor: "rgba(43, 238, 121, 0.1)",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    alignItems: "center",
-  },
-  ctaText: { color: "#d1d5db", textAlign: "center", marginBottom: 20 },
-
-  // Buttons
-  primaryButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 30,
-    width: "100%",
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: COLORS.background,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
 
   secondaryButton: {
     backgroundColor: "#27272a",
