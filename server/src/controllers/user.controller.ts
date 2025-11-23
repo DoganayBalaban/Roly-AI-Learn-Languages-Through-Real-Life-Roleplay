@@ -5,7 +5,9 @@ import jwt from "jsonwebtoken";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import dotenv from "dotenv";
 import Session from "../models/Session";
-import crypto from "crypto";
+import crypto from "crypto"
+import {loginSchema, registerSchema} from "../utils/validation"
+
 dotenv.config();
 const calculateLevel = (xp: number) => {
   // Basit bir seviye sistemi:
@@ -90,6 +92,10 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
 };
 export const register = async (req: Request, res: Response) => {
   try {
+    const validation = registerSchema.safeParse(req.body)
+    if (!validation.success) {
+      return res.status(400).json({ message: validation.error.message });
+    }
     const { email, password, fullName } = req.body;
 
     if (!email || !password || !fullName) {
@@ -128,6 +134,10 @@ export const register = async (req: Request, res: Response) => {
 };
 export const login = async (req: Request, res: Response) => {
   try {
+    const validation = loginSchema.safeParse(req.body)
+    if (!validation.success) {
+      return res.status(400).json({ message: validation.error.message });
+    }
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
