@@ -20,6 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 // Tasarımdaki Renk Paleti
 import { COLORS } from "../constants/color";
 import { Image } from "expo-image";
+import { validateCredentials } from "../utils/validation";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -39,26 +40,15 @@ export default function LoginScreen() {
   const navigation = useNavigation<any>();
 
   const handleSubmit = async () => {
-    if (!email || !password) {
-      Alert.alert("Hata", "Lütfen tüm alanları doldurun.");
-      return;
-    }
-    if (isRegistering && !fullName) {
-      Alert.alert("Hata", "İsim alanı zorunludur.");
-      return;
-    }
-    if (isRegistering && !isTermsAccepted) {
-      Alert.alert(
-        "Uyarı",
-        "Lütfen Kullanım Koşulları ve Gizlilik Politikasını kabul edin."
-      );
-      if (isRegistering && password !== passwordConfirm) {
-        Alert.alert("Hata", "Şifreler uyuşmuyor.");
-        return;
-      }
+    // 1. Frontend Validation Kontrolü
+    const error = validateCredentials(email, password, fullName, isRegistering);
+
+    if (error) {
+      Alert.alert("Hata", error);
       return;
     }
 
+    // 2. Eğer frontend'i geçerse Backend'e git
     setLoading(true);
     try {
       if (isRegistering) {
@@ -67,6 +57,7 @@ export default function LoginScreen() {
         await login(email, password);
       }
     } catch (error: any) {
+      // Backend'den (Zod'dan) gelen mesajı göster
       const errorMessage = error.message || error.error || "Bir hata oluştu";
       Alert.alert("Hata", errorMessage);
     } finally {
