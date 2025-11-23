@@ -55,7 +55,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: "temp",
           fullName: "",
           email: "",
-          preferences: { targetLanguage: "English", nativeLanguage: "Turkish" },
+          preferences: {
+            targetLanguage: "English",
+            nativeLanguage: "Turkish",
+            difficultyLevel: "A1",
+          },
         });
         await fetchUserProfile();
       }

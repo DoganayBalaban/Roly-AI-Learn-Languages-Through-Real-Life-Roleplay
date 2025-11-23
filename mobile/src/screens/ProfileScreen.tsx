@@ -173,20 +173,20 @@ export default function ProfileScreen() {
               title="Hedef Dil"
               value={
                 LANGUAGES.find(
-                  (l) => l.code === user?.preferences.targetLanguage
-                )?.label || user?.preferences.targetLanguage
+                  (l) => l.code === user?.preferences?.targetLanguage
+                )?.label || user?.preferences?.targetLanguage
               }
               onPress={() => openModal("target")}
             />
             <View style={styles.divider} />
-            {/* Ana Dil Seçimi (Zorluk Seviyesi Yerine Geldi) */}
+
             <SettingRow
               icon="language"
               title="Ana Dil"
               value={
                 LANGUAGES.find(
-                  (l) => l.code === user?.preferences.nativeLanguage
-                )?.label || user?.preferences.nativeLanguage
+                  (l) => l.code === user?.preferences?.nativeLanguage
+                )?.label || user?.preferences?.nativeLanguage
               }
               onPress={() => openModal("native")}
             />
@@ -275,9 +275,9 @@ export default function ProfileScreen() {
                   <Text style={styles.langLabel}>{item.label}</Text>
                   {/* Seçili olanı işaretle */}
                   {(activeSelection === "target" &&
-                    user?.preferences.targetLanguage === item.code) ||
+                    user?.preferences?.targetLanguage === item.code) ||
                   (activeSelection === "native" &&
-                    user?.preferences.nativeLanguage === item.code) ? (
+                    user?.preferences?.nativeLanguage === item.code) ? (
                     <MaterialIcons
                       name="check"
                       size={24}
