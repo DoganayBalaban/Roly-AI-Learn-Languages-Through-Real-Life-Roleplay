@@ -14,6 +14,7 @@ export interface IUser extends Document {
   fullName: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  isPremium: boolean;
   preferences: {
     targetLanguage: string;
     nativeLanguage: string;
@@ -35,7 +36,7 @@ const userSchema = new Schema({
   fullName: { type: String, required: true },
   resetPasswordToken: { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null },
-  
+  isPremium: { type: Boolean, default: false },
   preferences: {
     targetLanguage: { type: String, default: 'English' },
     nativeLanguage: { type: String, default: 'Turkish' },

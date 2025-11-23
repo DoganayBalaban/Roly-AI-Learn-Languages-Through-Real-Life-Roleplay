@@ -267,3 +267,17 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+export const upgradeToPremium = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user._id
+    const updatedUser = await User.findByIdAndUpdate(userId, {isPremium: true}, {new: true}).select('-password')
+    res.json({ 
+      message: "Tebrikler! Premium üyelik aktif.", 
+      user: updatedUser 
+    });
+    
+  } catch (error) {
+    console.error("Error in upgradeToPremium controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

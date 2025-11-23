@@ -17,6 +17,7 @@ import ProfileScreen from "./src/screens/ProfileScreen";
 import ScenarioListScreen from "./src/screens/ScenarioListScreen";
 import FeedbackScreen from "./src/screens/FeedbackScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
+import PaywallScreen from "./src/screens/PaywallScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -106,6 +107,14 @@ const AppNavigator = () => {
               name="Feedback"
               component={FeedbackScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Paywall"
+              component={PaywallScreen}
+              options={{
+                headerShown: false,
+                presentation: "modal", // Bu, ekranın aşağıdan yukarı kayarak açılmasını sağlar (iOS'te çok şık durur)
+              }}
             />
           </>
         ) : (

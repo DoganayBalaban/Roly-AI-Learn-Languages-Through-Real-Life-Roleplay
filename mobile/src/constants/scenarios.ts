@@ -6,6 +6,7 @@ export const SCENARIOS = [
     role: "Check-in Görevlisi",
     level: "Orta",
     icon: "flight-takeoff",
+    isPremium: true,
   },
   {
     id: "2",
@@ -13,6 +14,7 @@ export const SCENARIOS = [
     role: "Müşteri",
     level: "Kolay",
     icon: "local-cafe",
+    isPremium: false,
   },
   {
     id: "3",
@@ -20,6 +22,7 @@ export const SCENARIOS = [
     role: "İK Müdürü",
     level: "Zor",
     icon: "business-center",
+    isPremium: true,
   },
   {
     id: "4",
@@ -27,6 +30,7 @@ export const SCENARIOS = [
     role: "Kasiyer",
     level: "Kolay",
     icon: "shopping-cart",
+    isPremium: false,
   },
   {
     id: "5",
@@ -34,6 +38,7 @@ export const SCENARIOS = [
     role: "Garson",
     level: "Kolay",
     icon: "restaurant",
+    isPremium: false,
   },
   {
     id: "6",
@@ -41,15 +46,15 @@ export const SCENARIOS = [
     role: "Taksi Şoförü",
     level: "Kolay",
     icon: "local-taxi",
+    isPremium: false,
   },
-
-  // --- YENİ EKLENENLER ---
   {
     id: "7",
     title: "Otel Resepsiyonu",
     role: "Resepsiyonist",
     level: "Orta",
     icon: "hotel",
+    isPremium: true,
   },
   {
     id: "8",
@@ -57,6 +62,7 @@ export const SCENARIOS = [
     role: "Yerel Halk",
     level: "Kolay",
     icon: "map",
+    isPremium: false,
   },
   {
     id: "9",
@@ -64,6 +70,7 @@ export const SCENARIOS = [
     role: "Doktor",
     level: "Zor",
     icon: "medical-services",
+    isPremium: true,
   },
   {
     id: "10",
@@ -71,6 +78,7 @@ export const SCENARIOS = [
     role: "Mağaza Görevlisi",
     level: "Kolay",
     icon: "checkroom",
+    isPremium: false,
   },
   {
     id: "11",
@@ -78,6 +86,7 @@ export const SCENARIOS = [
     role: "Polis Memuru",
     level: "Zor",
     icon: "local-police",
+    isPremium: false,
   },
   {
     id: "12",
@@ -85,6 +94,7 @@ export const SCENARIOS = [
     role: "Antrenör",
     level: "Orta",
     icon: "fitness-center",
+    isPremium: false,
   },
   {
     id: "13",
@@ -92,6 +102,7 @@ export const SCENARIOS = [
     role: "Arkadaş",
     level: "Orta",
     icon: "movie",
+    isPremium: false,
   },
   {
     id: "14",
@@ -99,6 +110,7 @@ export const SCENARIOS = [
     role: "Eczacı",
     level: "Orta",
     icon: "local-pharmacy",
+    isPremium: false,
   },
   {
     id: "15",
@@ -106,6 +118,7 @@ export const SCENARIOS = [
     role: "Müşteri Temsilcisi",
     level: "Zor",
     icon: "router",
+    isPremium: true,
   },
   {
     id: "16",
@@ -113,6 +126,7 @@ export const SCENARIOS = [
     role: "Kuaför",
     level: "Kolay",
     icon: "content-cut",
+    isPremium: false,
   },
   {
     id: "17",
@@ -120,13 +134,14 @@ export const SCENARIOS = [
     role: "Emlakçı",
     level: "Zor",
     icon: "home",
-  },
-  {
+    isPremium: true,
+  },{
     id: "18",
     title: "Tren Bileti Alma",
     role: "Gişe Görevlisi",
     level: "Kolay",
     icon: "train",
+    isPremium: false,
   },
   {
     id: "19",
@@ -134,6 +149,7 @@ export const SCENARIOS = [
     role: "Kütüphaneci",
     level: "Orta",
     icon: "menu-book",
+    isPremium: false,
   },
   {
     id: "20",
@@ -141,5 +157,6 @@ export const SCENARIOS = [
     role: "Acente Görevlisi",
     level: "Orta",
     icon: "directions-car",
+    isPremium: false,
   },
 ];
