@@ -5,6 +5,7 @@ import {
   getChatCompletion,
   generateFeedbackAnalysis,
 } from "../services/OpenAIService";
+import User from "../models/User";
 
 export const startSession = async (req: AuthRequest, res: Response) => {
   try {
@@ -69,9 +70,10 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
 export const endSession = async (req: AuthRequest, res: Response) => {
   try {
     const { sessionId } = req.body;
+    const userId = req.user._id;
     const session = await Session.findOne({
       _id: sessionId,
-      userId: req.user._id,
+      userId,
     });
     if (!session) {
       return res.status(404).json({ message: "Session not found" });
@@ -82,10 +84,23 @@ export const endSession = async (req: AuthRequest, res: Response) => {
         .status(500)
         .json({ message: "Failed to parse feedback from AI" });
     }
+    const xpEarned = feedback.score || 0
+    await User.findByIdAndUpdate(userId, {
+      $inc: { 
+        'stats.xp': xpEarned,           // XP'yi artır
+        'stats.totalSessions': 1        // Toplam oturumu 1 artır
+      },
+      $set: {
+        'stats.lastActivityDate': new Date() // Son aktiviteyi güncelle (Streak için)
+      }
+    });
     session.feedback = feedback;
     session.status = "completed";
     await session.save();
-    res.json(feedback);
+    res.json({
+      ...feedback,
+      xpEarned // <-- Bunu ekledik
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to generate feedback" });
