@@ -13,87 +13,61 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { NAMES } from "../constants/name";
 import { COLORS } from "../constants/color";
-// Tasarımdaki Senaryo Listesi
-const SCENARIOS = [
-  {
-    id: "1",
-    title: "Havaalanında Check-in",
-    role: "Yolcu",
-    level: "Orta",
-    icon: "flight-takeoff",
-  },
-  {
-    id: "2",
-    title: "Kafede Tanışma",
-    role: "Müşteri",
-    level: "Kolay",
-    icon: "local-cafe",
-  },
-  {
-    id: "3",
-    title: "İş Görüşmesi",
-    role: "Aday",
-    level: "Zor",
-    icon: "business-center",
-  },
-  {
-    id: "4",
-    title: "Market Alışverişi",
-    role: "Müşteri",
-    level: "Kolay",
-    icon: "shopping-cart",
-  },
-  {
-    id: "5",
-    title: "Restoranda Sipariş Verme",
-    role: "Müşteri",
-    level: "Kolay",
-    icon: "restaurant",
-  },
-  {
-    id: "6",
-    title: "Taksi Çağırma",
-    role: "Yolcu",
-    level: "Kolay",
-    icon: "local-taxi",
-  },
-];
+import { SCENARIOS } from "../constants/scenarios";
 
 const FILTERS = ["Tümü", "Kolay", "Orta", "Zor"];
 
 export default function ScenarioListScreen() {
   const navigation = useNavigation<any>();
+  const { user } = useAuth(); // Kullanıcının hedef dilini almak için
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("Tümü");
 
-  // --- FİLTRELEME MANTIĞI ---
+  // Filtreleme Mantığı
   const filteredScenarios = SCENARIOS.filter((item) => {
-    // 1. Arama Metni Kontrolü
     const matchesSearch = item.title
       .toLowerCase()
       .includes(searchText.toLowerCase());
-    // 2. Kategori Filtresi Kontrolü
     const matchesFilter =
       selectedFilter === "Tümü" || item.level === selectedFilter;
-
     return matchesSearch && matchesFilter;
   });
+
+  // --- RASTGELE İSİM SEÇİCİ ---
+  const getRandomName = () => {
+    // Kullanıcının hedef dili varsa o dilden, yoksa İngilizce/Default havuzdan seç
+    const targetLang = user?.preferences?.targetLanguage || "English";
+    // @ts-ignore (TypeScript key kontrolü için basit bypass)
+    const nameList = NAMES[targetLang] || NAMES["Default"];
+
+    const randomIndex = Math.floor(Math.random() * nameList.length);
+    return nameList[randomIndex];
+  };
 
   // --- SENARYO BAŞLATMA ---
   const handleStartScenario = async (item: any) => {
     setLoadingId(item.id);
     try {
-      // Zorluk seviyesini backend formatına çevir (Opsiyonel, backend A1/B1 bekliyorsa maplemek gerekir)
-      // Şimdilik direkt gönderiyoruz.
-      const response = await api.post("/chat/start", {
-        scenario: item.title,
-        role: item.role,
+      // 1. Rastgele bir isim seç (Örn: "Jessica")
+      const botName = getRandomName();
+
+      // 2. Backend'e gönderilecek veriyi hazırla
+      // DİKKAT: Botun rolünü (Garson vb.) unutmaması için senaryo başlığına ekliyoruz.
+      // Ama Chat ekranında sadece "Jessica" ismi görünecek.
+      const payload = {
+        scenario: `${item.title} (Rolün: ${item.role})`, // AI'ya kopya veriyoruz
+        role: botName, // Chat ekranında görünecek isim (Jessica)
         difficultyLevel: item.level,
-      });
+      };
+
+      const response = await api.post("/chat/start", payload);
 
       const sessionId = response.data._id;
+      // Chat ekranına yönlendir
       navigation.navigate("Chat", { sessionId, title: item.title });
     } catch (error) {
       Alert.alert("Hata", "Senaryo başlatılamadı.");
@@ -102,7 +76,6 @@ export default function ScenarioListScreen() {
     }
   };
 
-  // --- ZORLUK RENGİNİ SEÇME ---
   const getLevelColor = (level: string) => {
     switch (level) {
       case "Kolay":
@@ -122,7 +95,6 @@ export default function ScenarioListScreen() {
       onPress={() => handleStartScenario(item)}
       disabled={!!loadingId}
     >
-      {/* İkon Kutusu */}
       <View style={styles.iconBox}>
         <MaterialIcons
           name={item.icon as any}
@@ -130,8 +102,6 @@ export default function ScenarioListScreen() {
           color={COLORS.primary}
         />
       </View>
-
-      {/* Yazılar */}
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={[styles.levelText, { color: getLevelColor(item.level) }]}>
@@ -145,7 +115,7 @@ export default function ScenarioListScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
 
-      {/* --- HEADER --- */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -159,7 +129,7 @@ export default function ScenarioListScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* --- SEARCH BAR --- */}
+      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <MaterialIcons
@@ -178,7 +148,7 @@ export default function ScenarioListScreen() {
         </View>
       </View>
 
-      {/* --- FILTER CHIPS --- */}
+      {/* Filters */}
       <View style={styles.filterContainer}>
         {FILTERS.map((filter) => (
           <TouchableOpacity
@@ -196,7 +166,7 @@ export default function ScenarioListScreen() {
                 styles.chipText,
                 selectedFilter === filter
                   ? { color: COLORS.textWhite }
-                  : { color: COLORS.textGrey }, // Aktifse beyaz, pasifse gri yapıldı
+                  : { color: COLORS.textGrey },
               ]}
             >
               {filter}
@@ -205,7 +175,7 @@ export default function ScenarioListScreen() {
         ))}
       </View>
 
-      {/* --- LIST --- */}
+      {/* List */}
       <FlatList
         data={filteredScenarios}
         keyExtractor={(item) => item.id}
@@ -219,8 +189,6 @@ export default function ScenarioListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-
-  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -228,26 +196,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.textWhite,
-  },
-  iconButton: {
-    padding: 8,
-  },
-
-  // Search Bar
-  searchContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
+  headerTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textWhite },
+  iconButton: { padding: 8 },
+  searchContainer: { paddingHorizontal: 16, marginBottom: 12 },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.inputBg,
     height: 50,
-    borderRadius: 25, // Tam yuvarlak kenarlar
+    borderRadius: 25,
   },
   searchInput: {
     flex: 1,
@@ -256,8 +213,6 @@ const styles = StyleSheet.create({
     color: COLORS.textWhite,
     fontSize: 16,
   },
-
-  // Filters
   filterContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
@@ -271,51 +226,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  chipActive: {
-    backgroundColor: COLORS.chipActive, // HTML'deki primary/20
-  },
-  chipInactive: {
-    backgroundColor: COLORS.chipInactive, // HTML'deki koyu gri
-  },
-  chipText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-
-  // Card List
-  list: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
+  chipActive: { backgroundColor: COLORS.chipActive },
+  chipInactive: { backgroundColor: COLORS.chipInactive },
+  chipText: { fontSize: 14, fontWeight: "500" },
+  list: { paddingHorizontal: 16, paddingBottom: 20 },
   card: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.cardBg,
-    borderRadius: 24, // HTML'deki lg/xl rounded yapısına uygun
+    borderRadius: 24,
     padding: 16,
     marginBottom: 12,
   },
   iconBox: {
     width: 56,
     height: 56,
-    borderRadius: 16, // Hafif karemsi yuvarlak
-    backgroundColor: COLORS.chipActive, // İkon arka planı (silik yeşil)
+    borderRadius: 16,
+    backgroundColor: COLORS.chipActive,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
   },
-  cardContent: {
-    flex: 1,
-    justifyContent: "center",
-    gap: 4,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: COLORS.textWhite,
-  },
-  levelText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
+  cardContent: { flex: 1, justifyContent: "center", gap: 4 },
+  cardTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.textWhite },
+  levelText: { fontSize: 14, fontWeight: "500" },
 });
