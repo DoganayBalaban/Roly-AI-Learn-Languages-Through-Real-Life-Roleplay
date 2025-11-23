@@ -14,6 +14,7 @@ interface User {
   _id?: string; // Backend bazen _id dönebilir
   email: string;
   fullName: string;
+  isPremium: boolean;
   preferences: {
     targetLanguage: string;
     nativeLanguage: string;
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: "temp",
           fullName: "",
           email: "",
+          isPremium: false,
           preferences: {
             targetLanguage: "English",
             nativeLanguage: "Turkish",

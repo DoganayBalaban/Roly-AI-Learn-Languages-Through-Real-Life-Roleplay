@@ -52,6 +52,20 @@ export default function ScenarioListScreen() {
   const handleStartScenario = async (item: any) => {
     setLoadingId(item.id);
     try {
+      if (item.isPremium && !user?.isPremium) {
+        Alert.alert(
+          "Premium İçerik 💎",
+          "Bu senaryoya erişmek için Premium üye olmalısınız.",
+          [
+            { text: "Vazgeç", style: "cancel" },
+            {
+              text: "Premium'a Geç",
+              onPress: () => navigation.navigate("Paywall"),
+            }, // Ödeme sayfasına yönlendir
+          ]
+        );
+        return;
+      }
       // 1. Rastgele bir isim seç (Örn: "Jessica")
       const botName = getRandomName();
       const targetLang = user?.preferences?.targetLanguage || "English";
@@ -93,10 +107,19 @@ export default function ScenarioListScreen() {
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[
+        styles.card,
+        // Premium ve kilitli ise biraz soluk gösterelim
+        item.isPremium && !user?.isPremium && { opacity: 0.7 },
+      ]}
       onPress={() => handleStartScenario(item)}
-      disabled={!!loadingId}
     >
+      {/* KİLİT İKONU (SAĞ ÜST) */}
+      {item.isPremium && !user?.isPremium && (
+        <View style={styles.lockIconContainer}>
+          <MaterialIcons name="lock" size={20} color="#fbbf24" />
+        </View>
+      )}
       <View style={styles.iconBox}>
         <MaterialIcons
           name={item.icon as any}
@@ -191,6 +214,15 @@ export default function ScenarioListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  lockIconContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 12,
+    padding: 4,
+    zIndex: 10,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

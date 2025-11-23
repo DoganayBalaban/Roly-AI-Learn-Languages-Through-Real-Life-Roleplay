@@ -27,5 +27,7 @@ export const COLORS = {
   danger: "#ef4444", // Kırmızı (Çıkış/Silme)
   iconGreen: "#2bee79", // İkon Yeşili
   modalOverlay: "rgba(0,0,0,0.7)",
-  modalBg: "#1c2e24"
+  modalBg: "#1c2e24",
+  gold: "#FFD700", // Premium Altın Rengi
+  goldLight: "rgba(255, 215, 0, 0.15)",
 };

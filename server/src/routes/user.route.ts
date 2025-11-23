@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getMe, getUserStats, updatePreferences, forgotPassword, verifyResetCode, resetPassword } from "../controllers/user.controller";
+import { register, login, getMe, getUserStats, updatePreferences, forgotPassword, verifyResetCode, resetPassword, upgradeToPremium } from "../controllers/user.controller";
 import { protect } from "../middlewares/auth.middleware";
 
 const router = express.Router();
@@ -12,4 +12,5 @@ router.put('/preferences', protect, updatePreferences);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-code', verifyResetCode);
 router.post('/reset-password', resetPassword);
+router.post('/upgrade', protect, upgradeToPremium);
 export default router;
