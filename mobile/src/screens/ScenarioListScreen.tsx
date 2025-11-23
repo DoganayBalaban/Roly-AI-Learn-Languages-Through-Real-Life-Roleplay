@@ -54,14 +54,16 @@ export default function ScenarioListScreen() {
     try {
       // 1. Rastgele bir isim seç (Örn: "Jessica")
       const botName = getRandomName();
-
+      const targetLang = user?.preferences?.targetLanguage || "English";
       // 2. Backend'e gönderilecek veriyi hazırla
       // DİKKAT: Botun rolünü (Garson vb.) unutmaması için senaryo başlığına ekliyoruz.
       // Ama Chat ekranında sadece "Jessica" ismi görünecek.
       const payload = {
-        scenario: `${item.title} (Rolün: ${item.role})`, // AI'ya kopya veriyoruz
-        role: botName, // Chat ekranında görünecek isim (Jessica)
+        scenario: item.title,
+        role: botName,
         difficultyLevel: item.level,
+        roleDescription: item.role,
+        targetLanguage: targetLang,
       };
 
       const response = await api.post("/chat/start", payload);
