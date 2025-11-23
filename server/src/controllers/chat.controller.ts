@@ -9,13 +9,31 @@ import User from "../models/User";
 
 export const startSession = async (req: AuthRequest, res: Response) => {
   try {
-    const { scenario, role, difficultyLevel } = req.body;
+    const { scenario, role, difficultyLevel, roleDescription, targetLanguage } = req.body;
     const userId = req.user._id;
-    // System Prompt: Botun karakterini tanımlıyoruz
+    const languageToSpeak = targetLanguage || req.user.preferences.targetLanguage || 'English';
+    const botJob = roleDescription || role; 
+    const systemMessageContent = `
+      You are playing a roleplay game.
+      
+      YOUR CHARACTER:
+      - Name: ${role}
+      - Job/Role: ${botJob}
+      - Context: ${scenario}
+      
+      THE USER:
+      - Learning Level: ${difficultyLevel}
+      - Target Language: ${languageToSpeak}
+      
+      RULES:
+      1. You must ONLY speak in ${languageToSpeak}. Never speak another language unless the scenario specifically asks for translation.
+      2. Act exactly like a real ${botJob}. Do not be an AI assistant. Be the character.
+      3. Keep your responses concise (1-3 sentences) suitable for a chat app.
+      4. Adjust your vocabulary complexity to match the user's level (${difficultyLevel}).
+    `;
     const systemMessage = {
       role: "system",
-      content: `You are a ${role} in a ${scenario}. The user is learning English at ${difficultyLevel} level. 
-        Roleplay with them. Be immersive. Don't correct grammar yet. Keep responses short (1-3 sentences).`,
+      content: systemMessageContent,
     };
 
     const newSession = await Session.create({
