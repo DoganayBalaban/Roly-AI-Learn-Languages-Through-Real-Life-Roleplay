@@ -30,4 +30,5 @@ export const COLORS = {
   modalBg: "#1c2e24",
   gold: "#FFD700", // Premium Altın Rengi
   goldLight: "rgba(255, 215, 0, 0.15)",
+  activeBg: "rgba(43, 238, 121, 0.2)", // Aktif gün arka planı
 };
