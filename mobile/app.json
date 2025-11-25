@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "RolyAI",
+    "slug": "rolyai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,20 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.doganay.rolyai",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.618439721328-9namoain2tk94d7qvnlte7k8rovk9ois" 
+            ]
+          }
+        ]
+      }
+
     },
     "android": {
       "package": "com.doganay.rolyai",
@@ -36,7 +49,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "502d4b93-0689-4c74-b930-5ed34f07da95"
+        "projectId": "da083d46-8d69-4b28-9e66-da9de3923a05"
       }
     }
   }

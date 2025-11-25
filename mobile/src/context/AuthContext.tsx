@@ -48,12 +48,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  GoogleSignin.configure({
-    webClientId: process.env!.GOOGLE_CLIENT_ID!,
-  });
 
   useEffect(() => {
-    checkLoginStatus();
+    const initAuth = async () => {
+      // 1. Google Ayarları
+      GoogleSignin.configure({
+        // Backend için Web Client ID (Google Cloud'dan aldığın)
+        webClientId:
+          "618439721328-l9o03a085hhiej167m327kkveif6tccn.apps.googleusercontent.com",
+
+        // iOS Simülatörü için Native Client ID (Plist dosyasından aldığın)
+        iosClientId:
+          "618439721328-9namoain2tk94d7qvnlte7k8rovk9ois.apps.googleusercontent.com",
+      });
+
+      // 2. Mevcut oturumu kontrol et
+      await checkLoginStatus();
+    };
+
+    initAuth();
   }, []);
 
   const checkLoginStatus = async () => {
