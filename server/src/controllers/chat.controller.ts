@@ -6,7 +6,18 @@ import {
   generateFeedbackAnalysis,
 } from "../services/OpenAIService";
 import User from "../models/User";
+const isSameDay = (d1: Date, d2: Date) => {
+  return d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+};
 
+// Yardımcı Fonksiyon: İki tarih ardışık mı? (d1 = d2'den 1 gün sonra mı?)
+const isConsecutiveDay = (d1: Date, d2: Date) => {
+  const oneDay = 24 * 60 * 60 * 1000;
+  const diff = d1.setHours(0,0,0,0) - d2.setHours(0,0,0,0);
+  return diff === oneDay;
+};
 export const startSession = async (req: AuthRequest, res: Response) => {
   try {
     const { scenario, role, difficultyLevel, roleDescription, targetLanguage } = req.body;
@@ -103,13 +114,35 @@ export const endSession = async (req: AuthRequest, res: Response) => {
         .json({ message: "Failed to parse feedback from AI" });
     }
     const xpEarned = feedback.score || 0
+    const user = await User.findById(userId);
+    const today = new Date();
+    let newStreak = user?.stats.streak || 0;
+    let lastDate = user?.stats.lastActivityDate ? new Date(user.stats.lastActivityDate) : null
+    if (lastDate) {
+      if (isSameDay(today, lastDate)) {
+        
+      } else if (isConsecutiveDay(today, lastDate)) {
+        // Dün yapmış, seriyi artır
+        newStreak += 1;
+      } else {
+        // Seri bozulmuş, baştan başla
+        newStreak = 1;
+      }
+    } else {
+      // İlk defa yapıyor
+      newStreak = 1;
+    }
     await User.findByIdAndUpdate(userId, {
       $inc: { 
         'stats.xp': xpEarned,           // XP'yi artır
         'stats.totalSessions': 1        // Toplam oturumu 1 artır
       },
       $set: {
-        'stats.lastActivityDate': new Date() // Son aktiviteyi güncelle (Streak için)
+        'stats.streak': newStreak,
+        'stats.lastActivityDate': today // Son aktiviteyi güncelle (Streak için)
+      },
+      $push: {
+        'stats.activityHistory': today
       }
     });
     session.feedback = feedback;

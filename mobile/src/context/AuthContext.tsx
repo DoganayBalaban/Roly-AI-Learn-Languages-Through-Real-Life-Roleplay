@@ -20,6 +20,10 @@ interface User {
     nativeLanguage: string;
     difficultyLevel?: string;
   };
+  stats: {
+    streak: number;
+    activityHistory: string[];
+  };
   // İleride stats vs. eklenirse buraya yazılır
 }
 
@@ -61,6 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             targetLanguage: "English",
             nativeLanguage: "Turkish",
             difficultyLevel: "A1",
+          },
+          stats: {
+            streak: 0,
+            activityHistory: [],
           },
         });
         await fetchUserProfile();

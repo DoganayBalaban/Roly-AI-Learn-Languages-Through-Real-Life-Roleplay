@@ -14,6 +14,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
+import StreakHeader from "../components/StreakHeader";
 
 const COLORS = {
   primary: "#2bee79",
@@ -49,9 +50,8 @@ export default function HomeScreen() {
   };
 
   // İlerleme yüzdesini mesaj sayısına göre uyduralım (Örn: 20 mesaj %100 olsun)
-  const calculateProgress = (msgCount: number) => {
-    const percent = Math.min(msgCount * 5, 100); // Her mesaj %5
-    return percent + "%";
+  const calculateProgress = (msgCount: number): number => {
+    return Math.min(msgCount * 5, 100); // Her mesaj %5 artış
   };
 
   const recommendedScenarios = [
@@ -110,6 +110,10 @@ export default function HomeScreen() {
             />
           </View>
         </View>
+        <StreakHeader
+          streakCount={user?.stats?.streak || 0}
+          activityHistory={user?.stats?.activityHistory || []}
+        />
 
         {/* --- DİNAMİK SON PRATİK KARTI --- */}
         {loading ? (

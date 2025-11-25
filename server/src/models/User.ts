@@ -25,6 +25,7 @@ export interface IUser extends Document {
     streak: number;
     totalSessions: number;
     lastActivityDate?: Date; // <--- YENİ: Seriyi (Streak) hesaplamak için şart
+    activityHistory: Date[];
   };
   savedWords: ISavedWord[]; // <--- GÜNCELLENDİ: Sadece string değil, obje tutacak
   createdAt: Date;
@@ -51,7 +52,8 @@ const userSchema = new Schema({
     xp: { type: Number, default: 0 },
     streak: { type: Number, default: 0 },
     totalSessions: { type: Number, default: 0 },
-    lastActivityDate: { type: Date, default: null }
+    lastActivityDate: { type: Date, default: null },
+    activityHistory: [{ type: Date }]
   },
 
   savedWords: [{
