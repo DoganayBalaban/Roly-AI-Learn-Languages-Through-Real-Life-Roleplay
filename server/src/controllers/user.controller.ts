@@ -5,7 +5,9 @@ import jwt from "jsonwebtoken";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import dotenv from "dotenv";
 import Session from "../models/Session";
-import crypto from "crypto"
+import { OAuth2Client } from 'google-auth-library';
+import appleSignin from 'apple-signin-auth';
+import crypto from 'crypto';
 import {loginSchema, registerSchema} from "../utils/validation"
 
 dotenv.config();
@@ -17,6 +19,8 @@ const calculateLevel = (xp: number) => {
   if (xp < 5000) return { current: 'B2', next: 'C1', progress: ((xp - 3000) / 2000) * 100 };
   return { current: 'C1', next: 'C2', progress: 100 };
 };
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
 
 export const getUserStats = async (req: AuthRequest, res: Response) => {
   try {
@@ -278,6 +282,56 @@ export const upgradeToPremium = async (req: AuthRequest, res: Response) => {
     
   } catch (error) {
     console.error("Error in upgradeToPremium controller:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+export const googleLogin = async (req: Request, res: Response) => {
+  try {
+    const {idToken} = req.body
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID!
+    })
+    const payload = ticket.getPayload()
+    if (!payload || !payload.email) {
+      return res.status(400).json({message: "Invalid token"})
+    }
+    const {email, name, sub} = payload
+    let user = await User.findOne({email})
+    if (!user) {
+      const randomPassword = crypto.randomBytes(16).toString('hex')
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(randomPassword, salt)
+      user = await User.create({
+        email,
+        password: hashedPassword,
+        fullName: name || "Google User",
+        preferences:{
+          targetLanguage:"English",
+          nativeLanguage:"Turkish"
+        }
+      })
+    }
+    const token = jwt.sign({
+      id:user._id
+    }, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    })
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        fullName: user.fullName,
+        preferences: user.preferences,
+        isPremium: user.isPremium
+      },
+    })
+    
+    
+  } catch (error) {
+    console.error("Error in googleLogin controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }

@@ -16,6 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import { MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 // Tasarımdaki Renk Paleti
 import { COLORS } from "../constants/color";
@@ -35,7 +36,7 @@ export default function LoginScreen() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [fullName, setFullName] = useState("");
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
-  const { login, register } = useAuth();
+  const { login, register, googleLogin } = useAuth();
 
   const navigation = useNavigation<any>();
 
@@ -62,6 +63,14 @@ export default function LoginScreen() {
       Alert.alert("Hata", errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+  const handleGoogleLogin = async () => {
+    try {
+      await googleLogin();
+    } catch (error) {
+      console.log("Google login failed:", error);
+      Alert.alert("Hata", "Google girişi başarısız!");
     }
   };
 
@@ -236,7 +245,10 @@ export default function LoginScreen() {
 
             {/* --- SOCIAL BUTTONS --- */}
             <View style={styles.socialContainer}>
-              <TouchableOpacity style={styles.googleButton}>
+              <TouchableOpacity
+                onPress={handleGoogleLogin}
+                style={styles.googleButton}
+              >
                 <AntDesign
                   name="google"
                   size={20}
@@ -244,16 +256,6 @@ export default function LoginScreen() {
                   style={{ marginRight: 10 }}
                 />
                 <Text style={styles.socialTextGoogle}>Google ile Devam Et</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.appleButton}>
-                <AntDesign
-                  name="apple"
-                  size={20}
-                  color="black"
-                  style={{ marginRight: 10 }}
-                />
-                <Text style={styles.socialTextApple}>Apple ile Devam Et</Text>
               </TouchableOpacity>
             </View>
 

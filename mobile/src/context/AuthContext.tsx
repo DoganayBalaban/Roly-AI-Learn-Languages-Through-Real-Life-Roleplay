@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import * as SecureStore from "expo-secure-store";
 import api from "../services/api";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 // 1. User Interface'ini Güncelledik (Preferences ekledik)
 interface User {
@@ -37,6 +38,7 @@ interface AuthContextType {
     email: string,
     password: string
   ) => Promise<void>;
+  googleLogin: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: User) => void; // <-- YENİ EKLENEN FONKSİYON TANIMI
 }
@@ -46,6 +48,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  GoogleSignin.configure({
+    webClientId: process.env!.GOOGLE_CLIENT_ID!,
+  });
 
   useEffect(() => {
     checkLoginStatus();
@@ -127,6 +132,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error.response?.data || { message: "Registration failed" };
     }
   };
+  const googleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+      if (idToken) {
+        const res = await api.post("/auth/google", {
+          idToken,
+        });
+        const { user, token } = res.data;
+        await SecureStore.setItemAsync("user_token", token);
+        setUser(user);
+      }
+    } catch (error) {
+      console.log("Google login failed:", error);
+      throw error;
+    }
+  };
 
   const logout = async () => {
     await SecureStore.deleteItemAsync("user_token");
@@ -140,8 +163,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         login,
         register,
+        googleLogin,
         logout,
-        updateUser, // <-- 4. Dışarıya Açtık
+        updateUser,
       }}
     >
       {children}
