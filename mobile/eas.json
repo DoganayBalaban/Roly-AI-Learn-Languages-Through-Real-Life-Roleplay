@@ -3,7 +3,7 @@
     "version": ">= 16.10.1",
     "appVersionSource": "remote"
   },
-  "build": {
+"build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal"
@@ -11,8 +11,15 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {
-      "autoIncrement": true
+    "production": {},
+    
+    
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
     }
   },
   "submit": {
