@@ -1,15 +1,26 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
-// ⚠️ URL AYARI (Çok Önemli)
-// Android Emulator kullanıyorsan: 'http://10.0.2.2:3000/api'
-// iOS Simulator kullanıyorsan: 'http://localhost:3000/api'
-// Gerçek Cihaz (Wi-Fi) kullanıyorsan: Bilgisayarının IP'si örn: 'http://192.168.1.35:3000/api'
+// ⚠️ URL AYARI (Env + Expo Constants)
+// .env (veya EAS env) içine:
+// EXPO_PUBLIC_API_BASE_URL_ANDROID=
+// EXPO_PUBLIC_API_BASE_URL_IOS=
+// şeklinde değerleri tanımlayabilirsin.
+
+const extra = Constants.expoConfig?.extra as any;
 
 const getBaseUrl = () => {
-  if (Platform.OS === "android") return "http://10.0.2.2:3000/api";
-  return "http://localhost:3000/api";
+  if (Platform.OS === "android") {
+    return (
+      extra?.apiBaseUrlAndroid || "http://10.0.2.2:3000/api" // Fallback (local emulator)
+    );
+  }
+
+  return (
+    extra?.apiBaseUrlIOS || "http://localhost:3000/api" // Fallback (iOS simulator)
+  );
 };
 
 const api = axios.create({
