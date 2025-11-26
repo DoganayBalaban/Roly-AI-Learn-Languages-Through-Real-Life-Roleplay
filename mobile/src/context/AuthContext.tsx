@@ -8,6 +8,7 @@ import React, {
 import * as SecureStore from "expo-secure-store";
 import api from "../services/api";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import Constants from "expo-constants";
 
 // 1. User Interface'ini Güncelledik (Preferences ekledik)
 interface User {
@@ -25,10 +26,8 @@ interface User {
     streak: number;
     activityHistory: string[];
   };
-  // İleride stats vs. eklenirse buraya yazılır
 }
 
-// 2. Context Tipine updateUser'ı Ekledik
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -51,15 +50,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      // 1. Google Ayarları
+      const extra = Constants.expoConfig?.extra as any;
+
+      // 1. Google Ayarları (Env + Expo Constants)
       GoogleSignin.configure({
         // Backend için Web Client ID (Google Cloud'dan aldığın)
-        webClientId:
-          "618439721328-l9o03a085hhiej167m327kkveif6tccn.apps.googleusercontent.com",
+        webClientId: extra?.googleWebClientId,
 
-        // iOS Simülatörü için Native Client ID (Plist dosyasından aldığın)
-        iosClientId:
-          "618439721328-9namoain2tk94d7qvnlte7k8rovk9ois.apps.googleusercontent.com",
+        // iOS Simülatörü / cihaz için Native Client ID
+        iosClientId: extra?.googleIosClientId,
       });
 
       // 2. Mevcut oturumu kontrol et
@@ -97,7 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-
   const fetchUserProfile = async () => {
     try {
       const res = await api.get("/auth/me");
@@ -107,12 +105,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout();
     }
   };
-
-  // 3. updateUser Fonksiyonunu Yazdık
   const updateUser = (userData: User) => {
     setUser(userData);
   };
-
   const login = async (email: string, password: string) => {
     try {
       const res = await api.post("/auth/login", {
@@ -126,7 +121,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error.response?.data || { message: "Login failed" };
     }
   };
-
   const register = async (
     fullName: string,
     email: string,
@@ -163,7 +157,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   };
-
   const logout = async () => {
     await SecureStore.deleteItemAsync("user_token");
     setUser(null);
