@@ -1,26 +1,23 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
-import Constants from "expo-constants";
 
-// ⚠️ URL AYARI (Env + Expo Constants)
-// .env (veya EAS env) içine:
-// EXPO_PUBLIC_API_BASE_URL_ANDROID=
-// EXPO_PUBLIC_API_BASE_URL_IOS=
-// şeklinde değerleri tanımlayabilirsin.
-
-const extra = Constants.expoConfig?.extra as any;
+// React Native'in global değişkeni __DEV__:
+// Geliştirme modundaysan (bilgisayara bağlıysan) 'true' döner.
+// Build aldığında (APK/AAB) 'false' döner.
 
 const getBaseUrl = () => {
-  if (Platform.OS === "android") {
-    return (
-      extra?.apiBaseUrlAndroid || "http://10.0.2.2:3000/api" // Fallback (local emulator)
-    );
+  // 1. Eğer uygulama MAĞAZA/BUILD modundaysa (Production) -> Render Linki
+  if (!__DEV__) {
+    return process.env.EXPO_PUBLIC_API_URL_PROD;
   }
 
-  return (
-    extra?.apiBaseUrlIOS || "http://localhost:3000/api" // Fallback (iOS simulator)
-  );
+  // 2. Eğer geliştirme modundaysan (Localhost) -> Cihaza göre seçim
+  if (Platform.OS === "android") {
+    return process.env.EXPO_PUBLIC_API_URL_ANDROID;
+  }
+
+  return process.env.EXPO_PUBLIC_API_URL_IOS;
 };
 
 const api = axios.create({
@@ -30,7 +27,7 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Token varsa otomatik ekle
+// Request Interceptor (Aynen kalsın)
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("user_token");
