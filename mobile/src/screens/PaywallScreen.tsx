@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,53 +14,131 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+
+// REVENUECAT IMPORTLARI
+import Purchases, { PurchasesPackage } from "react-native-purchases";
+
+// Renkler
 import { COLORS } from "../constants/color";
-// Özellik Listesi
+
 const FEATURES = [
   { icon: "lock-open", text: "Tüm Senaryoların Kilidini Aç" },
   { icon: "record-voice-over", text: "Sınırsız Sesli Konuşma" },
   { icon: "analytics", text: "Detaylı Gramer & Hata Analizi" },
-  { icon: "save", text: "Sınırsız Kelime Kaydetme" },
   { icon: "block", text: "Reklamsız Deneyim" },
 ];
 
 export default function PaywallScreen() {
   const navigation = useNavigation();
-  const { updateUser } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">(
-    "yearly"
-  );
-  const [loading, setLoading] = useState(false);
+  const { user, updateUser } = useAuth();
 
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] =
+    useState<PurchasesPackage | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true); // Sayfa ilk açılış yüklemesi
+
+  // 1. Ürünleri RevenueCat'ten Çek
+  useEffect(() => {
+    const getOfferings = async () => {
+      try {
+        const offerings = await Purchases.getOfferings();
+        // 'current' offering RevenueCat panelinde varsayılan olandır
+        if (
+          offerings.current !== null &&
+          offerings.current.availablePackages.length !== 0
+        ) {
+          setPackages(offerings.current.availablePackages);
+          // Varsayılan olarak Yıllık paketi seç (Genelde en karlı olandır)
+          // Package ID'si içinde 'year' veya 'annual' geçeni bulmaya çalışabilirsin, şimdilik ilkini seçelim
+          setSelectedPackage(offerings.current.availablePackages[0]);
+        }
+      } catch (e: any) {
+        Alert.alert("Hata", "Ürünler yüklenemedi: " + e.message);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    getOfferings();
+  }, []);
+
+  // 2. Satın Alma Fonksiyonu
   const handleSubscribe = async () => {
+    if (!selectedPackage) return;
     setLoading(true);
     try {
-      // 1. Ödeme Simülasyonu (2 saniye bekle)
-      setTimeout(async () => {
-        // 2. Backend'e haber ver
-        const response = await api.post("/auth/upgrade");
+      // Satın alımı başlat
+      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
 
-        // 3. Kullanıcıyı güncelle (Context)
-        updateUser(response.data.user);
-
-        Alert.alert(
-          "Tebrikler! 🌟",
-          "Premium üyeliğin başarıyla aktif edildi.",
-          [{ text: "Tamam", onPress: () => navigation.goBack() }]
-        );
-        setLoading(false);
-      }, 2000);
-    } catch (error) {
-      Alert.alert("Hata", "Ödeme işlemi başarısız oldu.");
+      // 'premium_access' bizim RevenueCat'te oluşturacağımız yetki (Entitlement) adı
+      if (
+        typeof customerInfo.entitlements.active["premium_access"] !==
+        "undefined"
+      ) {
+        await activatePremium();
+      }
+    } catch (e: any) {
+      if (!e.userCancelled) {
+        Alert.alert("Hata", e.message);
+      }
+    } finally {
       setLoading(false);
     }
   };
+
+  // 3. Restore (Eski Satın Alımı Geri Yükle)
+  const handleRestore = async () => {
+    setLoading(true);
+    try {
+      const restore = await Purchases.restorePurchases();
+      if (restore.entitlements.active["premium_access"]) {
+        await activatePremium();
+        Alert.alert("Başarılı", "Üyeliğin geri yüklendi! 🎉");
+      } else {
+        Alert.alert("Bilgi", "Aktif bir üyelik bulunamadı.");
+      }
+    } catch (e: any) {
+      Alert.alert("Hata", "Geri yükleme başarısız.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Yardımcı Fonksiyon: Backend'i ve Uygulamayı Güncelle
+  const activatePremium = async () => {
+    try {
+      // Backend'e haber ver
+      await api.post("/auth/upgrade");
+      // Uygulamayı güncelle (Anlık kilitleri açar)
+      if (user) {
+        updateUser({ ...user, isPremium: true });
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.log("Backend sync error");
+    }
+  };
+
+  if (pageLoading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={COLORS.gold} />
+        <Text style={{ color: "white", marginTop: 10 }}>
+          Mağazaya bağlanılıyor...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* KAPAT BUTONU */}
       <TouchableOpacity
         style={styles.closeButton}
         onPress={() => navigation.goBack()}
@@ -72,89 +150,73 @@ export default function PaywallScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* BAŞLIK & İKON */}
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <MaterialCommunityIcons
-              name="crown"
-              size={64}
-              color={COLORS.gold}
-            />
-          </View>
+          <MaterialCommunityIcons name="crown" size={64} color={COLORS.gold} />
           <Text style={styles.title}>
             RolyAI <Text style={{ color: COLORS.gold }}>Premium</Text>
           </Text>
-          <Text style={styles.subtitle}>Dil öğrenme sınırlarını kaldır.</Text>
+          <Text style={styles.subtitle}>Sınırları kaldır, akıcı konuş.</Text>
         </View>
 
-        {/* ÖZELLİKLER LİSTESİ */}
         <View style={styles.featuresContainer}>
           {FEATURES.map((item, index) => (
             <View key={index} style={styles.featureRow}>
-              <View style={styles.checkIcon}>
-                <MaterialIcons
-                  name="check"
-                  size={16}
-                  color={COLORS.background}
-                />
-              </View>
+              <MaterialIcons
+                name="check"
+                size={20}
+                color={COLORS.gold}
+                style={{ marginRight: 10 }}
+              />
               <Text style={styles.featureText}>{item.text}</Text>
             </View>
           ))}
         </View>
 
-        {/* PLAN SEÇİMİ */}
+        {/* DİNAMİK PAKET LİSTESİ */}
         <View style={styles.plansContainer}>
-          {/* Yıllık Plan */}
-          <TouchableOpacity
-            style={[
-              styles.planCard,
-              selectedPlan === "yearly" && styles.selectedPlan,
-            ]}
-            onPress={() => setSelectedPlan("yearly")}
-            activeOpacity={0.9}
-          >
-            <View style={styles.planHeader}>
-              <Text style={styles.planTitle}>Yıllık</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>%40 İndirim</Text>
-              </View>
-            </View>
-            <Text style={styles.planPrice}>
-              ₺499.99 <Text style={styles.planPeriod}>/ yıl</Text>
+          {packages.length > 0 ? (
+            packages.map((pkg) => {
+              const isSelected = selectedPackage?.identifier === pkg.identifier;
+              const isYearly =
+                pkg.product.title.toLowerCase().includes("year") ||
+                pkg.product.title.toLowerCase().includes("yıllık");
+
+              return (
+                <TouchableOpacity
+                  key={pkg.identifier}
+                  style={[styles.planCard, isSelected && styles.selectedPlan]}
+                  onPress={() => setSelectedPackage(pkg)}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.planHeader}>
+                    {/* Ürün başlığını temizle (Google bazen "App Name (App)" ekler) */}
+                    <Text style={styles.planTitle}>
+                      {isYearly ? "Yıllık Plan" : "Aylık Plan"}
+                    </Text>
+                    {isYearly && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>EN POPÜLER</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.planPrice}>
+                    {pkg.product.priceString}
+                  </Text>
+                  <Text style={styles.planSub}>{pkg.product.description}</Text>
+
+                  <View style={styles.radioCircle}>
+                    {isSelected && <View style={styles.radioFill} />}
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <Text style={{ color: "white", textAlign: "center" }}>
+              Ürün bulunamadı. (Mağaza yapılandırmasını kontrol edin)
             </Text>
-            <Text style={styles.planSub}>Ayda sadece ₺41.66</Text>
-
-            {/* Seçili İkonu */}
-            <View style={styles.radioCircle}>
-              {selectedPlan === "yearly" && <View style={styles.radioFill} />}
-            </View>
-          </TouchableOpacity>
-
-          {/* Aylık Plan */}
-          <TouchableOpacity
-            style={[
-              styles.planCard,
-              selectedPlan === "monthly" && styles.selectedPlan,
-            ]}
-            onPress={() => setSelectedPlan("monthly")}
-            activeOpacity={0.9}
-          >
-            <View style={styles.planHeader}>
-              <Text style={styles.planTitle}>Aylık</Text>
-            </View>
-            <Text style={styles.planPrice}>
-              ₺69.99 <Text style={styles.planPeriod}>/ ay</Text>
-            </Text>
-            <Text style={styles.planSub}>İstediğin zaman iptal et</Text>
-
-            <View style={styles.radioCircle}>
-              {selectedPlan === "monthly" && <View style={styles.radioFill} />}
-            </View>
-          </TouchableOpacity>
+          )}
         </View>
 
-        {/* ABONE OL BUTONU */}
         <TouchableOpacity
           style={styles.subscribeButton}
           onPress={handleSubscribe}
@@ -163,20 +225,24 @@ export default function PaywallScreen() {
           {loading ? (
             <ActivityIndicator color={COLORS.background} />
           ) : (
-            <Text style={styles.subscribeText}>Hemen Başla</Text>
+            <Text style={styles.subscribeText}>Abone Ol</Text>
           )}
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
+          <Text style={styles.restoreText}>Satın Alımları Geri Yükle</Text>
+        </TouchableOpacity>
+
         <Text style={styles.footerText}>
-          Ödeme, onay işleminden sonra iTunes/Play Store hesabınızdan tahsil
-          edilecektir. Abonelik, dönem bitiminden 24 saat önce iptal edilmezse
-          otomatik yenilenir.
+          Abonelik otomatik olarak yenilenir. Mağaza ayarlarından iptal
+          edilebilir.
         </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// Stillerin çoğu aynı kalabilir, sadece ufak düzenlemeler:
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: 24, paddingBottom: 40 },
@@ -187,36 +253,17 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 8,
   },
-
-  // Header
-  header: { alignItems: "center", marginTop: 40, marginBottom: 30 },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: COLORS.goldLight,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
+  header: { alignItems: "center", marginTop: 20, marginBottom: 30 },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: COLORS.textWhite,
+    marginTop: 10,
   },
-  title: { fontSize: 32, fontWeight: "bold", color: COLORS.textWhite },
-  subtitle: { fontSize: 16, color: COLORS.textGrey, marginTop: 8 },
-
-  // Features
+  subtitle: { fontSize: 16, color: COLORS.textGrey, marginTop: 5 },
   featuresContainer: { marginBottom: 30 },
   featureRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  checkIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.gold,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
   featureText: { fontSize: 16, color: COLORS.textWhite, fontWeight: "500" },
-
-  // Plans
   plansContainer: { gap: 12, marginBottom: 30 },
   planCard: {
     backgroundColor: COLORS.cardBg,
@@ -224,11 +271,10 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     borderRadius: 16,
     padding: 20,
-    position: "relative",
   },
   selectedPlan: {
     borderColor: COLORS.gold,
-    backgroundColor: COLORS.goldLight,
+    backgroundColor: "rgba(255, 215, 0, 0.05)",
   },
   planHeader: {
     flexDirection: "row",
@@ -242,16 +288,14 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  badgeText: { fontSize: 12, fontWeight: "bold", color: COLORS.background },
+  badgeText: { fontSize: 10, fontWeight: "bold", color: COLORS.background },
   planPrice: { fontSize: 24, fontWeight: "bold", color: COLORS.textWhite },
-  planPeriod: { fontSize: 16, color: COLORS.textGrey, fontWeight: "normal" },
   planSub: { fontSize: 14, color: COLORS.textGrey, marginTop: 4 },
-
   radioCircle: {
     position: "absolute",
     right: 20,
     top: "50%",
-    marginTop: -10, // Ortalamak için
+    marginTop: -10,
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -266,25 +310,24 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: COLORS.gold,
   },
-
-  // Button
   subscribeButton: {
     backgroundColor: COLORS.gold,
     paddingVertical: 18,
     borderRadius: 30,
     alignItems: "center",
-    marginBottom: 20,
-    shadowColor: COLORS.gold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+    marginBottom: 15,
   },
   subscribeText: { fontSize: 18, fontWeight: "bold", color: COLORS.background },
+  restoreButton: { alignSelf: "center", marginBottom: 20, padding: 10 },
+  restoreText: {
+    color: COLORS.textGrey,
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
   footerText: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#52525b",
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 16,
   },
 });
