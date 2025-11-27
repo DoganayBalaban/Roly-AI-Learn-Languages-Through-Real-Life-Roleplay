@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Linking,
   SafeAreaView,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
@@ -39,7 +40,15 @@ export default function LoginScreen() {
   const { login, register, googleLogin } = useAuth();
 
   const navigation = useNavigation<any>();
-
+  const handleOpenLink = async (url: string) => {
+    // Cihazın tarayıcısında açar
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Hata", "Link açılamadı");
+    }
+  };
   const handleSubmit = async () => {
     // 1. Frontend Validation Kontrolü
     const error = validateCredentials(email, password, fullName, isRegistering);
@@ -203,13 +212,30 @@ export default function LoginScreen() {
                         : "radio-button-unchecked"
                     }
                     size={28}
-                    color={isTermsAccepted ? COLORS.primary : "#334155"} // Seçiliyse Yeşil, değilse Koyu Gri
+                    color={isTermsAccepted ? COLORS.primary : "#334155"}
                   />
                 </TouchableOpacity>
+
                 <Text style={styles.termsText}>
-                  <Text style={styles.linkText}>Kullanım Koşulları</Text> ve{" "}
-                  <Text style={styles.linkText}>Gizlilik Politikası</Text>'nı
-                  kabul ediyorum.
+                  {/* Tıklanabilir Metinler */}
+                  <Text
+                    style={styles.linkText}
+                    onPress={() =>
+                      handleOpenLink(process.env.EXPO_PUBLIC_PRIVACY_URL)
+                    }
+                  >
+                    Kullanım Koşulları
+                  </Text>{" "}
+                  ve{" "}
+                  <Text
+                    style={styles.linkText}
+                    onPress={() =>
+                      handleOpenLink(process.env.EXPO_PUBLIC_TERMS_URL)
+                    }
+                  >
+                    Gizlilik Politikası
+                  </Text>
+                  'nı kabul ediyorum.
                 </Text>
               </View>
             ) : (

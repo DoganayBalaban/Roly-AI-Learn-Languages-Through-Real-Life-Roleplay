@@ -5,19 +5,23 @@ import jwt from "jsonwebtoken";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import dotenv from "dotenv";
 import Session from "../models/Session";
-import { OAuth2Client } from 'google-auth-library';
-import appleSignin from 'apple-signin-auth';
-import crypto from 'crypto';
-import {loginSchema, registerSchema} from "../utils/validation"
+import { OAuth2Client } from "google-auth-library";
+import appleSignin from "apple-signin-auth";
+import crypto from "crypto";
+import { loginSchema, registerSchema } from "../utils/validation";
 
 dotenv.config();
 const calculateLevel = (xp: number) => {
   // Basit bir seviye sistemi:
-  if (xp < 500) return { current: 'A1', next: 'A2', progress: (xp / 500) * 100 };
-  if (xp < 1500) return { current: 'A2', next: 'B1', progress: ((xp - 500) / 1000) * 100 };
-  if (xp < 3000) return { current: 'B1', next: 'B2', progress: ((xp - 1500) / 1500) * 100 };
-  if (xp < 5000) return { current: 'B2', next: 'C1', progress: ((xp - 3000) / 2000) * 100 };
-  return { current: 'C1', next: 'C2', progress: 100 };
+  if (xp < 500)
+    return { current: "A1", next: "A2", progress: (xp / 500) * 100 };
+  if (xp < 1500)
+    return { current: "A2", next: "B1", progress: ((xp - 500) / 1000) * 100 };
+  if (xp < 3000)
+    return { current: "B1", next: "B2", progress: ((xp - 1500) / 1500) * 100 };
+  if (xp < 5000)
+    return { current: "B2", next: "C1", progress: ((xp - 3000) / 2000) * 100 };
+  return { current: "C1", next: "C2", progress: 100 };
 };
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
@@ -33,20 +37,23 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
     const levelInfo = calculateLevel(xp);
 
     // 2. Toplam Oturum Sayısı (Tamamlanmış)
-    const totalSessions = await Session.countDocuments({ userId, status: 'completed' });
+    const totalSessions = await Session.countDocuments({
+      userId,
+      status: "completed",
+    });
 
     // 3. Tahmini Pratik Süresi (Her mesajı ortalama 1 dakika sayalım)
     // Tüm sessionlardaki mesaj sayısını topla
-    const allSessions = await Session.find({ userId, status: 'completed' });
+    const allSessions = await Session.find({ userId, status: "completed" });
     let totalMessages = 0;
-    allSessions.forEach(sess => totalMessages += sess.messages.length);
+    allSessions.forEach((sess) => (totalMessages += sess.messages.length));
     const totalHours = Math.floor(totalMessages / 60); // Dakikayı saate çevir (Örn: 120 msg = 2 saat)
 
     // 4. Son 3 Geri Bildirim
-    const recentReports = await Session.find({ userId, status: 'completed' })
+    const recentReports = await Session.find({ userId, status: "completed" })
       .sort({ updatedAt: -1 })
       .limit(3)
-      .select('scenario updatedAt difficultyLevel'); // Sadece lazım olan alanlar
+      .select("scenario updatedAt difficultyLevel"); // Sadece lazım olan alanlar
 
     // 5. Haftalık Aktivite Grafiği (Son 7 Gün)
     const sevenDaysAgo = new Date();
@@ -54,27 +61,31 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
 
     const weeklySessions = await Session.find({
       userId,
-      updatedAt: { $gte: sevenDaysAgo }
+      updatedAt: { $gte: sevenDaysAgo },
     });
 
     // Grafiği oluştur (Pzt: 2, Sal: 0 vs.)
-    const days = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
-    const chartData = Array(7).fill(0).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i)); // Bugünden geriye doğru
-      const dayName = days[d.getDay()];
-      
-      // O günkü session sayısını bul
-      const count = weeklySessions.filter(s => {
-        const sDate = new Date(s.updatedAt);
-        return sDate.getDate() === d.getDate() && sDate.getMonth() === d.getMonth();
-      }).length;
+    const days = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+    const chartData = Array(7)
+      .fill(0)
+      .map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i)); // Bugünden geriye doğru
+        const dayName = days[d.getDay()];
 
-      // Grafik yüzdesi (Max 5 session %100 olsun)
-      const percent = Math.min((count / 5) * 100, 100); 
-      
-      return { day: dayName, percent, count };
-    });
+        // O günkü session sayısını bul
+        const count = weeklySessions.filter((s) => {
+          const sDate = new Date(s.updatedAt);
+          return (
+            sDate.getDate() === d.getDate() && sDate.getMonth() === d.getMonth()
+          );
+        }).length;
+
+        // Grafik yüzdesi (Max 5 session %100 olsun)
+        const percent = Math.min((count / 5) * 100, 100);
+
+        return { day: dayName, percent, count };
+      });
 
     // Response Hazırla
     res.json({
@@ -83,12 +94,11 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
         completedSessions: totalSessions,
         learnedWords: totalWords,
         practiceHours: totalHours || 1, // Hiç yoksa 1 göster motive olsun
-        weeklyCount: weeklySessions.length
+        weeklyCount: weeklySessions.length,
       },
       chart: chartData,
-      recentReports
+      recentReports,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Stats failed" });
@@ -96,7 +106,7 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
 };
 export const register = async (req: Request, res: Response) => {
   try {
-    const validation = registerSchema.safeParse(req.body)
+    const validation = registerSchema.safeParse(req.body);
     if (!validation.success) {
       return res.status(400).json({ message: validation.error.message });
     }
@@ -138,21 +148,21 @@ export const register = async (req: Request, res: Response) => {
 };
 export const login = async (req: Request, res: Response) => {
   try {
-    const validation = loginSchema.safeParse(req.body)
+    const validation = loginSchema.safeParse(req.body);
     if (!validation.success) {
       return res.status(400).json({ message: validation.error.message });
     }
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "Lütfen tüm alanları doldurun" });
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ message: "E-posta veya şifre yanlış" });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "E-posta veya şifre yanlış" });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
       expiresIn: "7d",
@@ -186,7 +196,7 @@ export const updatePreferences = async (req: AuthRequest, res: Response) => {
     const userId = req.user._id;
 
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -198,9 +208,8 @@ export const updatePreferences = async (req: AuthRequest, res: Response) => {
     await user.save();
 
     // Güncel kullanıcıyı dön (Password hariç)
-    const updatedUser = await User.findById(userId).select('-password');
+    const updatedUser = await User.findById(userId).select("-password");
     res.json(updatedUser);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Update failed" });
@@ -208,115 +217,119 @@ export const updatePreferences = async (req: AuthRequest, res: Response) => {
 };
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
-    const {email} = req.body
-    const user = await User.findOne({email})
+    const { email } = req.body;
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({message: "User not found"})
+      return res.status(404).json({ message: "User not found" });
     }
-    const resetToken = crypto.randomInt(100000, 999999).toString()
-    user.resetPasswordToken = resetToken
-    user.resetPasswordExpires = new Date(Date.now() + 3600000)
-    await user.save()
+    const resetToken = crypto.randomInt(100000, 999999).toString();
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000);
+    await user.save();
 
-    console.log(`[RESET CODE] ${email} için kod: ${resetToken}`)
+    console.log(`[RESET CODE] ${email} için kod: ${resetToken}`);
 
-    res.json({ 
+    res.json({
       message: "Doğrulama kodu e-posta adresinize gönderildi.",
-      debugCode: resetToken 
+      debugCode: resetToken,
     });
-    
-    
   } catch (error) {
     console.error("Error in forgotPassword controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 export const verifyResetCode = async (req: Request, res: Response) => {
   try {
-    const {email, code}= req.body
+    const { email, code } = req.body;
     const user = await User.findOne({
       email,
       resetPasswordToken: code,
-      resetPasswordExpires: { $gt: Date.now() }
-    })
+      resetPasswordExpires: { $gt: Date.now() },
+    });
     if (!user) {
-      return res.status(400).json({message: "Invalid or expired code"})
+      return res.status(400).json({ message: "Invalid or expired code" });
     }
-    res.json({message: "Code verified successfully"})
+    res.json({ message: "Code verified successfully" });
   } catch (error) {
     console.error("Error in verifyResetCode controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 export const resetPassword = async (req: Request, res: Response) => {
   try {
-    const {email, code, newPassword} = req.body
+    const { email, code, newPassword } = req.body;
     const user = await User.findOne({
       email,
       resetPasswordToken: code,
-      resetPasswordExpires: { $gt: Date.now() }
-    })
+      resetPasswordExpires: { $gt: Date.now() },
+    });
     if (!user) {
-      return res.status(400).json({message: "Invalid or expired code"})
+      return res.status(400).json({ message: "Invalid or expired code" });
     }
-    const salt = await bcrypt.genSalt(10)
-    user.password = await bcrypt.hash(newPassword, salt)
-    user.resetPasswordToken = undefined
-    user.resetPasswordExpires = undefined
-    await user.save()
-    res.json({message: "Password reset successfully"})
-    
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+    res.json({ message: "Password reset successfully" });
   } catch (error) {
     console.error("Error in resetPassword controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 export const upgradeToPremium = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user._id
-    const updatedUser = await User.findByIdAndUpdate(userId, {isPremium: true}, {new: true}).select('-password')
-    res.json({ 
-      message: "Tebrikler! Premium üyelik aktif.", 
-      user: updatedUser 
+    const userId = req.user._id;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isPremium: true },
+      { new: true }
+    ).select("-password");
+    res.json({
+      message: "Tebrikler! Premium üyelik aktif.",
+      user: updatedUser,
     });
-    
   } catch (error) {
     console.error("Error in upgradeToPremium controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 export const googleLogin = async (req: Request, res: Response) => {
   try {
-    const {idToken} = req.body
+    const { idToken } = req.body;
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID!
-    })
-    const payload = ticket.getPayload()
+      audience: process.env.GOOGLE_CLIENT_ID!,
+    });
+    const payload = ticket.getPayload();
     if (!payload || !payload.email) {
-      return res.status(400).json({message: "Invalid token"})
+      return res.status(400).json({ message: "Invalid token" });
     }
-    const {email, name, sub} = payload
-    let user = await User.findOne({email})
+    const { email, name, sub } = payload;
+    let user = await User.findOne({ email });
     if (!user) {
-      const randomPassword = crypto.randomBytes(16).toString('hex')
-      const salt = await bcrypt.genSalt(10)
-      const hashedPassword = await bcrypt.hash(randomPassword, salt)
+      const randomPassword = crypto.randomBytes(16).toString("hex");
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
       user = await User.create({
         email,
         password: hashedPassword,
         fullName: name || "Google User",
-        preferences:{
-          targetLanguage:"English",
-          nativeLanguage:"Turkish"
-        }
-      })
+        preferences: {
+          targetLanguage: "English",
+          nativeLanguage: "Turkish",
+        },
+      });
     }
-    const token = jwt.sign({
-      id:user._id
-    }, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
-    })
+    const token = jwt.sign(
+      {
+        id: user._id,
+      },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "7d",
+      }
+    );
     res.json({
       message: "Login successful",
       token,
@@ -325,13 +338,24 @@ export const googleLogin = async (req: Request, res: Response) => {
         email: user.email,
         fullName: user.fullName,
         preferences: user.preferences,
-        isPremium: user.isPremium
+        isPremium: user.isPremium,
       },
-    })
-    
-    
+    });
   } catch (error) {
     console.error("Error in googleLogin controller:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-}
+};
+export const deleteAccount = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user._id;
+    await Session.deleteMany({ userId });
+    await User.findByIdAndDelete(userId);
+    res.json({
+      message: "Hesap Başarıyla Silindi.",
+    });
+  } catch (error) {
+    console.error("Error in deleteAccount controller: ", error);
+    res.status(500).json({ message: "Hesap silinemedi." });
+  }
+};

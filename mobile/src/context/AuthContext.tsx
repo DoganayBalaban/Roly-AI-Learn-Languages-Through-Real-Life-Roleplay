@@ -38,7 +38,8 @@ interface AuthContextType {
   ) => Promise<void>;
   googleLogin: () => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: User) => void; // <-- YENİ EKLENEN FONKSİYON TANIMI
+  deleteUser: () => Promise<void>;
+  updateUser: (userData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -158,6 +159,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await SecureStore.deleteItemAsync("user_token");
     setUser(null);
   };
+  const deleteUser = async () => {
+    try {
+      await api.delete("/auth/delete");
+      await logout();
+    } catch (error: any) {
+      throw error.response?.data || { message: "Delete account failed" };
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -169,6 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         googleLogin,
         logout,
         updateUser,
+        deleteUser,
       }}
     >
       {children}
