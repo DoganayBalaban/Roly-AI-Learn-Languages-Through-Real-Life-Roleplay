@@ -9,6 +9,11 @@ import {
   StatusBar,
   ActivityIndicator,
 } from "react-native";
+import {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+} from "react-native-google-mobile-ads";
 import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -214,6 +219,15 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        {!user?.isPremium && (
+          <View style={{ alignItems: "center", marginVertical: 10 }}>
+            <BannerAd
+              unitId={TestIds.BANNER}
+              size={BannerAdSize.BANNER}
+              requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

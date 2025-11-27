@@ -14,12 +14,24 @@ import {
   Animated,
   Alert,
 } from "react-native";
+import {
+  InterstitialAd,
+  AdEventType,
+  TestIds,
+} from "react-native-google-mobile-ads";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import api from "../services/api";
 import { COLORS } from "../constants/color";
+import { useAuth } from "../context/AuthContext";
 
+const adUnitId = __DEV__
+  ? TestIds.INTERSTITIAL
+  : process.env.EXPO_PUBLIC_GOOGLE_ADS_ID;
+const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
+  requestNonPersonalizedAdsOnly: true,
+});
 interface Message {
   id: string;
   text: string;
@@ -72,11 +84,30 @@ export default function ChatScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { sessionId, title } = route.params;
-
+  const { user } = useAuth();
+  const [loaded, setLoaded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
+
+  // GOOGLE ADS
+  useEffect(() => {
+    // Eğer kullanıcı Premium ise reklam yükleme, boşuna internet harcama
+    if (user?.isPremium) return;
+
+    const unsubscribe = interstitial.addAdEventListener(
+      AdEventType.LOADED,
+      () => {
+        setLoaded(true);
+      }
+    );
+    // Reklamı yüklemeye başla
+    interstitial.load();
+
+    // Temizlik (Unmount)
+    return unsubscribe;
+  }, [user]);
 
   // DİNAMİK KİŞİLİK STATE'LERİ
   const [botRole, setBotRole] = useState<string>("Asistan"); // Varsayılan
@@ -159,10 +190,36 @@ export default function ChatScreen() {
       setLoadingFeedback(true);
       const response = await api.post("/chat/end", { sessionId });
 
-      navigation.navigate("Feedback", {
+      // Feedback verisini hazırlayalım
+      const feedbackData = {
         feedback: response.data,
         xpEarned: response.data.xpEarned || 0,
-      });
+      };
+
+      // --- NAVİGASYON MANTIĞI ---
+      const navigateToFeedback = () => {
+        navigation.navigate("Feedback", feedbackData);
+      };
+
+      // MANTIK: Premium mu? -> Direkt Git
+      // Değil mi? -> Reklam yüklü mü? -> Göster -> Kapanınca Git
+      // Reklam yüklenmedi mi? -> Direkt Git
+
+      if (!user?.isPremium && loaded) {
+        // Reklam kapandığında çalışacak event
+        const closeListener = interstitial.addAdEventListener(
+          AdEventType.CLOSED,
+          () => {
+            navigateToFeedback();
+            closeListener(); // Listener'ı temizle
+          }
+        );
+
+        interstitial.show(); // Reklamı patlat 📺
+      } else {
+        // Premium üye veya reklam yüklenemedi, bekletme direkt git
+        navigateToFeedback();
+      }
     } catch (error) {
       Alert.alert("Hata", "Rapor alınamadı.");
     } finally {
