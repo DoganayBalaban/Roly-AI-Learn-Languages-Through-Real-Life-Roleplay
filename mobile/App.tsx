@@ -22,8 +22,8 @@ import PaywallScreen from "./src/screens/PaywallScreen";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const API_KEYS = {
-  android: process.env.REVENUECAT_PUBLIC_API_KEY_ANDROID, // RevenueCat Public API Key (Android)
-  ios: process.env.REVENUECAT_PUBLIC_API_KEY_IOS, // RevenueCat Public API Key (iOS)
+  android: process.env.EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_ANDROID, // RevenueCat Public API Key (Android)
+  ios: process.env.EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_IOS, // RevenueCat Public API Key (iOS)
 };
 // --- TAB BAR YAPISI ---
 function MainTabs() {
