@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12, // Logo ile Yazı arasındaki boşluk
+    marginRight: 24, // Logo ile Yazı arasındaki boşluk
     // marginBottom sildik, çünkü yan yana geldiler
   },
   logo: {

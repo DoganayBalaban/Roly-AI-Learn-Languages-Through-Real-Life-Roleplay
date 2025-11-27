@@ -44,7 +44,7 @@ export async function scheduleDailyReminder() {
   const trigger: Notifications.DailyTriggerInput = {
     type: Notifications.SchedulableTriggerInputTypes.DAILY,
     hour: 16, // Saat 20:00
-    minute: 0,
+    minute: 14,
   };
 
   // Yeni bildirimi kur
