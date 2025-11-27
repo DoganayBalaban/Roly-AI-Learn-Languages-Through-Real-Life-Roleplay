@@ -8,7 +8,6 @@ import React, {
 import * as SecureStore from "expo-secure-store";
 import api from "../services/api";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import Constants from "expo-constants";
 
 // 1. User Interface'ini Güncelledik (Preferences ekledik)
 interface User {
@@ -50,15 +49,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const extra = Constants.expoConfig?.extra as any;
-
       // 1. Google Ayarları (Env + Expo Constants)
       GoogleSignin.configure({
         // Backend için Web Client ID (Google Cloud'dan aldığın)
-        webClientId: extra?.googleWebClientId,
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
 
         // iOS Simülatörü / cihaz için Native Client ID
-        iosClientId: extra?.googleIosClientId,
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
       });
 
       // 2. Mevcut oturumu kontrol et
