@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "./src/constants/color";
-
+import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
 // Ekranlar
@@ -136,6 +136,19 @@ const AppNavigator = () => {
     </NavigationContainer>
   );
 };
+
+// ... diğer importlar
+
+// BU KODU APP COMPONENT'İN DIŞINA EKLE
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true, // Uygulama açıkken de bildirim görünsün
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function App() {
   return (

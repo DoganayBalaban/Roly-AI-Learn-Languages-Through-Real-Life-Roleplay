@@ -12,6 +12,7 @@ import {
   Modal,
   FlatList,
 } from "react-native";
+import { scheduleDailyReminder, cancelReminders } from "../utils/notifications";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
@@ -43,7 +44,7 @@ export default function ProfileScreen() {
   >(null);
   const [loading, setLoading] = useState(false);
 
-  const [isDailyReminderEnabled, setIsDailyReminderEnabled] = useState(true);
+  const [isDailyReminderEnabled, setIsDailyReminderEnabled] = useState(false);
   const [isWeeklySummaryEnabled, setIsWeeklySummaryEnabled] = useState(false);
 
   // --- DİL DEĞİŞTİRME FONKSİYONU ---
@@ -78,6 +79,18 @@ export default function ProfileScreen() {
       { text: "İptal", style: "cancel" },
       { text: "Çıkış Yap", style: "destructive", onPress: () => logout() },
     ]);
+  };
+
+  const toggleDailyReminder = async (value: boolean) => {
+    setIsDailyReminderEnabled(value);
+
+    if (value) {
+      // Açıldıysa kur
+      await scheduleDailyReminder();
+    } else {
+      // Kapandıysa iptal et
+      await cancelReminders();
+    }
   };
 
   // --- YARDIMCI BİLEŞENLER ---
@@ -201,7 +214,7 @@ export default function ProfileScreen() {
               icon="notifications"
               title="Günlük Hatırlatıcı"
               value={isDailyReminderEnabled}
-              onValueChange={setIsDailyReminderEnabled}
+              onValueChange={toggleDailyReminder}
             />
             <View style={styles.divider} />
             <SwitchRow
