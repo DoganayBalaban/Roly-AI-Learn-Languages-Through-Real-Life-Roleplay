@@ -35,7 +35,7 @@ const LANGUAGES = [
 
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, deleteUser } = useAuth();
 
   // Modal State'leri
   const [modalVisible, setModalVisible] = useState(false);
@@ -91,6 +91,30 @@ export default function ProfileScreen() {
       // Kapandıysa iptal et
       await cancelReminders();
     }
+  };
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteUser();
+      Alert.alert("Bilgi", "Hesabın başarıyla silindi.");
+    } catch (error: any) {
+      const message = error?.message || "Hesap silinemedi. Lütfen tekrar dene.";
+      Alert.alert("Hata", message);
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      "Hesabı Sil",
+      "Bu işlem geri alınamaz. Hesabını ve tüm ilerlemeni silmek istediğinden emin misin?",
+      [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Evet, sil",
+          style: "destructive",
+          onPress: handleDeleteAccount,
+        },
+      ]
+    );
   };
 
   // --- YARDIMCI BİLEŞENLER ---
@@ -249,9 +273,7 @@ export default function ProfileScreen() {
               title="Hesabı Sil"
               isDestructive={true}
               showChevron={false}
-              onPress={() =>
-                Alert.alert("Hesap Sil", "Bu işlem geri alınamaz.")
-              }
+              onPress={confirmDeleteAccount}
             />
           </View>
         </View>
