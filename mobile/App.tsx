@@ -1,5 +1,5 @@
-import React from "react";
-import { View, ActivityIndicator } from "react-native";
+import React, { useEffect } from "react";
+import { View, ActivityIndicator, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -7,7 +7,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "./src/constants/color";
 import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
-
+import Purchases, { LOG_LEVEL } from "react-native-purchases";
 // Ekranlar
 import LoginScreen from "./src/screens/LoginScreen";
 import HomeScreen from "./src/screens/HomeScreen";
@@ -21,7 +21,10 @@ import PaywallScreen from "./src/screens/PaywallScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
+const API_KEYS = {
+  android: process.env.REVENUECAT_PUBLIC_API_KEY_ANDROID, // RevenueCat Public API Key (Android)
+  ios: process.env.REVENUECAT_PUBLIC_API_KEY_IOS, // RevenueCat Public API Key (iOS)
+};
 // --- TAB BAR YAPISI ---
 function MainTabs() {
   return (
@@ -151,6 +154,20 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  useEffect(() => {
+    const initPurchases = async () => {
+      // Hata ayıklama için logları açalım
+      Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+
+      if (Platform.OS === "android") {
+        await Purchases.configure({ apiKey: API_KEYS.android });
+      } else if (Platform.OS === "ios") {
+        await Purchases.configure({ apiKey: API_KEYS.ios });
+      }
+    };
+
+    initPurchases();
+  }, []);
   return (
     <AuthProvider>
       <AppNavigator />
