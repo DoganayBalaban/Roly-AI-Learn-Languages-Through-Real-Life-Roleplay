@@ -25,9 +25,6 @@
             ]
           }
         ]
-      },
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-3940256099942544~1458002511"
       }
     },
     "android": {
@@ -39,9 +36,11 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
-      }
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET",
+        "com.android.vending.BILLING" 
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,8 +49,13 @@
       "expo-router",
       "expo-secure-store",
       "@react-native-google-signin/google-signin",
-      "react-native-google-mobile-ads",
-      "react-native-purchases"
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ]
     ],
     "extra": {
       "router": {},
