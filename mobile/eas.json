@@ -1,9 +1,9 @@
 {
   "cli": {
     "version": ">= 16.10.1",
-    "appVersionSource": "remote"
+    "appVersionSource": "local" 
   },
-"build": {
+  "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal"
@@ -12,14 +12,10 @@
       "distribution": "internal"
     },
     "production": {
-      
-      "appVersionSource": "local", 
       "android": {
         "buildType": "app-bundle"
       }
     },
-    
-    
     "development-simulator": {
       "developmentClient": true,
       "distribution": "internal",
