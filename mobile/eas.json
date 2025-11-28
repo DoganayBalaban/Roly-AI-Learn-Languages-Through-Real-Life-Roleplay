@@ -11,7 +11,13 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {},
+    "production": {
+      
+      "appVersionSource": "local", 
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
     
     
     "development-simulator": {
