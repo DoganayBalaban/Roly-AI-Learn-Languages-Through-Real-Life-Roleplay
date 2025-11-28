@@ -28,7 +28,7 @@ import { useAuth } from "../context/AuthContext";
 
 const adUnitId = __DEV__
   ? TestIds.INTERSTITIAL
-  : process.env.EXPO_PUBLIC_GOOGLE_ADS_ID;
+  : process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID;
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,
 });

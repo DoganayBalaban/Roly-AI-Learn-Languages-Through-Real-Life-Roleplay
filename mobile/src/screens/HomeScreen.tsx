@@ -20,7 +20,9 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
 import StreakHeader from "../components/StreakHeader";
-
+const bannerAdUnitId = __DEV__
+  ? TestIds.BANNER
+  : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID;
 const COLORS = {
   primary: "#2bee79",
   backgroundDark: "#102217",
@@ -222,7 +224,7 @@ export default function HomeScreen() {
         {!user?.isPremium && (
           <View style={{ alignItems: "center", marginVertical: 10 }}>
             <BannerAd
-              unitId={TestIds.BANNER}
+              unitId={bannerAdUnitId} // <-- ARTIK DİNAMİK
               size={BannerAdSize.BANNER}
               requestOptions={{ requestNonPersonalizedAdsOnly: true }}
             />
