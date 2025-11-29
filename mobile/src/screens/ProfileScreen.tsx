@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import * as SecureStore from "expo-secure-store";
 import { COLORS } from "../constants/color";
 
 // Seçilebilir Diller Listesi
@@ -45,9 +46,21 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
 
   const [isDailyReminderEnabled, setIsDailyReminderEnabled] = useState(false);
-  const [isWeeklySummaryEnabled, setIsWeeklySummaryEnabled] = useState(false);
 
-  // --- DİL DEĞİŞTİRME FONKSİYONU ---
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const savedReminder = await SecureStore.getItemAsync("daily_reminder");
+        if (savedReminder === "true") {
+          setIsDailyReminderEnabled(true);
+        }
+      } catch (error) {
+        console.log("Ayarlar yüklenemedi.");
+      }
+    };
+    loadSettings();
+  }, []);
+
   const handleLanguageSelect = async (langCode: string) => {
     setLoading(true);
     try {
@@ -84,12 +97,16 @@ export default function ProfileScreen() {
   const toggleDailyReminder = async (value: boolean) => {
     setIsDailyReminderEnabled(value);
 
-    if (value) {
-      // Açıldıysa kur
-      await scheduleDailyReminder();
-    } else {
-      // Kapandıysa iptal et
-      await cancelReminders();
+    try {
+      await SecureStore.setItemAsync("daily_reminder", value.toString());
+      if (value) {
+        await scheduleDailyReminder();
+      } else {
+        await cancelReminders();
+      }
+    } catch (error) {
+      console.log("Ayar kaydedilemedi.");
+      setIsDailyReminderEnabled(!value);
     }
   };
   const handleDeleteAccount = async () => {
@@ -239,13 +256,6 @@ export default function ProfileScreen() {
               title="Günlük Hatırlatıcı"
               value={isDailyReminderEnabled}
               onValueChange={toggleDailyReminder}
-            />
-            <View style={styles.divider} />
-            <SwitchRow
-              icon="event"
-              title="Haftalık Özet"
-              value={isWeeklySummaryEnabled}
-              onValueChange={setIsWeeklySummaryEnabled}
             />
           </View>
         </View>
