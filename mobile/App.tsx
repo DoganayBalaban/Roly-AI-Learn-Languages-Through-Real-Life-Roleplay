@@ -8,6 +8,7 @@ import { COLORS } from "./src/constants/color";
 import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Ekranlar
 import LoginScreen from "./src/screens/LoginScreen";
 import HomeScreen from "./src/screens/HomeScreen";
@@ -27,6 +28,7 @@ const API_KEYS = {
 };
 // --- TAB BAR YAPISI ---
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -35,8 +37,8 @@ function MainTabs() {
           backgroundColor: COLORS.tabBarBg,
           borderTopWidth: 0, // Çizgiyi kaldır
           elevation: 0,
-          height: 80, // Biraz daha yüksek
-          paddingBottom: 20,
+          height: 60 + (insets.bottom > 0 ? insets.bottom : 10),
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
           paddingTop: 10,
         },
         tabBarLabelStyle: {

@@ -298,7 +298,7 @@ export default function ChatScreen() {
       {/* --- FOOTER --- */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
         <View style={styles.footer}>
           <TouchableOpacity onPress={endSession} style={styles.endButton}>
