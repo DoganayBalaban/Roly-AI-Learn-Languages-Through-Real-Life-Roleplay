@@ -11,6 +11,7 @@ import {
   upgradeToPremium,
   googleLogin,
   deleteAccount,
+  updateAvatar,
 } from "../controllers/user.controller";
 import { protect } from "../middlewares/auth.middleware";
 
@@ -27,4 +28,5 @@ router.post("/reset-password", resetPassword);
 router.post("/upgrade", protect, upgradeToPremium);
 router.post("/google", googleLogin);
 router.delete("/delete", protect, deleteAccount);
+router.put("/avatar", protect, updateAvatar);
 export default router;

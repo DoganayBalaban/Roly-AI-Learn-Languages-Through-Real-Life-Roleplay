@@ -20,7 +20,7 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import * as SecureStore from "expo-secure-store";
 import { COLORS } from "../constants/color";
-
+import { AVATAR_SEEDS } from "../constants/avatar";
 // Seçilebilir Diller Listesi
 const LANGUAGES = [
   { code: "Turkish", label: "Türkçe", flag: "🇹🇷" },
@@ -40,13 +40,17 @@ export default function ProfileScreen() {
 
   // Modal State'leri
   const [modalVisible, setModalVisible] = useState(false);
+  const [avatarModalVisible, setAvatarModalVisible] = useState(false);
+  const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [activeSelection, setActiveSelection] = useState<
     "target" | "native" | null
   >(null);
   const [loading, setLoading] = useState(false);
 
   const [isDailyReminderEnabled, setIsDailyReminderEnabled] = useState(false);
-
+  const currentAvatarUrl = `https://api.dicebear.com/9.x/avataaars/png?seed=${
+    user?.avatarId || user?.fullName || "User"
+  }`;
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -61,6 +65,18 @@ export default function ProfileScreen() {
     loadSettings();
   }, []);
 
+  const handleSelectAvatar = async (seed: string) => {
+    setLoadingAvatar(true);
+    try {
+      const res = await api.put("/auth/avatar", { avatarId: seed });
+      updateUser(res.data);
+      setAvatarModalVisible(false);
+    } catch (error) {
+      Alert.alert("Hata", "Avatar güncellenemedi.");
+    } finally {
+      setLoadingAvatar(false);
+    }
+  };
   const handleLanguageSelect = async (langCode: string) => {
     setLoading(true);
     try {
@@ -203,13 +219,15 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <Image
               source={{
-                uri:
-                  "https://api.dicebear.com/9.x/avataaars/png?seed=" +
-                  (user?.fullName || "Elif"),
+                uri: currentAvatarUrl,
               }}
+              contentFit="cover"
               style={styles.avatar}
             />
-            <TouchableOpacity style={styles.editButton}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => setAvatarModalVisible(true)}
+            >
               <MaterialIcons name="edit" size={16} color="#000" />
             </TouchableOpacity>
           </View>
@@ -288,6 +306,53 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
+      {/* --- AVATAR SEÇİM MODALI --- */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={avatarModalVisible}
+        onRequestClose={() => setAvatarModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { height: "60%" }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Bir Avatar Seç</Text>
+              <TouchableOpacity onPress={() => setAvatarModalVisible(false)}>
+                <MaterialIcons name="close" size={24} color={COLORS.textGrey} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={AVATAR_SEEDS}
+              keyExtractor={(item) => item}
+              numColumns={4} // Yan yana 4 tane
+              contentContainerStyle={{ paddingBottom: 20 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.avatarOption,
+                    user?.avatarId === item && styles.avatarSelected, // Seçili olanı belli et
+                  ]}
+                  onPress={() => handleSelectAvatar(item)}
+                  disabled={loadingAvatar}
+                >
+                  <Image
+                    source={{
+                      uri: `https://api.dicebear.com/9.x/avataaars/png?seed=${item}`,
+                    }}
+                    style={styles.avatarSmall}
+                  />
+                  {user?.avatarId === item && (
+                    <View style={styles.checkBadge}>
+                      <MaterialIcons name="check" size={12} color="white" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
 
       {/* --- DİL SEÇİM MODALI --- */}
       <Modal
@@ -443,4 +508,35 @@ const styles = StyleSheet.create({
   },
   langFlag: { fontSize: 24, marginRight: 16 },
   langLabel: { fontSize: 16, color: COLORS.textWhite, flex: 1 },
+  avatarOption: {
+    flex: 1,
+    alignItems: "center",
+    margin: 8,
+    padding: 4,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  avatarSelected: {
+    borderColor: COLORS.primary, // Seçili olanın etrafı yeşil olsun
+    backgroundColor: "rgba(43, 238, 121, 0.1)",
+  },
+  avatarSmall: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  checkBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.modalBg,
+  },
 });

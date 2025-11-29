@@ -16,6 +16,7 @@ interface User {
   email: string;
   fullName: string;
   isPremium: boolean;
+  avatarId?: string;
   preferences: {
     targetLanguage: string;
     nativeLanguage: string;

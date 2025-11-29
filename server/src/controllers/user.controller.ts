@@ -359,3 +359,18 @@ export const deleteAccount = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Hesap silinemedi." });
   }
 };
+export const updateAvatar = async (req: AuthRequest, res: Response) => {
+  try {
+    const { avatarId } = req.body;
+    const userId = req.user._id;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { avatarId: avatarId },
+      { new: true }
+    ).select("-password");
+    res.json(user);
+  } catch (error) {
+    console.error("Error in deleteAccount controller: ", error);
+    res.status(500).json({ message: "Hesap silinemedi." });
+  }
+};
