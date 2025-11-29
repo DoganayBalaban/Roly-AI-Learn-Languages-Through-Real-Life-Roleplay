@@ -14,6 +14,8 @@ import {
   Animated,
   Alert,
 } from "react-native";
+import { Audio } from "expo-av";
+import { uploadAudio } from "../services/api";
 import {
   InterstitialAd,
   AdEventType,
@@ -90,6 +92,79 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== "granted") {
+        Alert.alert("İzin Gerekli", "Mikrafon izni vermelisiniz.");
+        return;
+      }
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+      const recordingOptions: any = {
+        android: {
+          extension: ".m4a",
+          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+          audioEncoder: Audio.AndroidAudioEncoder.AAC,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+        },
+        ios: {
+          extension: ".m4a",
+          outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+          audioQuality: Audio.IOSAudioQuality.MAX,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        web: {
+          mimeType: "audio/webm",
+          bitsPerSecond: 128000,
+        },
+      };
+      const { recording } = await Audio.Recording.createAsync(recordingOptions);
+      setRecording(recording);
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Kayıt Başlatılamadı", error);
+    }
+  };
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    setIsRecording(false);
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI();
+    setRecording(null); // Sıfırla
+
+    if (uri) {
+      setLoading(true); // Yükleniyor göster
+      try {
+        // 1. Backend'e gönder ve Text al
+        const response = await uploadAudio(uri);
+
+        // 2. Gelen metni direkt gönder (input'a yazmadan)
+        if (response.text && response.text.trim()) {
+          await sendMessage(response.text);
+        } else {
+          Alert.alert("Uyarı", "Ses kaydından metin çıkarılamadı.");
+        }
+      } catch (error) {
+        Alert.alert("Hata", "Ses yazıya çevrilemedi.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   // GOOGLE ADS
   useEffect(() => {
@@ -150,11 +225,16 @@ export default function ChatScreen() {
     loadSessionData();
   }, [sessionId]);
 
-  const sendMessage = async () => {
-    if (!inputText.trim()) return;
+  const sendMessage = async (messageText?: string) => {
+    // Eğer parametre verilmişse onu kullan, yoksa input'tan al
+    const userMsgText = messageText || inputText;
 
-    const userMsgText = inputText;
-    setInputText("");
+    if (!userMsgText.trim()) return;
+
+    // Input'u temizle (sadece input'tan gönderildiyse)
+    if (!messageText) {
+      setInputText("");
+    }
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -321,7 +401,10 @@ export default function ChatScreen() {
                 placeholderTextColor="#6b7280"
                 multiline
               />
-              <TouchableOpacity onPress={sendMessage} style={styles.sendIcon}>
+              <TouchableOpacity
+                onPress={() => sendMessage()}
+                style={styles.sendIcon}
+              >
                 <MaterialCommunityIcons
                   name="send"
                   size={22}
@@ -329,9 +412,16 @@ export default function ChatScreen() {
                 />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.micButton}>
+            <TouchableOpacity
+              style={[
+                styles.micButton,
+                isRecording && { backgroundColor: "#ef4444" },
+              ]}
+              onPressIn={startRecording}
+              onPressOut={stopRecording}
+            >
               <MaterialIcons
-                name="mic"
+                name={isRecording ? "stop" : "mic"}
                 size={28}
                 color={COLORS.backgroundDark}
               />
