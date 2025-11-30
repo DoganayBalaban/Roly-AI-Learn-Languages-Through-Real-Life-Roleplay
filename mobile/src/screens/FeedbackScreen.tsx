@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../constants/color";
 import { saveWord } from "../services/api"; // <-- EKLENDI
 
@@ -60,6 +61,7 @@ const GrammarItem = ({ original, correction, explanation }: any) => {
 };
 
 export default function FeedbackScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
@@ -89,9 +91,9 @@ export default function FeedbackScreen() {
       // State güncelle (İkonu dolu yapmak için)
       setSavedLocalWords((prev) => [...prev, word]);
 
-      Alert.alert("Kaydedildi", `"${word}" kelime defterine eklendi.`);
+      Alert.alert(t("word_saved"), t("word_saved_message", { word }));
     } catch (error) {
-      Alert.alert("Bilgi", "Bu kelime zaten kayıtlı olabilir.");
+      Alert.alert(t("info"), t("word_already_saved"));
       // Hata olsa bile UI'da kaydedilmiş gibi gösterelim ki kullanıcı tekrar basmasın
       setSavedLocalWords((prev) => [...prev, word]);
     }
@@ -109,7 +111,7 @@ export default function FeedbackScreen() {
         >
           <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Performans Raporun</Text>
+        <Text style={styles.headerTitle}>{t("feedback_title")}</Text>
         <TouchableOpacity style={styles.iconButton}>
           <MaterialIcons name="share" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
@@ -121,10 +123,8 @@ export default function FeedbackScreen() {
       >
         {/* BAŞLIK */}
         <View style={styles.headlineContainer}>
-          <Text style={styles.headline}>Harika Gidiyorsun!</Text>
-          <Text style={styles.subHeadline}>
-            İşte konuşma performansının bir özeti.
-          </Text>
+          <Text style={styles.headline}>{t("feedback_headline")}</Text>
+          <Text style={styles.subHeadline}>{t("feedback_subheadline")}</Text>
         </View>
 
         {/* SKOR KARTI */}
@@ -136,7 +136,7 @@ export default function FeedbackScreen() {
               alignItems: "center",
             }}
           >
-            <Text style={styles.cardTitle}>Genel Puan</Text>
+            <Text style={styles.cardTitle}>{t("overall_score")}</Text>
             {xpEarned > 0 && (
               <View style={styles.xpBadge}>
                 <Text style={styles.xpText}>🔥 +{xpEarned} XP</Text>
@@ -145,7 +145,9 @@ export default function FeedbackScreen() {
           </View>
 
           <View style={styles.scoreRow}>
-            <Text style={styles.cefrText}>CEFR Seviyesi ({data.cefr})</Text>
+            <Text style={styles.cefrText}>
+              {t("cefr_level", { level: data.cefr })}
+            </Text>
             <Text style={styles.scoreText}>{data.score}/100</Text>
           </View>
 
@@ -166,7 +168,7 @@ export default function FeedbackScreen() {
                 size={24}
                 color={COLORS.primary}
               />
-              <Text style={styles.cardTitle}>Gramer İncelemesi</Text>
+              <Text style={styles.cardTitle}>{t("grammar_review")}</Text>
             </View>
             <View style={styles.gap12}>
               {data.grammarMistakes.map((item: any, index: number) => (
@@ -185,7 +187,7 @@ export default function FeedbackScreen() {
                 size={24}
                 color={COLORS.primary}
               />
-              <Text style={styles.cardTitle}>Daha Akıcı Konuş</Text>
+              <Text style={styles.cardTitle}>{t("speak_more_fluently")}</Text>
             </View>
             <View style={styles.gap12}>
               {data.suggestions.map((item: string, index: number) => (
@@ -209,7 +211,7 @@ export default function FeedbackScreen() {
                 size={24}
                 color={COLORS.primary}
               />
-              <Text style={styles.cardTitle}>Kelime Hazineni Genişlet</Text>
+              <Text style={styles.cardTitle}>{t("expand_vocabulary")}</Text>
             </View>
             <View style={styles.gap12}>
               {data.vocabulary.map((word: string, index: number) => {
@@ -226,7 +228,7 @@ export default function FeedbackScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.vocabWord}>{word}</Text>
                         <Text style={styles.vocabDesc}>
-                          Bu kelimeyi öğrenmek için kaydet.
+                          {t("save_word_desc")}
                         </Text>
                       </View>
                     </View>
@@ -254,7 +256,7 @@ export default function FeedbackScreen() {
           style={styles.secondaryButton}
           onPress={() => navigation.navigate("MainTabs")}
         >
-          <Text style={styles.secondaryButtonText}>Ana Sayfaya Dön</Text>
+          <Text style={styles.secondaryButtonText}>{t("back_to_home")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

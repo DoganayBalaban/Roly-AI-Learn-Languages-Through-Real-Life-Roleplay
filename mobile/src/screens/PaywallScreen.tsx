@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
@@ -21,14 +22,10 @@ import Purchases, { PurchasesPackage } from "react-native-purchases";
 // Renkler
 import { COLORS } from "../constants/color";
 
-const FEATURES = [
-  { icon: "lock-open", text: "Tüm Senaryoların Kilidini Aç" },
-  { icon: "record-voice-over", text: "Sınırsız Sesli Konuşma" },
-  { icon: "analytics", text: "Detaylı Gramer & Hata Analizi" },
-  { icon: "block", text: "Reklamsız Deneyim" },
-];
+// FEATURES artık dinamik olacak, component içinde t() ile çeviriyoruz
 
 export default function PaywallScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
 
@@ -93,12 +90,12 @@ export default function PaywallScreen() {
       const restore = await Purchases.restorePurchases();
       if (restore.entitlements.active["premium_access"]) {
         await activatePremium();
-        Alert.alert("Başarılı", "Üyeliğin geri yüklendi! 🎉");
+        Alert.alert(t("success"), t("restore_success"));
       } else {
-        Alert.alert("Bilgi", "Aktif bir üyelik bulunamadı.");
+        Alert.alert(t("info"), t("restore_no_subscription"));
       }
     } catch (e: any) {
-      Alert.alert("Hata", "Geri yükleme başarısız.");
+      Alert.alert(t("error"), t("restore_error"));
     } finally {
       setLoading(false);
     }
@@ -129,7 +126,7 @@ export default function PaywallScreen() {
       >
         <ActivityIndicator size="large" color={COLORS.gold} />
         <Text style={{ color: "white", marginTop: 10 }}>
-          Mağazaya bağlanılıyor...
+          {t("connecting_to_store")}
         </Text>
       </View>
     );
@@ -153,13 +150,19 @@ export default function PaywallScreen() {
         <View style={styles.header}>
           <MaterialCommunityIcons name="crown" size={64} color={COLORS.gold} />
           <Text style={styles.title}>
-            RolyAI <Text style={{ color: COLORS.gold }}>Premium</Text>
+            {t("paywall_title")}{" "}
+            <Text style={{ color: COLORS.gold }}>Premium</Text>
           </Text>
-          <Text style={styles.subtitle}>Sınırları kaldır, akıcı konuş.</Text>
+          <Text style={styles.subtitle}>{t("paywall_subtitle")}</Text>
         </View>
 
         <View style={styles.featuresContainer}>
-          {FEATURES.map((item, index) => (
+          {[
+            { icon: "lock-open", text: t("feature_unlock_scenarios") },
+            { icon: "record-voice-over", text: t("feature_unlimited_voice") },
+            { icon: "analytics", text: t("feature_detailed_analysis") },
+            { icon: "block", text: t("feature_ad_free") },
+          ].map((item, index) => (
             <View key={index} style={styles.featureRow}>
               <MaterialIcons
                 name="check"
@@ -191,11 +194,13 @@ export default function PaywallScreen() {
                   <View style={styles.planHeader}>
                     {/* Ürün başlığını temizle (Google bazen "App Name (App)" ekler) */}
                     <Text style={styles.planTitle}>
-                      {isYearly ? "Yıllık Plan" : "Aylık Plan"}
+                      {isYearly ? t("yearly_plan") : t("monthly_plan")}
                     </Text>
                     {isYearly && (
                       <View style={styles.badge}>
-                        <Text style={styles.badgeText}>EN POPÜLER</Text>
+                        <Text style={styles.badgeText}>
+                          {t("most_popular")}
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -212,7 +217,7 @@ export default function PaywallScreen() {
             })
           ) : (
             <Text style={{ color: "white", textAlign: "center" }}>
-              Ürün bulunamadı. (Mağaza yapılandırmasını kontrol edin)
+              {t("no_products_found")}
             </Text>
           )}
         </View>
@@ -225,18 +230,15 @@ export default function PaywallScreen() {
           {loading ? (
             <ActivityIndicator color={COLORS.background} />
           ) : (
-            <Text style={styles.subscribeText}>Abone Ol</Text>
+            <Text style={styles.subscribeText}>{t("subscribe")}</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.restoreButton} onPress={handleRestore}>
-          <Text style={styles.restoreText}>Satın Alımları Geri Yükle</Text>
+          <Text style={styles.restoreText}>{t("restore_purchases")}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>
-          Abonelik otomatik olarak yenilenir. Mağaza ayarlarından iptal
-          edilebilir.
-        </Text>
+        <Text style={styles.footerText}>{t("subscription_footer")}</Text>
       </ScrollView>
     </SafeAreaView>
   );

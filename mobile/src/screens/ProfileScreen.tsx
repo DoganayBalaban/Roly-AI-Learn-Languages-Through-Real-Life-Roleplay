@@ -18,6 +18,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import * as SecureStore from "expo-secure-store";
 import { COLORS } from "../constants/color";
@@ -36,6 +37,7 @@ const LANGUAGES = [
 ];
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user, logout, updateUser, deleteUser } = useAuth();
   const insets = useSafeAreaInsets();
@@ -74,7 +76,7 @@ export default function ProfileScreen() {
       updateUser(res.data);
       setAvatarModalVisible(false);
     } catch (error) {
-      Alert.alert("Hata", "Avatar güncellenemedi.");
+      Alert.alert(t("error"), t("avatar_update_error"));
     } finally {
       setLoadingAvatar(false);
     }
@@ -93,7 +95,7 @@ export default function ProfileScreen() {
       updateUser(response.data);
       setModalVisible(false);
     } catch (error) {
-      Alert.alert("Hata", "Dil güncellenemedi.");
+      Alert.alert(t("error"), t("language_update_error"));
     } finally {
       setLoading(false);
     }
@@ -106,9 +108,13 @@ export default function ProfileScreen() {
 
   // Logout Mantığı
   const handleLogout = () => {
-    Alert.alert("Çıkış Yap", "Hesabından çıkış yapmak istediğine emin misin?", [
-      { text: "İptal", style: "cancel" },
-      { text: "Çıkış Yap", style: "destructive", onPress: () => logout() },
+    Alert.alert(t("logout"), t("logout_confirm"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("logout_confirm_button"),
+        style: "destructive",
+        onPress: () => logout(),
+      },
     ]);
   };
 
@@ -130,26 +136,22 @@ export default function ProfileScreen() {
   const handleDeleteAccount = async () => {
     try {
       await deleteUser();
-      Alert.alert("Bilgi", "Hesabın başarıyla silindi.");
+      Alert.alert(t("info"), t("account_deleted"));
     } catch (error: any) {
-      const message = error?.message || "Hesap silinemedi. Lütfen tekrar dene.";
-      Alert.alert("Hata", message);
+      const message = error?.message || t("account_delete_error");
+      Alert.alert(t("error"), message);
     }
   };
 
   const confirmDeleteAccount = () => {
-    Alert.alert(
-      "Hesabı Sil",
-      "Bu işlem geri alınamaz. Hesabını ve tüm ilerlemeni silmek istediğinden emin misin?",
-      [
-        { text: "İptal", style: "cancel" },
-        {
-          text: "Evet, sil",
-          style: "destructive",
-          onPress: handleDeleteAccount,
-        },
-      ]
-    );
+    Alert.alert(t("delete_account"), t("delete_account_confirm"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("delete_account_yes"),
+        style: "destructive",
+        onPress: handleDeleteAccount,
+      },
+    ]);
   };
 
   // --- YARDIMCI BİLEŞENLER ---
@@ -213,7 +215,7 @@ export default function ProfileScreen() {
         >
           <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profil ve Ayarlar</Text>
+        <Text style={styles.headerTitle}>{t("profile_settings")}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -246,12 +248,12 @@ export default function ProfileScreen() {
 
         {/* --- ÖĞRENME TERCİHLERİ --- */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>ÖĞRENME TERCİHLERİ</Text>
+          <Text style={styles.sectionHeader}>{t("learning_preferences")}</Text>
           <View style={styles.card}>
             {/* Hedef Dil Seçimi */}
             <SettingRow
               icon="translate"
-              title="Hedef Dil"
+              title={t("target_language")}
               value={
                 LANGUAGES.find(
                   (l) => l.code === user?.preferences?.targetLanguage
@@ -263,7 +265,7 @@ export default function ProfileScreen() {
 
             <SettingRow
               icon="language"
-              title="Ana Dil"
+              title={t("native_language")}
               value={
                 LANGUAGES.find(
                   (l) => l.code === user?.preferences?.nativeLanguage
@@ -274,11 +276,11 @@ export default function ProfileScreen() {
           </View>
         </View>
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>EĞİTİM ARAÇLARI</Text>
+          <Text style={styles.sectionHeader}>{t("education_tools")}</Text>
           <View style={styles.card}>
             <SettingRow
               icon="book"
-              title="Kelime Defterim"
+              title={t("my_vocabulary")}
               onPress={() => navigation.navigate("Vocabulary")}
             />
           </View>
@@ -286,11 +288,11 @@ export default function ProfileScreen() {
 
         {/* --- BİLDİRİMLER --- */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>BİLDİRİMLER</Text>
+          <Text style={styles.sectionHeader}>{t("notifications")}</Text>
           <View style={styles.card}>
             <SwitchRow
               icon="notifications"
-              title="Günlük Hatırlatıcı"
+              title={t("daily_reminder")}
               value={isDailyReminderEnabled}
               onValueChange={toggleDailyReminder}
             />
@@ -299,17 +301,17 @@ export default function ProfileScreen() {
 
         {/* --- HESAP YÖNETİMİ --- */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>HESAP YÖNETİMİ</Text>
+          <Text style={styles.sectionHeader}>{t("account_management")}</Text>
           <View style={styles.card}>
             <SettingRow
               icon="lock"
-              title="Parolayı Değiştir"
+              title={t("change_password")}
               onPress={() => {}}
             />
             <View style={styles.divider} />
             <SettingRow
               icon="logout"
-              title="Çıkış Yap"
+              title={t("logout")}
               isDestructive={true}
               showChevron={false}
               onPress={handleLogout}
@@ -317,7 +319,7 @@ export default function ProfileScreen() {
             <View style={styles.divider} />
             <SettingRow
               icon="delete-forever"
-              title="Hesabı Sil"
+              title={t("delete_account")}
               isDestructive={true}
               showChevron={false}
               onPress={confirmDeleteAccount}
@@ -335,7 +337,7 @@ export default function ProfileScreen() {
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { height: "60%" }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Bir Avatar Seç</Text>
+              <Text style={styles.modalTitle}>{t("select_avatar")}</Text>
               <TouchableOpacity onPress={() => setAvatarModalVisible(false)}>
                 <MaterialIcons name="close" size={24} color={COLORS.textGrey} />
               </TouchableOpacity>
@@ -384,7 +386,9 @@ export default function ProfileScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {activeSelection === "target" ? "Hedef Dil Seç" : "Ana Dil Seç"}
+                {activeSelection === "target"
+                  ? t("select_target_language")
+                  : t("select_native_language")}
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <MaterialIcons name="close" size={24} color={COLORS.textGrey} />

@@ -13,10 +13,12 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { COLORS } from "../constants/color";
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [step, setStep] = useState(1); // 1: Email, 2: Kod, 3: Yeni Şifre
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,8 @@ export default function ForgotPasswordScreen() {
 
   // --- ADIM 1: KOD GÖNDER ---
   const handleSendCode = async () => {
-    if (!email) return Alert.alert("Hata", "Lütfen e-posta adresinizi girin.");
+    if (!email)
+      return Alert.alert(t("error"), "Lütfen e-posta adresinizi girin.");
     setLoading(true);
     try {
       const res = await api.post("/auth/forgot-password", { email });
@@ -35,14 +38,14 @@ export default function ForgotPasswordScreen() {
       if (res.data.debugCode) {
         Alert.alert("Test Modu", `Gelen Kod: ${res.data.debugCode}`);
       } else {
-        Alert.alert(
-          "Başarılı",
-          "Doğrulama kodu e-posta adresinize gönderildi."
-        );
+        Alert.alert(t("success"), t("code_sent"));
       }
       setStep(2);
     } catch (error: any) {
-      Alert.alert("Hata", error.response?.data?.message || "İşlem başarısız.");
+      Alert.alert(
+        t("error"),
+        error.response?.data?.message || "İşlem başarısız."
+      );
     } finally {
       setLoading(false);
     }
@@ -50,13 +53,13 @@ export default function ForgotPasswordScreen() {
 
   // --- ADIM 2: KODU DOĞRULA ---
   const handleVerifyCode = async () => {
-    if (!code) return Alert.alert("Hata", "Lütfen kodu girin.");
+    if (!code) return Alert.alert(t("error"), "Lütfen kodu girin.");
     setLoading(true);
     try {
       await api.post("/auth/verify-code", { email, code });
       setStep(3);
     } catch (error: any) {
-      Alert.alert("Hata", "Kod hatalı veya süresi dolmuş.");
+      Alert.alert(t("error"), t("code_invalid"));
     } finally {
       setLoading(false);
     }
@@ -64,15 +67,15 @@ export default function ForgotPasswordScreen() {
 
   // --- ADIM 3: ŞİFREYİ SIFIRLA ---
   const handleResetPassword = async () => {
-    if (!newPassword) return Alert.alert("Hata", "Yeni şifrenizi girin.");
+    if (!newPassword) return Alert.alert(t("error"), "Yeni şifrenizi girin.");
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { email, code, newPassword });
-      Alert.alert("Başarılı", "Şifreniz güncellendi! Giriş yapabilirsiniz.", [
-        { text: "Tamam", onPress: () => navigation.goBack() },
+      Alert.alert(t("success"), t("password_updated"), [
+        { text: t("ok"), onPress: () => navigation.goBack() },
       ]);
     } catch (error: any) {
-      Alert.alert("Hata", "Şifre güncellenemedi.");
+      Alert.alert(t("error"), t("password_reset_error"));
     } finally {
       setLoading(false);
     }
@@ -96,7 +99,7 @@ export default function ForgotPasswordScreen() {
               color={COLORS.textWhite}
             />
           </TouchableOpacity>
-          <Text style={styles.title}>Şifremi Unuttum</Text>
+          <Text style={styles.title}>{t("forgot_password_title")}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -110,13 +113,10 @@ export default function ForgotPasswordScreen() {
                 color={COLORS.primary}
                 style={styles.icon}
               />
-              <Text style={styles.infoText}>
-                Hesabınıza bağlı e-posta adresini girin. Size bir doğrulama kodu
-                göndereceğiz.
-              </Text>
+              <Text style={styles.infoText}>{t("forgot_password_info")}</Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-posta</Text>
+                <Text style={styles.label}>{t("email")}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="ornek@email.com"
@@ -136,7 +136,7 @@ export default function ForgotPasswordScreen() {
                 {loading ? (
                   <ActivityIndicator color="#000" />
                 ) : (
-                  <Text style={styles.buttonText}>Kod Gönder</Text>
+                  <Text style={styles.buttonText}>{t("send_code")}</Text>
                 )}
               </TouchableOpacity>
             </>
@@ -152,11 +152,11 @@ export default function ForgotPasswordScreen() {
                 style={styles.icon}
               />
               <Text style={styles.infoText}>
-                {email} adresine gönderilen 6 haneli kodu girin.
+                {t("verification_code_info", { email })}
               </Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Doğrulama Kodu</Text>
+                <Text style={styles.label}>{t("verification_code")}</Text>
                 <TextInput
                   style={[
                     styles.input,
@@ -179,7 +179,7 @@ export default function ForgotPasswordScreen() {
                 {loading ? (
                   <ActivityIndicator color="#000" />
                 ) : (
-                  <Text style={styles.buttonText}>Doğrula</Text>
+                  <Text style={styles.buttonText}>{t("verify")}</Text>
                 )}
               </TouchableOpacity>
             </>
@@ -194,15 +194,13 @@ export default function ForgotPasswordScreen() {
                 color={COLORS.primary}
                 style={styles.icon}
               />
-              <Text style={styles.infoText}>
-                Harika! Şimdi yeni şifrenizi belirleyebilirsiniz.
-              </Text>
+              <Text style={styles.infoText}>{t("new_password_info")}</Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Yeni Şifre</Text>
+                <Text style={styles.label}>{t("new_password")}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Yeni şifreniz"
+                  placeholder={t("new_password_placeholder")}
                   placeholderTextColor={COLORS.textGrey}
                   value={newPassword}
                   onChangeText={setNewPassword}
@@ -218,7 +216,7 @@ export default function ForgotPasswordScreen() {
                 {loading ? (
                   <ActivityIndicator color="#000" />
                 ) : (
-                  <Text style={styles.buttonText}>Şifreyi Güncelle</Text>
+                  <Text style={styles.buttonText}>{t("update_password")}</Text>
                 )}
               </TouchableOpacity>
             </>
