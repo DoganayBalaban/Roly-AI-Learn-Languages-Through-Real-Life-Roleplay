@@ -264,6 +264,16 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>EĞİTİM ARAÇLARI</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon="book"
+              title="Kelime Defterim"
+              onPress={() => navigation.navigate("Vocabulary")}
+            />
+          </View>
+        </View>
 
         {/* --- BİLDİRİMLER --- */}
         <View style={styles.section}>

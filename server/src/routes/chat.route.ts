@@ -7,6 +7,7 @@ import {
   getLastSession,
   getSession,
   sendMessage,
+  speakText,
   startSession,
   transcribeAudio,
 } from "../controllers/chat.controller";
@@ -19,5 +20,6 @@ router.post("/start", protect, startSession);
 router.post("/message", protect, sendMessage);
 router.post("/end", protect, endSession);
 router.post("/transcribe", protect, upload.single("audio"), transcribeAudio);
+router.post("/speak", protect, speakText);
 
 export default router;

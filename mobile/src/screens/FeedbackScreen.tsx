@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { COLORS } from "../constants/color";
+import { saveWord } from "../services/api"; // <-- EKLENDI
 
 // --- ACCORDION COMPONENT ---
 const GrammarItem = ({ original, correction, explanation }: any) => {
@@ -61,8 +63,10 @@ export default function FeedbackScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
-  // Parametreleri al (XP eklendi)
   const { feedback, xpEarned } = route.params || { feedback: {}, xpEarned: 0 };
+
+  // --- LOCAL STATE: O an kaydedilen kelimeleri takip etmek için ---
+  const [savedLocalWords, setSavedLocalWords] = useState<string[]>([]);
 
   const data = {
     score: feedback?.score || 0,
@@ -73,11 +77,31 @@ export default function FeedbackScreen() {
     comment: feedback?.overallComment || "Pratik tamamlandı.",
   };
 
+  // --- KELİME KAYDETME FONKSİYONU ---
+  const handleSaveSuggestion = async (word: string) => {
+    // Zaten kaydettiyse tekrar işlem yapma
+    if (savedLocalWords.includes(word)) return;
+
+    try {
+      // Backend'e kaydet (Context olarak "Feedback Önerisi" gönderiyoruz)
+      await saveWord(word, "Feedback Raporu Önerisi");
+
+      // State güncelle (İkonu dolu yapmak için)
+      setSavedLocalWords((prev) => [...prev, word]);
+
+      Alert.alert("Kaydedildi", `"${word}" kelime defterine eklendi.`);
+    } catch (error) {
+      Alert.alert("Bilgi", "Bu kelime zaten kayıtlı olabilir.");
+      // Hata olsa bile UI'da kaydedilmiş gibi gösterelim ki kullanıcı tekrar basmasın
+      setSavedLocalWords((prev) => [...prev, word]);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
 
-      {/* --- HEADER --- */}
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -95,7 +119,7 @@ export default function FeedbackScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* --- BAŞLIK --- */}
+        {/* BAŞLIK */}
         <View style={styles.headlineContainer}>
           <Text style={styles.headline}>Harika Gidiyorsun!</Text>
           <Text style={styles.subHeadline}>
@@ -103,7 +127,7 @@ export default function FeedbackScreen() {
           </Text>
         </View>
 
-        {/* --- SKOR KARTI (XP BURADA GÖSTERİLİYOR) --- */}
+        {/* SKOR KARTI */}
         <View style={styles.card}>
           <View
             style={{
@@ -113,8 +137,6 @@ export default function FeedbackScreen() {
             }}
           >
             <Text style={styles.cardTitle}>Genel Puan</Text>
-
-            {/* --- YENİ: XP BADGE --- */}
             {xpEarned > 0 && (
               <View style={styles.xpBadge}>
                 <Text style={styles.xpText}>🔥 +{xpEarned} XP</Text>
@@ -135,7 +157,7 @@ export default function FeedbackScreen() {
           <Text style={styles.commentText}>{data.comment}</Text>
         </View>
 
-        {/* --- GRAMER --- */}
+        {/* GRAMER */}
         {data.grammarMistakes.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -154,7 +176,7 @@ export default function FeedbackScreen() {
           </View>
         )}
 
-        {/* --- ÖNERİLER --- */}
+        {/* ÖNERİLER */}
         {data.suggestions.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -178,7 +200,7 @@ export default function FeedbackScreen() {
           </View>
         )}
 
-        {/* --- KELİMELER --- */}
+        {/* --- KELİME ÖNERİLERİ (GÜNCELLENDİ) --- */}
         {data.vocabulary.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -190,27 +212,44 @@ export default function FeedbackScreen() {
               <Text style={styles.cardTitle}>Kelime Hazineni Genişlet</Text>
             </View>
             <View style={styles.gap12}>
-              {data.vocabulary.map((word: string, index: number) => (
-                <View key={index} style={styles.vocabRow}>
-                  <MaterialIcons
-                    name="arrow-forward"
-                    size={20}
-                    color={COLORS.primary}
-                    style={{ marginTop: 2 }}
-                  />
-                  <View>
-                    <Text style={styles.vocabWord}>{word}</Text>
-                    <Text style={styles.vocabDesc}>
-                      Bu kelimeyi cümle içinde kullanmayı dene.
-                    </Text>
+              {data.vocabulary.map((word: string, index: number) => {
+                const isSaved = savedLocalWords.includes(word);
+                return (
+                  <View key={index} style={styles.vocabRow}>
+                    <View style={styles.vocabLeft}>
+                      <MaterialIcons
+                        name="arrow-forward"
+                        size={20}
+                        color={COLORS.primary}
+                        style={{ marginTop: 2 }}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.vocabWord}>{word}</Text>
+                        <Text style={styles.vocabDesc}>
+                          Bu kelimeyi öğrenmek için kaydet.
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* KAYDET BUTONU */}
+                    <TouchableOpacity
+                      onPress={() => handleSaveSuggestion(word)}
+                      style={styles.saveIconBtn}
+                    >
+                      <MaterialIcons
+                        name={isSaved ? "bookmark" : "bookmark-border"}
+                        size={24}
+                        color={isSaved ? COLORS.primary : COLORS.textGrey}
+                      />
+                    </TouchableOpacity>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         )}
 
-        {/* --- BUTON --- */}
+        {/* BUTON */}
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={() => navigation.navigate("MainTabs")}
@@ -247,7 +286,6 @@ const styles = StyleSheet.create({
   },
   subHeadline: { fontSize: 16, color: COLORS.textGrey },
 
-  // Kart Stilleri
   card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 16,
@@ -262,9 +300,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textWhite },
 
-  // --- XP Badge Stili ---
   xpBadge: {
-    backgroundColor: "rgba(43, 238, 121, 0.2)", // Silik yeşil
+    backgroundColor: "rgba(43, 238, 121, 0.2)",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -300,7 +337,6 @@ const styles = StyleSheet.create({
   },
   commentText: { fontSize: 14, color: COLORS.textGrey },
 
-  // Accordion & Listeler
   gap12: { gap: 12 },
   accordionContainer: {
     backgroundColor: "rgba(255,255,255,0.03)",
@@ -344,9 +380,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.1)",
     marginVertical: 12,
   },
-  vocabRow: { flexDirection: "row", gap: 12 },
+
+  // Vocab Styles
+  vocabRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  vocabLeft: { flexDirection: "row", gap: 12, flex: 1 },
   vocabWord: { color: COLORS.textWhite, fontSize: 16, fontWeight: "600" },
   vocabDesc: { color: COLORS.textGrey, fontSize: 14 },
+  saveIconBtn: { padding: 8 },
 
   secondaryButton: {
     backgroundColor: "#27272a",
