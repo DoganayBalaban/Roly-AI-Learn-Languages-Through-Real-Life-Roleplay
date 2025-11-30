@@ -25,7 +25,24 @@
     "streak_fire_icon_aria": "Streak fire icon",
     "day_active_aria": "{{day}} completed",
     "day_inactive_aria": "{{day}} not completed",
-    "weekdays_short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    "weekdays_short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "progress_title": "Progress Report",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "days_ago": "{{count}} days ago",
+    "reached_level": "You've reached level {{level}}!",
+    "current_level": "Current English Level: {{level}}",
+    "level_progress": "{{progress}}%",
+    "level_remaining": "{{next}} level — {{remaining}}% to go",
+    "completed_scenarios": "Completed Scenarios",
+    "learned_words": "Learned Words",
+    "practice_time": "Practice Time (est.)",
+    "weekly_activity": "Weekly Activity",
+    "last_7_days": "Last 7 Days",
+    "active": "Active",
+    "recent_feedback": "Your Recent Feedback",
+    "no_reports": "No completed reports yet.",
+    "scenario": "Scenario"
     
   }
   

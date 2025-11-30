@@ -13,29 +13,32 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { COLORS } from "../constants/color";
 import ProgressSkeleton from "../components/skeletons/ProgressSkeleton";
 
-// Tarihi formatla (Örn: "2 gün önce")
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return "Bugün";
-  if (diffDays === 1) return "Dün";
-  return `${diffDays} gün önce`;
-};
-
 export default function ProgressScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
+
+  // Tarihi formatla (i18n kullanarak)
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return t("today");
+    if (diffDays === 1) return t("yesterday");
+    return t("days_ago", { count: diffDays });
+  };
 
   // Ekran her odaklandığında veriyi yenile
   useFocusEffect(
@@ -67,11 +70,15 @@ export default function ProgressScreen() {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.iconButton}
+          accessibilityLabel={t("back")}
         >
           <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>İlerleme Raporum</Text>
-        <TouchableOpacity style={styles.iconButton}>
+        <Text style={styles.headerTitle}>{t("progress_title")}</Text>
+        <TouchableOpacity
+          style={styles.iconButton}
+          accessibilityLabel={t("settings")}
+        >
           <MaterialIcons name="settings" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
       </View>
@@ -99,7 +106,7 @@ export default function ProgressScreen() {
             <View>
               <Text style={styles.userName}>{user?.fullName}</Text>
               <Text style={styles.userStatus}>
-                {stats?.level.current} Seviyesine Ulaştın!
+                {t("reached_level", { level: stats?.level?.current ?? "-" })}
               </Text>
             </View>
           </View>
@@ -108,83 +115,89 @@ export default function ProgressScreen() {
           <View style={styles.card}>
             <View style={styles.rowBetween}>
               <Text style={styles.cardLabel}>
-                Mevcut İngilizce Seviyen: {stats?.level.current}
+                {t("current_level", { level: stats?.level?.current ?? "-" })}
               </Text>
               <Text style={styles.cardLabel}>
-                {Math.round(stats?.level.progress)}%
+                {t("level_progress", {
+                  progress: Math.round(stats?.level?.progress ?? 0),
+                })}
               </Text>
             </View>
             <View style={styles.progressBarBg}>
               <View
                 style={[
                   styles.progressBarFill,
-                  { width: `${stats?.level.progress}%` },
+                  { width: `${stats?.level?.progress ?? 0}%` },
                 ]}
               />
             </View>
             <Text style={styles.helperText}>
-              {stats?.level.next} seviyesine %
-              {100 - Math.round(stats?.level.progress)} kaldı
+              {t("level_remaining", {
+                next: stats?.level?.next ?? "-",
+                remaining: 100 - Math.round(stats?.level?.progress ?? 0),
+              })}
             </Text>
           </View>
 
           {/* --- İSTATİSTİK GRID --- */}
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Tamamlanan Senaryolar</Text>
+              <Text style={styles.statLabel}>{t("completed_scenarios")}</Text>
               <Text style={styles.statValue}>
-                {stats?.stats.completedSessions}
+                {stats?.stats?.completedSessions ?? 0}
               </Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Öğrenilen Kelimeler</Text>
-              <Text style={styles.statValue}>{stats?.stats.learnedWords}</Text>
+              <Text style={styles.statLabel}>{t("learned_words")}</Text>
+              <Text style={styles.statValue}>
+                {stats?.stats?.learnedWords ?? 0}
+              </Text>
             </View>
             <View style={[styles.statCard, { width: "100%" }]}>
-              <Text style={styles.statLabel}>Pratik Süresi (Tahmini)</Text>
+              <Text style={styles.statLabel}>{t("practice_time")}</Text>
               <Text style={styles.statValue}>
-                {stats?.stats.practiceHours} sa
+                {stats?.stats?.practiceHours ?? 0} {t("hours") ?? "h"}
               </Text>
             </View>
           </View>
 
           {/* --- HAFTALIK AKTİVİTE GRAFİĞİ --- */}
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Haftalık Aktivite</Text>
+            <Text style={styles.cardLabel}>{t("weekly_activity")}</Text>
             <Text style={styles.bigStat}>
-              {stats?.stats.weeklyCount} Senaryo
+              {stats?.stats?.weeklyCount ?? 0} {t("scenario")}
             </Text>
             <View style={styles.trendRow}>
-              <Text style={styles.helperText}>Son 7 Gün</Text>
-              {/* Burası statik kalabilir veya önceki haftaya göre hesaplanabilir */}
-              <Text style={styles.trendPositive}>Aktif</Text>
+              <Text style={styles.helperText}>{t("last_7_days")}</Text>
+              <Text style={styles.trendPositive}>{t("active")}</Text>
             </View>
 
             <View style={styles.chartContainer}>
-              {stats?.chart.map((item: any, index: number) => (
-                <View key={index} style={styles.barWrapper}>
-                  {/* Barın yüksekliği dinamik */}
-                  <View
-                    style={[
-                      styles.barFill,
-                      { height: `${Math.max(item.percent, 5)}%` },
-                    ]}
-                  />
-                  <Text style={styles.barLabel}>{item.day}</Text>
-                </View>
-              ))}
+              {Array.isArray(stats?.chart) &&
+                stats.chart.map((item: any, index: number) => (
+                  <View key={index} style={styles.barWrapper}>
+                    {/* Barın yüksekliği dinamik */}
+                    <View
+                      style={[
+                        styles.barFill,
+                        { height: `${Math.max(item.percent, 5)}%` },
+                      ]}
+                      accessibilityLabel={`${item.day}: ${item.percent}%`}
+                    />
+                    <Text style={styles.barLabel}>{item.day}</Text>
+                  </View>
+                ))}
             </View>
           </View>
 
           {/* --- SON GERİ BİLDİRİMLER --- */}
-          <Text style={styles.sectionTitle}>Son Geri Bildirimlerin</Text>
+          <Text style={styles.sectionTitle}>{t("recent_feedback")}</Text>
           <View style={styles.recentList}>
-            {stats?.recentReports.length > 0 ? (
-              stats?.recentReports.map((item: any) => (
+            {stats?.recentReports?.length > 0 ? (
+              stats.recentReports.map((item: any) => (
                 <TouchableOpacity
                   key={item._id}
                   style={styles.recentItem}
-                  // Tıklayınca o raporun detayına (Chat geçmişine) gidebiliriz
                   onPress={() =>
                     navigation.navigate("Chat", {
                       sessionId: item._id,
@@ -207,7 +220,7 @@ export default function ProgressScreen() {
               ))
             ) : (
               <Text style={{ color: COLORS.textGrey, fontStyle: "italic" }}>
-                Henüz tamamlanmış bir rapor yok.
+                {t("no_reports")}
               </Text>
             )}
           </View>
