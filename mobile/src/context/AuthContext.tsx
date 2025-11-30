@@ -71,27 +71,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const token = await SecureStore.getItemAsync("user_token");
       if (token) {
-        // Geçici başlangıç verisi
-        setUser({
-          id: "temp",
-          fullName: "",
-          email: "",
-          isPremium: false,
-          preferences: {
-            targetLanguage: "English",
-            nativeLanguage: "Turkish",
-            difficultyLevel: "A1",
-          },
-          stats: {
-            streak: 0,
-            activityHistory: [],
-          },
-        });
+        // Token varsa gerçek kullanıcı verilerini yükle
         await fetchUserProfile();
+      } else {
+        // Token yoksa loading'i bitir
+        setIsLoading(false);
       }
     } catch (error) {
       console.log("Login check failed:", error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -102,6 +89,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.log("User data fetch failed");
       logout();
+    } finally {
+      // Kullanıcı verileri yüklendikten sonra loading'i bitir
+      setIsLoading(false);
     }
   };
   const updateUser = (userData: User) => {

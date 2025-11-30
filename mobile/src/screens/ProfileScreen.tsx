@@ -5,13 +5,14 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Switch,
   Alert,
   Modal,
   FlatList,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleDailyReminder, cancelReminders } from "../utils/notifications";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -37,6 +38,7 @@ const LANGUAGES = [
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
   const { user, logout, updateUser, deleteUser } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Modal State'leri
   const [modalVisible, setModalVisible] = useState(false);
@@ -197,8 +199,12 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={COLORS.background}
+        translucent={Platform.OS === "android"}
+      />
 
       <View style={styles.header}>
         <TouchableOpacity
@@ -212,7 +218,10 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 20 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.profileHeader}>
@@ -410,7 +419,7 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -8,13 +8,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ActivityIndicator,
   StatusBar,
   Animated,
   Alert,
   Modal,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Audio } from "expo-av";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -123,6 +123,7 @@ export default function ChatScreen() {
   const navigation = useNavigation<any>();
   const { sessionId, title } = route.params;
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -456,10 +457,11 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar
         barStyle="light-content"
         backgroundColor={COLORS.backgroundDark}
+        translucent={Platform.OS === "android"}
       />
 
       {/* HEADER */}
@@ -498,9 +500,9 @@ export default function ChatScreen() {
       {/* FOOTER & INPUT */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Düzeltildi
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
           <TouchableOpacity onPress={endSession} style={styles.endButton}>
             <Text style={styles.endButtonText}>
               {loadingFeedback ? (
@@ -608,7 +610,7 @@ export default function ChatScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
