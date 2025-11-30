@@ -8,6 +8,7 @@ import { COLORS } from "./src/constants/color";
 import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import "./src/i18n.ts";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,

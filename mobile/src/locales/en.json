@@ -1,0 +1,31 @@
+{
+    "welcome": "Hello",
+    "welcome_sub": "Which scenario would you like to practice today?",
+    "last_practice": "Continue Last Session",
+    "new_practice": "Start New Practice",
+    "tab_home": "Home",
+    "tab_progress": "Progress",
+    "tab_profile": "Profile",
+    "scenario_selection": "Scenario Selection",
+    "premium_lock": "Premium Content",
+    "premium_alert": "You need to be a Premium member to access this scenario.",
+    "cancel": "Cancel",
+    "buy_premium": "Go Premium",
+    "guest": "Guest",
+    "no_practice_yet": "You don't have any practice yet.",
+    "rec_scenario_title": "Scenario Selection",
+    "rec_scenario_desc": "Discover dialogue scenarios to practice different topics.",
+    "rec_taxi_title": "Personal Scenario: Taxi Call",
+    "rec_taxi_desc": "Learn key phrases you'll need when getting around the city.",
+    "taxi_call_title": "Taxi Call",
+    "continue_session_aria": "Continue your last practice session",
+    "start_new_practice_aria": "Start a new practice session",
+    "streak_count": "{{count}} day streak",
+    "streak_subtitle": "Keep going!",
+    "streak_fire_icon_aria": "Streak fire icon",
+    "day_active_aria": "{{day}} completed",
+    "day_inactive_aria": "{{day}} not completed",
+    "weekdays_short": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    
+  }
+  
