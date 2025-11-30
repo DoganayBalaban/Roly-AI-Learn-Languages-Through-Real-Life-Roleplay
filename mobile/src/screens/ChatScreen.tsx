@@ -24,12 +24,16 @@ import {
   AdEventType,
   TestIds,
 } from "react-native-google-mobile-ads";
-import * as Speech from "expo-speech"; // Seslendirme için
 
-import api, { uploadAudio, saveWord, lookupWord } from "../services/api";
+import api, {
+  uploadAudio,
+  saveWord,
+  lookupWord,
+  getVoiceAudio,
+} from "../services/api";
 import { COLORS } from "../constants/color";
 import { useAuth } from "../context/AuthContext";
-
+import { MALE_NAMES_LIST } from "../constants/name";
 // --- REKLAM BİRİMİ ---
 const adUnitId = __DEV__
   ? TestIds.INTERSTITIAL
@@ -129,6 +133,20 @@ export default function ChatScreen() {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
+  // Seslendirme durumu
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(
+    null
+  );
+  const getVoiceForRole = (name: string) => {
+    if (!name) return "shimmer"; // İsim yoksa varsayılan kadın
+
+    // Listede var mı kontrol et (Büyük/küçük harf duyarsız)
+    const isMale = MALE_NAMES_LIST.some(
+      (maleName) => maleName.toLowerCase() === name.toLowerCase()
+    );
+
+    return isMale ? "onyx" : "shimmer";
+  };
   // Reklam
   const [adLoaded, setAdLoaded] = useState(false);
 
@@ -253,7 +271,41 @@ export default function ChatScreen() {
       }
     }
   };
+  const handleSpeakMessage = async (text: string, messageId: string) => {
+    // Aynı mesaj tekrar tıklanırsa iptal et
+    if (speakingMessageId === messageId) {
+      setSpeakingMessageId(null);
+      return;
+    }
+    const voiceId = getVoiceForRole(botRole);
 
+    setSpeakingMessageId(messageId);
+    try {
+      // Backend'den sesi al (bu biraz zaman alabilir)
+      const audioUri = await getVoiceAudio(text, voiceId);
+
+      // Sesi oynat
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: audioUri },
+        { shouldPlay: true }
+      );
+
+      // Ses oynatılmaya başladığında loading'i kaldır
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.isPlaying) {
+          // Ses oynatılmaya başladı, loading'i kaldır
+          setSpeakingMessageId(null);
+        }
+        if (status.isLoaded && status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.log("Ses çalma hatası:", error);
+      setSpeakingMessageId(null);
+      Alert.alert("Hata", "Ses oynatılamadı.");
+    }
+  };
   // --- MESAJ GÖNDERME ---
   const sendMessage = async (messageText?: string) => {
     const userMsgText = messageText || inputText;
@@ -283,7 +335,6 @@ export default function ChatScreen() {
       };
 
       setMessages((prev) => [...prev, botMsg]);
-      Speech.speak(botReply, { language: "en-US", rate: 0.9 }); // Seslendir
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -382,6 +433,23 @@ export default function ChatScreen() {
               isBot ? styles.textWhite : styles.textBlack,
             ]}
           />
+          {isBot && (
+            <TouchableOpacity
+              style={styles.speakerIcon}
+              onPress={() => handleSpeakMessage(item.text, item.id)}
+              disabled={speakingMessageId === item.id}
+            >
+              {speakingMessageId === item.id ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <MaterialIcons
+                  name="volume-up"
+                  size={18}
+                  color={COLORS.textGrey}
+                />
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -584,6 +652,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 8,
     marginBottom: 4,
+  },
+  speakerIcon: {
+    alignSelf: "flex-end", // Sağa yasla
+    marginTop: 8, // Metinle arasına boşluk koy
+    padding: 4, // Dokunma alanını genişlet
   },
   bubble: { padding: 16, borderRadius: 20 },
   bubbleBot: { backgroundColor: COLORS.bubbleBot, borderBottomLeftRadius: 4 },

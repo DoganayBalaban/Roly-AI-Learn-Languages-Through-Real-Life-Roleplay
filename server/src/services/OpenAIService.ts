@@ -90,3 +90,19 @@ export const getWordDefinition = async (
 
   return completion.choices[0].message.content || "Anlam bulunamadı.";
 };
+export const textToSpeech = async (text: string, voice: string = "alloy") => {
+  try {
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      // TypeScript için 'voice' tipini cast ediyoruz, çünkü string geliyor
+      voice: voice as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
+      input: text,
+    });
+
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+    return buffer.toString("base64");
+  } catch (error) {
+    console.error("OpenAI TTS Error:", error);
+    throw new Error("Ses oluşturulamadı.");
+  }
+};

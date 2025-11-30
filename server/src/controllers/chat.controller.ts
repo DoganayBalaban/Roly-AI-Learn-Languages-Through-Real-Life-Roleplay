@@ -7,6 +7,7 @@ import {
   getChatCompletion,
   generateFeedbackAnalysis,
   transcribeAudioWithWhisper,
+  textToSpeech,
 } from "../services/OpenAIService";
 import User from "../models/User";
 const isSameDay = (d1: Date, d2: Date) => {
@@ -284,5 +285,18 @@ export const transcribeAudio = async (req: any, res: Response) => {
 
     console.error("Transcribe Controller Error:", error);
     res.status(500).json({ message: "Ses işlenemedi." });
+  }
+};
+export const speakText = async (req: AuthRequest, res: Response) => {
+  try {
+    const { text, voice } = req.body;
+    if (!text) return res.status(400).json({ message: "Metin gerekli." });
+
+    const audioBase64 = await textToSpeech(text, voice);
+
+    // Base64 string dönüyoruz
+    res.json({ audio: `data:audio/mp3;base64,${audioBase64}` });
+  } catch (error) {
+    res.status(500).json({ message: "Seslendirme hatası." });
   }
 };

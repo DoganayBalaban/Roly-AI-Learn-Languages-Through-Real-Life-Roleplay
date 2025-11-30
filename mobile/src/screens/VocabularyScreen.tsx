@@ -77,7 +77,7 @@ export default function VocabularyScreen() {
         >
           <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.title}>Kelime Defterim 📖</Text>
+        <Text style={styles.title}>Kelime Defterim</Text>
         <View style={{ width: 40 }} />
       </View>
 
