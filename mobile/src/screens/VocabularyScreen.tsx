@@ -11,6 +11,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { getMyWords, deleteWord } from "../services/api";
+import VocabSkeleton from "../components/skeletons/VocabSkeleton";
 
 const COLORS = {
   background: "#102217",
@@ -82,7 +83,7 @@ export default function VocabularyScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={COLORS.primary} style={{ marginTop: 50 }} />
+        <VocabSkeleton />
       ) : (
         <FlatList
           data={words}

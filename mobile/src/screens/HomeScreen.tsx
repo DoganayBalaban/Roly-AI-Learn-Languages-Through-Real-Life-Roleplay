@@ -5,10 +5,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BannerAd,
   BannerAdSize,
@@ -20,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
 import StreakHeader from "../components/StreakHeader";
+import HomeSkeleton from "../components/skeletons/HomeSkeleton";
 const bannerAdUnitId = __DEV__
   ? TestIds.BANNER
   : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID;
@@ -33,16 +35,20 @@ const COLORS = {
 };
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user, isLoading: isUserLoading } = useAuth();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const [lastSession, setLastSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // useFocusEffect: Ekran her odaklandığında (geri gelince) çalışır
   useFocusEffect(
     useCallback(() => {
-      fetchLastSession();
-    }, [])
+      // Kullanıcı verileri yüklendiyse son oturumu çek
+      if (!isUserLoading && user) {
+        fetchLastSession();
+      }
+    }, [isUserLoading, user])
   );
 
   const fetchLastSession = async () => {
@@ -85,153 +91,166 @@ export default function HomeScreen() {
     },
   ];
 
+  // Kullanıcı verileri yükleniyorsa veya lastSession yükleniyorsa skeleton göster
+  const showSkeleton = isUserLoading || loading || !user;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar
         barStyle="light-content"
         backgroundColor={COLORS.backgroundDark}
+        translucent={Platform.OS === "android"}
       />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
-              Merhaba, {user?.fullName?.split(" ")[0] || "Misafir"}!
-            </Text>
-            <Text style={styles.subGreeting}>
-              Bugün hangi senaryoyu denemek istersin?
-            </Text>
-          </View>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{
-                uri:
-                  "https://api.dicebear.com/9.x/avataaars/png?seed=" +
-                  user?.avatarId,
-              }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
-          </View>
-        </View>
-        <StreakHeader
-          streakCount={user?.stats?.streak || 0}
-          activityHistory={user?.stats?.activityHistory || []}
-        />
-
-        {/* --- DİNAMİK SON PRATİK KARTI --- */}
-        {loading ? (
-          <ActivityIndicator
-            color={COLORS.primary}
-            style={{ marginBottom: 20 }}
-          />
-        ) : lastSession ? (
-          <TouchableOpacity
-            style={styles.activeCard}
-            onPress={() =>
-              navigation.navigate("Chat", {
-                sessionId: lastSession._id,
-                title: lastSession.scenario,
-              })
-            }
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardLabel}>Son Pratiğine Devam Et</Text>
-              <MaterialIcons
-                name="more-horiz"
-                size={24}
-                color={COLORS.textGrey}
+      {showSkeleton ? (
+        <HomeSkeleton />
+      ) : (
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 20 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>
+                Merhaba, {user?.fullName?.split(" ")[0] || "Misafir"}!
+              </Text>
+              <Text style={styles.subGreeting}>
+                Bugün hangi senaryoyu denemek istersin?
+              </Text>
+            </View>
+            <View style={styles.avatarContainer}>
+              <Image
+                source={{
+                  uri:
+                    "https://api.dicebear.com/9.x/avataaars/png?seed=" +
+                    user?.avatarId,
+                }}
+                style={styles.avatar}
+                contentFit="cover"
               />
             </View>
+          </View>
+          <StreakHeader
+            streakCount={user?.stats?.streak || 0}
+            activityHistory={user?.stats?.activityHistory || []}
+          />
 
-            <View style={styles.cardBody}>
-              <View style={styles.iconBox}>
+          {/* --- DİNAMİK SON PRATİK KARTI --- */}
+          {loading ? (
+            <ActivityIndicator
+              color={COLORS.primary}
+              style={{ marginBottom: 20 }}
+            />
+          ) : lastSession ? (
+            <TouchableOpacity
+              style={styles.activeCard}
+              onPress={() =>
+                navigation.navigate("Chat", {
+                  sessionId: lastSession._id,
+                  title: lastSession.scenario,
+                })
+              }
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardLabel}>Son Pratiğine Devam Et</Text>
                 <MaterialIcons
-                  name="restaurant-menu"
-                  size={28}
-                  color={COLORS.primary}
+                  name="more-horiz"
+                  size={24}
+                  color={COLORS.textGrey}
                 />
               </View>
 
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{lastSession.scenario}</Text>
-                <View style={styles.progressBarBg}>
-                  <View
-                    style={[
-                      styles.progressBarFill,
-                      { width: calculateProgress(lastSession.messages.length) },
-                    ]}
+              <View style={styles.cardBody}>
+                <View style={styles.iconBox}>
+                  <MaterialIcons
+                    name="restaurant-menu"
+                    size={28}
+                    color={COLORS.primary}
+                  />
+                </View>
+
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTitle}>{lastSession.scenario}</Text>
+                  <View style={styles.progressBarBg}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          width: calculateProgress(lastSession.messages.length),
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.playButtonSmall}>
+                  <MaterialIcons
+                    name="play-arrow"
+                    size={28}
+                    color={COLORS.backgroundDark}
                   />
                 </View>
               </View>
-
-              <View style={styles.playButtonSmall}>
-                <MaterialIcons
-                  name="play-arrow"
-                  size={28}
-                  color={COLORS.backgroundDark}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        ) : (
-          // Oturum yoksa boş bir alan veya mesaj gösterebiliriz
-          <View style={[styles.activeCard, { opacity: 0.5 }]}>
-            <Text style={{ color: "white", textAlign: "center" }}>
-              Henüz bir pratiğin yok.
-            </Text>
-          </View>
-        )}
-
-        {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
-        <TouchableOpacity
-          style={styles.bigButton}
-          onPress={() => navigation.navigate("ScenarioList")}
-        >
-          <MaterialIcons
-            name="play-arrow"
-            size={24}
-            color={COLORS.backgroundDark}
-          />
-          <Text style={styles.bigButtonText}>Yeni Pratik Başlat</Text>
-        </TouchableOpacity>
-
-        {/* --- DİĞER KARTLAR --- */}
-        <View style={styles.listContainer}>
-          {recommendedScenarios.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.scenarioCard}
-              onPress={item.action}
-            >
-              <View style={styles.iconBox}>
-                <MaterialIcons
-                  name={item.icon as any}
-                  size={24}
-                  color={COLORS.primary}
-                />
-              </View>
-              <View style={styles.textContainer}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardDescription}>{item.description}</Text>
-              </View>
             </TouchableOpacity>
-          ))}
-        </View>
-        {!user?.isPremium && (
-          <View style={{ alignItems: "center", marginVertical: 10 }}>
-            <BannerAd
-              unitId={bannerAdUnitId} // <-- ARTIK DİNAMİK
-              size={BannerAdSize.BANNER}
-              requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+          ) : (
+            // Oturum yoksa boş bir alan veya mesaj gösterebiliriz
+            <View style={[styles.activeCard, { opacity: 0.5 }]}>
+              <Text style={{ color: "white", textAlign: "center" }}>
+                Henüz bir pratiğin yok.
+              </Text>
+            </View>
+          )}
+
+          {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
+          <TouchableOpacity
+            style={styles.bigButton}
+            onPress={() => navigation.navigate("ScenarioList")}
+          >
+            <MaterialIcons
+              name="play-arrow"
+              size={24}
+              color={COLORS.backgroundDark}
             />
+            <Text style={styles.bigButtonText}>Yeni Pratik Başlat</Text>
+          </TouchableOpacity>
+
+          {/* --- DİĞER KARTLAR --- */}
+          <View style={styles.listContainer}>
+            {recommendedScenarios.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.scenarioCard}
+                onPress={item.action}
+              >
+                <View style={styles.iconBox}>
+                  <MaterialIcons
+                    name={item.icon as any}
+                    size={24}
+                    color={COLORS.primary}
+                  />
+                </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardDescription}>{item.description}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          {!user?.isPremium && (
+            <View style={{ alignItems: "center", marginVertical: 10 }}>
+              <BannerAd
+                unitId={bannerAdUnitId} // <-- ARTIK DİNAMİK
+                size={BannerAdSize.BANNER}
+                requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+              />
+            </View>
+          )}
+        </ScrollView>
+      )}
+    </View>
   );
 }
 

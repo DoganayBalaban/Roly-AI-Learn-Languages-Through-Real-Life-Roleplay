@@ -5,16 +5,18 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { COLORS } from "../constants/color";
+import ProgressSkeleton from "../components/skeletons/ProgressSkeleton";
 
 // Tarihi formatla (Örn: "2 gün önce")
 const formatDate = (dateString: string) => {
@@ -31,6 +33,7 @@ const formatDate = (dateString: string) => {
 export default function ProgressScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
 
@@ -52,22 +55,13 @@ export default function ProgressScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={[
-          styles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={COLORS.background}
+        translucent={Platform.OS === "android"}
+      />
 
       <View style={styles.header}>
         <TouchableOpacity
@@ -82,135 +76,144 @@ export default function ProgressScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* --- PROFİL KARTI --- */}
-        <View style={styles.profileSection}>
-          <Image
-            source={{
-              uri:
-                "https://api.dicebear.com/9.x/avataaars/png?seed=" +
-                (user?.fullName || "User"),
-            }}
-            style={styles.avatar}
-          />
-          <View>
-            <Text style={styles.userName}>{user?.fullName}</Text>
-            <Text style={styles.userStatus}>
-              {stats?.level.current} Seviyesine Ulaştın!
-            </Text>
-          </View>
-        </View>
-
-        {/* --- SEVİYE PROGRESS --- */}
-        <View style={styles.card}>
-          <View style={styles.rowBetween}>
-            <Text style={styles.cardLabel}>
-              Mevcut İngilizce Seviyen: {stats?.level.current}
-            </Text>
-            <Text style={styles.cardLabel}>
-              {Math.round(stats?.level.progress)}%
-            </Text>
-          </View>
-          <View style={styles.progressBarBg}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${stats?.level.progress}%` },
-              ]}
+      {loading ? (
+        <ProgressSkeleton />
+      ) : (
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 20 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* --- PROFİL KARTI --- */}
+          <View style={styles.profileSection}>
+            <Image
+              source={{
+                uri:
+                  "https://api.dicebear.com/9.x/avataaars/png?seed=" +
+                  user?.avatarId,
+              }}
+              style={styles.avatar}
             />
+            <View>
+              <Text style={styles.userName}>{user?.fullName}</Text>
+              <Text style={styles.userStatus}>
+                {stats?.level.current} Seviyesine Ulaştın!
+              </Text>
+            </View>
           </View>
-          <Text style={styles.helperText}>
-            {stats?.level.next} seviyesine %
-            {100 - Math.round(stats?.level.progress)} kaldı
-          </Text>
-        </View>
 
-        {/* --- İSTATİSTİK GRID --- */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Tamamlanan Senaryolar</Text>
-            <Text style={styles.statValue}>
-              {stats?.stats.completedSessions}
+          {/* --- SEVİYE PROGRESS --- */}
+          <View style={styles.card}>
+            <View style={styles.rowBetween}>
+              <Text style={styles.cardLabel}>
+                Mevcut İngilizce Seviyen: {stats?.level.current}
+              </Text>
+              <Text style={styles.cardLabel}>
+                {Math.round(stats?.level.progress)}%
+              </Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${stats?.level.progress}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.helperText}>
+              {stats?.level.next} seviyesine %
+              {100 - Math.round(stats?.level.progress)} kaldı
             </Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Öğrenilen Kelimeler</Text>
-            <Text style={styles.statValue}>{stats?.stats.learnedWords}</Text>
+
+          {/* --- İSTATİSTİK GRID --- */}
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Tamamlanan Senaryolar</Text>
+              <Text style={styles.statValue}>
+                {stats?.stats.completedSessions}
+              </Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>Öğrenilen Kelimeler</Text>
+              <Text style={styles.statValue}>{stats?.stats.learnedWords}</Text>
+            </View>
+            <View style={[styles.statCard, { width: "100%" }]}>
+              <Text style={styles.statLabel}>Pratik Süresi (Tahmini)</Text>
+              <Text style={styles.statValue}>
+                {stats?.stats.practiceHours} sa
+              </Text>
+            </View>
           </View>
-          <View style={[styles.statCard, { width: "100%" }]}>
-            <Text style={styles.statLabel}>Pratik Süresi (Tahmini)</Text>
-            <Text style={styles.statValue}>
-              {stats?.stats.practiceHours} sa
+
+          {/* --- HAFTALIK AKTİVİTE GRAFİĞİ --- */}
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Haftalık Aktivite</Text>
+            <Text style={styles.bigStat}>
+              {stats?.stats.weeklyCount} Senaryo
             </Text>
-          </View>
-        </View>
+            <View style={styles.trendRow}>
+              <Text style={styles.helperText}>Son 7 Gün</Text>
+              {/* Burası statik kalabilir veya önceki haftaya göre hesaplanabilir */}
+              <Text style={styles.trendPositive}>Aktif</Text>
+            </View>
 
-        {/* --- HAFTALIK AKTİVİTE GRAFİĞİ --- */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Haftalık Aktivite</Text>
-          <Text style={styles.bigStat}>{stats?.stats.weeklyCount} Senaryo</Text>
-          <View style={styles.trendRow}>
-            <Text style={styles.helperText}>Son 7 Gün</Text>
-            {/* Burası statik kalabilir veya önceki haftaya göre hesaplanabilir */}
-            <Text style={styles.trendPositive}>Aktif</Text>
-          </View>
-
-          <View style={styles.chartContainer}>
-            {stats?.chart.map((item: any, index: number) => (
-              <View key={index} style={styles.barWrapper}>
-                {/* Barın yüksekliği dinamik */}
-                <View
-                  style={[
-                    styles.barFill,
-                    { height: `${Math.max(item.percent, 5)}%` },
-                  ]}
-                />
-                <Text style={styles.barLabel}>{item.day}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* --- SON GERİ BİLDİRİMLER --- */}
-        <Text style={styles.sectionTitle}>Son Geri Bildirimlerin</Text>
-        <View style={styles.recentList}>
-          {stats?.recentReports.length > 0 ? (
-            stats?.recentReports.map((item: any) => (
-              <TouchableOpacity
-                key={item._id}
-                style={styles.recentItem}
-                // Tıklayınca o raporun detayına (Chat geçmişine) gidebiliriz
-                onPress={() =>
-                  navigation.navigate("Chat", {
-                    sessionId: item._id,
-                    title: item.scenario,
-                  })
-                }
-              >
-                <View>
-                  <Text style={styles.recentTitle}>{item.scenario}</Text>
-                  <Text style={styles.recentDate}>
-                    {formatDate(item.updatedAt)}
-                  </Text>
+            <View style={styles.chartContainer}>
+              {stats?.chart.map((item: any, index: number) => (
+                <View key={index} style={styles.barWrapper}>
+                  {/* Barın yüksekliği dinamik */}
+                  <View
+                    style={[
+                      styles.barFill,
+                      { height: `${Math.max(item.percent, 5)}%` },
+                    ]}
+                  />
+                  <Text style={styles.barLabel}>{item.day}</Text>
                 </View>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={24}
-                  color={COLORS.textGrey}
-                />
-              </TouchableOpacity>
-            ))
-          ) : (
-            <Text style={{ color: COLORS.textGrey, fontStyle: "italic" }}>
-              Henüz tamamlanmış bir rapor yok.
-            </Text>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+              ))}
+            </View>
+          </View>
+
+          {/* --- SON GERİ BİLDİRİMLER --- */}
+          <Text style={styles.sectionTitle}>Son Geri Bildirimlerin</Text>
+          <View style={styles.recentList}>
+            {stats?.recentReports.length > 0 ? (
+              stats?.recentReports.map((item: any) => (
+                <TouchableOpacity
+                  key={item._id}
+                  style={styles.recentItem}
+                  // Tıklayınca o raporun detayına (Chat geçmişine) gidebiliriz
+                  onPress={() =>
+                    navigation.navigate("Chat", {
+                      sessionId: item._id,
+                      title: item.scenario,
+                    })
+                  }
+                >
+                  <View>
+                    <Text style={styles.recentTitle}>{item.scenario}</Text>
+                    <Text style={styles.recentDate}>
+                      {formatDate(item.updatedAt)}
+                    </Text>
+                  </View>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    color={COLORS.textGrey}
+                  />
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{ color: COLORS.textGrey, fontStyle: "italic" }}>
+                Henüz tamamlanmış bir rapor yok.
+              </Text>
+            )}
+          </View>
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
