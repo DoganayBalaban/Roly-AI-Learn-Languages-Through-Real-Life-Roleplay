@@ -2,29 +2,35 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "../constants/color";
+import { useTranslation } from "react-i18next";
 
-// Son 7 günü hesapla
-const getLast7Days = () => {
-  const days = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
-  const result = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    result.push({
-      dayName: days[d.getDay()],
-      date: d,
-      isToday: i === 0,
-    });
-  }
-  return result;
-};
-
+// StreakHeader props interface aynı kaldı
 interface Props {
   streakCount: number;
   activityHistory: string[]; // ISO Date string array
 }
 
 export default function StreakHeader({ streakCount, activityHistory }: Props) {
+  const { t } = useTranslation();
+
+  // Haftanın gün isimlerini i18n'den alıyoruz (short form)
+  const days = t("weekdays_short", { returnObjects: true }) as string[];
+
+  // Son 7 günü hesapla (bugünkü tarih son eleman olacak)
+  const getLast7Days = () => {
+    const result: { dayName: string; date: Date; isToday: boolean }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      result.push({
+        dayName: days[d.getDay()] ?? d.toLocaleDateString(),
+        date: d,
+        isToday: i === 0,
+      });
+    }
+    return result;
+  };
+
   const weekDays = getLast7Days();
 
   // Tarih kontrolü (String gelen tarihi Date objesine çevirip karşılaştırır)
@@ -49,10 +55,13 @@ export default function StreakHeader({ streakCount, activityHistory }: Props) {
             name="local-fire-department"
             size={24}
             color={COLORS.primary}
+            accessibilityLabel={t("streak_fire_icon_aria")}
           />
-          <Text style={styles.streakText}>{streakCount} Günlük Seri</Text>
+          <Text style={styles.streakText}>
+            {t("streak_count", { count: streakCount })}
+          </Text>
         </View>
-        <Text style={styles.subtitle}>Devam et, zinciri kırma!</Text>
+        <Text style={styles.subtitle}>{t("streak_subtitle")}</Text>
       </View>
 
       {/* Günler */}
@@ -72,6 +81,13 @@ export default function StreakHeader({ streakCount, activityHistory }: Props) {
                   active ? styles.circleActive : styles.circleInactive,
                   item.isToday && !active && styles.circleToday, // Bugünse ama henüz yapmadıysa
                 ]}
+                accessibilityLabel={
+                  active
+                    ? t("day_active_aria", {
+                        day: item.dayName,
+                      })
+                    : t("day_inactive_aria", { day: item.dayName })
+                }
               >
                 {active && (
                   <MaterialIcons

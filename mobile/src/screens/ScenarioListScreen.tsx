@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { NAMES } from "../constants/name";
@@ -21,6 +22,7 @@ import { SCENARIOS } from "../constants/scenarios";
 const FILTERS = ["Tümü", "Kolay", "Orta", "Zor"];
 
 export default function ScenarioListScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useAuth(); // Kullanıcının hedef dilini almak için
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -53,17 +55,13 @@ export default function ScenarioListScreen() {
     setLoadingId(item.id);
     try {
       if (item.isPremium && !user?.isPremium) {
-        Alert.alert(
-          "Premium İçerik 💎",
-          "Bu senaryoya erişmek için Premium üye olmalısınız.",
-          [
-            { text: "Vazgeç", style: "cancel" },
-            {
-              text: "Premium'a Geç",
-              onPress: () => navigation.navigate("Paywall"),
-            }, // Ödeme sayfasına yönlendir
-          ]
-        );
+        Alert.alert(t("premium_lock") + " 💎", t("premium_alert"), [
+          { text: t("cancel"), style: "cancel" },
+          {
+            text: t("buy_premium"),
+            onPress: () => navigation.navigate("Paywall"),
+          }, // Ödeme sayfasına yönlendir
+        ]);
         return;
       }
       // 1. Rastgele bir isim seç (Örn: "Jessica")
@@ -86,7 +84,7 @@ export default function ScenarioListScreen() {
       // Chat ekranına yönlendir
       navigation.navigate("Chat", { sessionId, title: item.title });
     } catch (error) {
-      Alert.alert("Hata", "Senaryo başlatılamadı.");
+      Alert.alert(t("error"), t("scenario_start_error"));
     } finally {
       setLoadingId(null);
     }
@@ -148,7 +146,7 @@ export default function ScenarioListScreen() {
         >
           <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Senaryolar</Text>
+        <Text style={styles.headerTitle}>{t("scenarios_title")}</Text>
         <TouchableOpacity style={styles.iconButton}>
           <MaterialIcons name="settings" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
@@ -165,7 +163,7 @@ export default function ScenarioListScreen() {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Senaryo ara..."
+            placeholder={t("search_scenario")}
             placeholderTextColor={COLORS.textGrey}
             value={searchText}
             onChangeText={setSearchText}

@@ -19,6 +19,7 @@ import { Audio } from "expo-av";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { useTranslation } from "react-i18next";
 import {
   InterstitialAd,
   AdEventType,
@@ -119,6 +120,7 @@ const ClickableMessage = ({
 };
 
 export default function ChatScreen() {
+  const { t } = useTranslation();
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { sessionId, title } = route.params;
@@ -208,7 +210,10 @@ export default function ChatScreen() {
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== "granted") {
-        Alert.alert("İzin Gerekli", "Mikrofon izni vermelisiniz.");
+        Alert.alert(
+          t("chat_permission_required"),
+          t("chat_microphone_permission")
+        );
         return;
       }
       await Audio.setAudioModeAsync({
@@ -263,10 +268,10 @@ export default function ChatScreen() {
           // Ses metne çevrildi, direkt gönder
           await sendMessage(response.text);
         } else {
-          Alert.alert("Uyarı", "Ses anlaşılamadı.");
+          Alert.alert(t("chat_audio_warning"), t("chat_audio_warning"));
         }
       } catch (error) {
-        Alert.alert("Hata", "Ses işlenemedi.");
+        Alert.alert(t("error"), t("chat_audio_error"));
       } finally {
         setLoading(false);
       }
@@ -304,7 +309,7 @@ export default function ChatScreen() {
     } catch (error) {
       console.log("Ses çalma hatası:", error);
       setSpeakingMessageId(null);
-      Alert.alert("Hata", "Ses oynatılamadı.");
+      Alert.alert(t("error"), t("chat_audio_playback_error"));
     }
   };
   // --- MESAJ GÖNDERME ---
@@ -339,7 +344,7 @@ export default function ChatScreen() {
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      Alert.alert("Hata", "Mesaj gönderilemedi.");
+      Alert.alert(t("error"), t("chat_message_error"));
     }
   };
 
@@ -373,7 +378,7 @@ export default function ChatScreen() {
         navigateToFeedback();
       }
     } catch (error) {
-      Alert.alert("Hata", "Rapor alınamadı.");
+      Alert.alert(t("error"), t("chat_feedback_error"));
     } finally {
       setLoadingFeedback(false);
     }
@@ -397,7 +402,7 @@ export default function ChatScreen() {
       setSelectedWordData({
         word,
         context: fullSentence,
-        translation: "Anlam bulunamadı.",
+        translation: t("chat_meaning_not_found"),
       });
     } finally {
       setIsLookingUp(false);
@@ -409,9 +414,9 @@ export default function ChatScreen() {
     try {
       await saveWord(selectedWordData.word, selectedWordData.context);
       setModalVisible(false);
-      Alert.alert("Başarılı", "Kelime kaydedildi! 📚");
+      Alert.alert(t("success"), t("chat_word_saved"));
     } catch (error) {
-      Alert.alert("Hata", "Kaydedilemedi.");
+      Alert.alert(t("error"), t("chat_save_error"));
     }
   };
 
@@ -508,7 +513,7 @@ export default function ChatScreen() {
               {loadingFeedback ? (
                 <ActivityIndicator size="small" color={COLORS.textWhite} />
               ) : (
-                "Konuşmayı Bitir"
+                t("chat_end_session")
               )}
             </Text>
           </TouchableOpacity>
@@ -519,7 +524,7 @@ export default function ChatScreen() {
                 style={styles.input}
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder="Mesajını yaz..."
+                placeholder={t("chat_input_placeholder")}
                 placeholderTextColor="#6b7280"
                 multiline
               />
@@ -570,14 +575,16 @@ export default function ChatScreen() {
             {isLookingUp ? (
               <View style={styles.loadingBox}>
                 <ActivityIndicator color={COLORS.primary} />
-                <Text style={styles.loadingText}>Anlamı aranıyor...</Text>
+                <Text style={styles.loadingText}>{t("chat_looking_up")}</Text>
               </View>
             ) : (
               <View>
                 <Text style={styles.popupTranslation}>
                   {selectedWordData?.translation}
                 </Text>
-                <Text style={styles.popupContextLabel}>Bağlam:</Text>
+                <Text style={styles.popupContextLabel}>
+                  {t("chat_context_label")}
+                </Text>
                 <Text style={styles.popupContext}>
                   "{selectedWordData?.context}"
                 </Text>
@@ -590,7 +597,7 @@ export default function ChatScreen() {
                   style={styles.btnCancel}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={styles.btnTextCancel}>Kapat</Text>
+                  <Text style={styles.btnTextCancel}>{t("close")}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -603,7 +610,7 @@ export default function ChatScreen() {
                     color={COLORS.backgroundDark}
                     style={{ marginRight: 5 }}
                   />
-                  <Text style={styles.btnTextSave}>Kaydet</Text>
+                  <Text style={styles.btnTextSave}>{t("chat_save_word")}</Text>
                 </TouchableOpacity>
               </View>
             )}

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { getMyWords, deleteWord } from "../services/api";
 import VocabSkeleton from "../components/skeletons/VocabSkeleton";
 
@@ -23,6 +24,7 @@ const COLORS = {
 };
 
 export default function VocabularyScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [words, setWords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export default function VocabularyScreen() {
         >
           <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.title}>Kelime Defterim</Text>
+        <Text style={styles.title}>{t("vocabulary_title")}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -91,7 +93,7 @@ export default function VocabularyScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Henüz hiç kelime kaydetmedin.</Text>
+            <Text style={styles.emptyText}>{t("no_words_yet")}</Text>
           }
         />
       )}

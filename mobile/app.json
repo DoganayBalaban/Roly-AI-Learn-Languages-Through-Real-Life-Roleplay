@@ -2,7 +2,7 @@
   "expo": {
     "name": "RolyAI",
     "slug": "rolyai",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -29,19 +29,19 @@
     },
     "android": {
       "package": "com.doganay.rolyai",
-      "versionCode":3,
+      "versionCode":4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "softwareKeyboardLayoutMode":"pan",
+      "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.INTERNET",
-        "com.android.vending.BILLING" 
+        "com.android.vending.BILLING"
       ]
     },
     "web": {
@@ -57,7 +57,8 @@
           "androidAppId": "ca-app-pub-4082514710601765~7111573959",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "extra": {
       "router": {},

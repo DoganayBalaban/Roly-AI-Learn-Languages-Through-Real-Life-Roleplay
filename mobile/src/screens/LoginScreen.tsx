@@ -18,6 +18,7 @@ import { MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useTranslation } from "react-i18next";
 
 // Tasarımdaki Renk Paleti
 import { COLORS } from "../constants/color";
@@ -25,6 +26,7 @@ import { Image } from "expo-image";
 import { validateCredentials } from "../utils/validation";
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -46,7 +48,7 @@ export default function LoginScreen() {
     if (supported) {
       await Linking.openURL(url);
     } else {
-      Alert.alert("Hata", "Link açılamadı");
+      Alert.alert(t("error"), t("link_open_error"));
     }
   };
   const handleSubmit = async () => {
@@ -54,7 +56,7 @@ export default function LoginScreen() {
     const error = validateCredentials(email, password, fullName, isRegistering);
 
     if (error) {
-      Alert.alert("Hata", error);
+      Alert.alert(t("error"), error);
       return;
     }
 
@@ -68,8 +70,8 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       // Backend'den (Zod'dan) gelen mesajı göster
-      const errorMessage = error.message || error.error || "Bir hata oluştu";
-      Alert.alert("Hata", errorMessage);
+      const errorMessage = error.message || error.error || t("error");
+      Alert.alert(t("error"), errorMessage);
     } finally {
       setLoading(false);
     }
@@ -79,7 +81,7 @@ export default function LoginScreen() {
       await googleLogin();
     } catch (error) {
       console.log("Google login failed:", error);
-      Alert.alert("Hata", "Google girişi başarısız!");
+      Alert.alert(t("error"), t("google_login_failed"));
     }
   };
 
@@ -111,7 +113,9 @@ export default function LoginScreen() {
 
             {/* Hoşgeldin Yazısı (Ortada veya Altta kalabilir) */}
             <Text style={styles.welcomeText}>
-              {isRegistering ? "Aramıza Katıl!" : "Tekrar Hoş Geldin!"}
+              {isRegistering
+                ? t("login_welcome_register")
+                : t("login_welcome_login")}
             </Text>
           </View>
 
@@ -119,10 +123,10 @@ export default function LoginScreen() {
           <View style={styles.formContainer}>
             {isRegistering && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Ad Soyad</Text>
+                <Text style={styles.label}>{t("full_name")}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Adını gir"
+                  placeholder={t("full_name_placeholder")}
                   placeholderTextColor={COLORS.textGrey}
                   value={fullName}
                   onChangeText={setFullName}
@@ -132,10 +136,10 @@ export default function LoginScreen() {
             )}
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>E-posta</Text>
+              <Text style={styles.label}>{t("email")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="E-postanı gir"
+                placeholder={t("email_placeholder")}
                 placeholderTextColor={COLORS.textGrey}
                 value={email}
                 onChangeText={setEmail}
@@ -145,11 +149,11 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Şifre</Text>
+              <Text style={styles.label}>{t("password")}</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Şifreni gir"
+                  placeholder={t("password_placeholder")}
                   placeholderTextColor={COLORS.textGrey}
                   value={password}
                   onChangeText={setPassword}
@@ -169,11 +173,11 @@ export default function LoginScreen() {
             </View>
             {isRegistering && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Şifre Tekrar</Text>
+                <Text style={styles.label}>{t("password_confirm")}</Text>
                 <View style={styles.passwordContainer}>
                   <TextInput
                     style={styles.passwordInput}
-                    placeholder="Şifreni onayla"
+                    placeholder={t("password_confirm_placeholder")}
                     placeholderTextColor={COLORS.textGrey}
                     value={passwordConfirm}
                     onChangeText={setPasswordConfirm}
@@ -224,18 +228,18 @@ export default function LoginScreen() {
                       handleOpenLink(process.env.EXPO_PUBLIC_PRIVACY_URL)
                     }
                   >
-                    Kullanım Koşulları
+                    {t("terms_of_use")}
                   </Text>{" "}
-                  ve{" "}
+                  {t("and")}{" "}
                   <Text
                     style={styles.linkText}
                     onPress={() =>
                       handleOpenLink(process.env.EXPO_PUBLIC_TERMS_URL)
                     }
                   >
-                    Gizlilik Politikası
-                  </Text>
-                  'nı kabul ediyorum.
+                    {t("privacy_policy")}
+                  </Text>{" "}
+                  {t("terms_accept")}
                 </Text>
               </View>
             ) : (
@@ -243,7 +247,9 @@ export default function LoginScreen() {
                 style={styles.forgotPassword}
                 onPress={() => navigation.navigate("ForgotPassword")}
               >
-                <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
+                <Text style={styles.forgotPasswordText}>
+                  {t("forgot_password")}
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -257,7 +263,7 @@ export default function LoginScreen() {
                 <ActivityIndicator color={COLORS.backgroundDark} />
               ) : (
                 <Text style={styles.primaryButtonText}>
-                  {isRegistering ? "Kayıt Ol" : "Giriş Yap"}
+                  {isRegistering ? t("register") : t("login")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -265,7 +271,7 @@ export default function LoginScreen() {
             {/* --- DIVIDER --- */}
             <View style={styles.dividerContainer}>
               <View style={styles.line} />
-              <Text style={styles.orText}>veya</Text>
+              <Text style={styles.orText}>{t("or")}</Text>
               <View style={styles.line} />
             </View>
 
@@ -281,20 +287,24 @@ export default function LoginScreen() {
                   color="white"
                   style={{ marginRight: 10 }}
                 />
-                <Text style={styles.socialTextGoogle}>Google ile Devam Et</Text>
+                <Text style={styles.socialTextGoogle}>
+                  {t("continue_with_google")}
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* --- BOTTOM LINK --- */}
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                {isRegistering ? "Zaten hesabın var mı? " : "Hesabın yok mu? "}
+                {isRegistering
+                  ? t("already_have_account")
+                  : t("dont_have_account")}{" "}
               </Text>
               <TouchableOpacity
                 onPress={() => setIsRegistering(!isRegistering)}
               >
                 <Text style={styles.footerLink}>
-                  {isRegistering ? "Giriş Yap" : "Kayıt Ol"}
+                  {isRegistering ? t("login") : t("register")}
                 </Text>
               </TouchableOpacity>
             </View>

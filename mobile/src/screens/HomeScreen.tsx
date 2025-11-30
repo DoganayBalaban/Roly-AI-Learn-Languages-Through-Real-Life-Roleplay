@@ -22,6 +22,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
 import StreakHeader from "../components/StreakHeader";
 import HomeSkeleton from "../components/skeletons/HomeSkeleton";
+import { useTranslation } from "react-i18next";
 const bannerAdUnitId = __DEV__
   ? TestIds.BANNER
   : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID;
@@ -35,6 +36,7 @@ const COLORS = {
 };
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const { user, isLoading: isUserLoading } = useAuth();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
@@ -70,23 +72,21 @@ export default function HomeScreen() {
   const recommendedScenarios = [
     {
       id: "1",
-      title: "Senaryo Seçimi",
-      description:
-        "Farklı konularda pratik yapabileceğin diyalog senaryolarını keşfet.",
+      title: t("rec_scenario_title"),
+      description: t("rec_scenario_desc"),
       icon: "chat-bubble-outline",
-      action: () => navigation.navigate("ScenarioList"), // ARTIK YENİ SAYFAYA GİDİYOR
+      action: () => navigation.navigate("ScenarioList"),
     },
     {
       id: "2",
-      title: "Sana Özel Senaryo: Taksi Çağırma",
-      description: "Şehirde gezinirken ihtiyacın olacak temel ifadeleri öğren.",
+      title: t("rec_taxi_title"),
+      description: t("rec_taxi_desc"),
       icon: "auto-awesome",
       action: () =>
         navigation.navigate("Chat", {
-          sessionId: null, // Yeni başlatacağı için ID yok, backendde create lazım olur
-          title: "Taksi Çağırma",
-          isQuickStart: true, // Bu parametreyi ChatScreen'de yakalayıp start atabilirsin (Opsiyonel)
-          // Şimdilik basit olsun, direkt senaryo listesine de atabiliriz:
+          sessionId: null,
+          title: t("taxi_call_title"),
+          isQuickStart: true,
         }),
     },
   ];
@@ -115,11 +115,9 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <View>
               <Text style={styles.greeting}>
-                Merhaba, {user?.fullName?.split(" ")[0] || "Misafir"}!
+                {t("welcome")}, {user?.fullName?.split(" ")[0] || t("guest")}!
               </Text>
-              <Text style={styles.subGreeting}>
-                Bugün hangi senaryoyu denemek istersin?
-              </Text>
+              <Text style={styles.subGreeting}>{t("welcome_sub")}</Text>
             </View>
             <View style={styles.avatarContainer}>
               <Image
@@ -155,7 +153,7 @@ export default function HomeScreen() {
               }
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.cardLabel}>Son Pratiğine Devam Et</Text>
+                <Text style={styles.cardLabel}>{t("last_practice")}</Text>
                 <MaterialIcons
                   name="more-horiz"
                   size={24}
@@ -199,7 +197,7 @@ export default function HomeScreen() {
             // Oturum yoksa boş bir alan veya mesaj gösterebiliriz
             <View style={[styles.activeCard, { opacity: 0.5 }]}>
               <Text style={{ color: "white", textAlign: "center" }}>
-                Henüz bir pratiğin yok.
+                {t("no_practice_yet")}
               </Text>
             </View>
           )}
@@ -214,7 +212,7 @@ export default function HomeScreen() {
               size={24}
               color={COLORS.backgroundDark}
             />
-            <Text style={styles.bigButtonText}>Yeni Pratik Başlat</Text>
+            <Text style={styles.bigButtonText}>{t("new_practice")}</Text>
           </TouchableOpacity>
 
           {/* --- DİĞER KARTLAR --- */}
