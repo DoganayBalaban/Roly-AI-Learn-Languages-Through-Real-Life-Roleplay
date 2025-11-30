@@ -39,7 +39,6 @@ export const transcribeAudioWithWhisper = async (
     throw new Error("Ses dosyası yazıya çevrilemedi.");
   }
 };
-
 export const generateFeedbackAnalysis = async (conversationHistory: any[]) => {
   const systemPrompt = `
       You are an expert English teacher. 
@@ -67,4 +66,27 @@ export const generateFeedbackAnalysis = async (conversationHistory: any[]) => {
 
   const content = completion.choices[0].message.content;
   return content ? JSON.parse(content) : null;
+};
+export const getWordDefinition = async (
+  word: string,
+  context: string,
+  targetLanguage: string = "Turkish"
+) => {
+  const prompt = `
+    You are a dictionary helper.
+    Task: Translate the word "${word}" to ${targetLanguage}.
+    Context sentence where the word is used: "${context}".
+    
+    Output format: Just the translation and maybe a very short definition or synonym in parenthesis. 
+    Keep it concise (max 5-6 words).
+    Example Output: "Elma (bir meyve türü)"
+  `;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 30,
+  });
+
+  return completion.choices[0].message.content || "Anlam bulunamadı.";
 };

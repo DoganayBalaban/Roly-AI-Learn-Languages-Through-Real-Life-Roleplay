@@ -77,4 +77,25 @@ export const uploadAudio = async (uri: string) => {
 
   return response.data;
 };
+export const saveWord = async (word: string, contextSentence: string) => {
+  const response = await api.post("/words", { word, contextSentence });
+  return response.data;
+};
+
+export const getMyWords = async () => {
+  const response = await api.get("/words");
+  return response.data;
+};
+
+export const deleteWord = async (wordId: string) => {
+  const response = await api.delete(`/words/${wordId}`);
+  return response.data;
+};
+export const lookupWord = async (word: string, contextSentence: string) => {
+  const response = await api.post("/words/lookup", {
+    word,
+    contextSentence,
+  });
+  return response.data;
+};
 export default api;

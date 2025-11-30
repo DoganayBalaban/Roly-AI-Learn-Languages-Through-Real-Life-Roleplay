@@ -19,6 +19,7 @@ import ScenarioListScreen from "./src/screens/ScenarioListScreen";
 import FeedbackScreen from "./src/screens/FeedbackScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import PaywallScreen from "./src/screens/PaywallScreen";
+import VocabularyScreen from "./src/screens/VocabularyScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -120,6 +121,11 @@ const AppNavigator = () => {
                 headerShown: false,
                 presentation: "modal", // Bu, ekranın aşağıdan yukarı kayarak açılmasını sağlar (iOS'te çok şık durur)
               }}
+            />
+            <Stack.Screen
+              name="Vocabulary"
+              component={VocabularyScreen}
+              options={{ headerShown: false }}
             />
           </>
         ) : (
