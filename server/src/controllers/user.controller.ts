@@ -9,6 +9,7 @@ import { OAuth2Client } from "google-auth-library";
 import appleSignin from "apple-signin-auth";
 import crypto from "crypto";
 import { loginSchema, registerSchema } from "../utils/validation";
+import { checkAndResetQuests } from "../services/QuestService";
 
 dotenv.config();
 const calculateLevel = (xp: number) => {
@@ -86,7 +87,7 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
 
         return { day: dayName, percent, count };
       });
-
+    await checkAndResetQuests(user!);
     // Response Hazırla
     res.json({
       level: levelInfo,
@@ -98,6 +99,7 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
       },
       chart: chartData,
       recentReports,
+      quests: user?.quests.daily,
     });
   } catch (error) {
     console.error(error);
@@ -372,5 +374,45 @@ export const updateAvatar = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("Error in deleteAccount controller: ", error);
     res.status(500).json({ message: "Hesap silinemedi." });
+  }
+};
+export const claimQuestReward = async (req: AuthRequest, res: Response) => {
+  try {
+    const { questId } = req.body;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "Kullanıcı bulunamadı." });
+
+    // İlgili görevi bul
+    const quest = user.quests.daily.find((q) => q.id === questId);
+
+    if (!quest) {
+      return res.status(404).json({ message: "Görev bulunamadı." });
+    }
+
+    // Kontroller
+    if (!quest.isCompleted) {
+      return res.status(400).json({ message: "Görev henüz tamamlanmamış." });
+    }
+    if (quest.isClaimed) {
+      return res.status(400).json({ message: "Ödül zaten alınmış." });
+    }
+
+    // Ödülü ver
+    user.stats.xp += quest.xpReward;
+    quest.isClaimed = true;
+
+    await user.save();
+
+    res.json({
+      message: "Ödül alındı!",
+      xpEarned: quest.xpReward,
+      newXp: user.stats.xp,
+      questId: quest.id,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Ödül alınamadı." });
   }
 };

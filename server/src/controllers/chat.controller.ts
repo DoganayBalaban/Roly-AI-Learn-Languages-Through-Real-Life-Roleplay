@@ -10,6 +10,7 @@ import {
   textToSpeech,
 } from "../services/OpenAIService";
 import User from "../models/User";
+import { updateQuestProgress } from "../services/QuestService";
 const isSameDay = (d1: Date, d2: Date) => {
   return (
     d1.getFullYear() === d2.getFullYear() &&
@@ -157,6 +158,9 @@ export const endSession = async (req: AuthRequest, res: Response) => {
     session.feedback = feedback;
     session.status = "completed";
     await session.save();
+    updateQuestProgress(userId, "SESSION_COMPLETE", 1).catch((err) =>
+      console.log(err)
+    );
     res.json({
       ...feedback,
       xpEarned, // <-- Bunu ekledik

@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import User from "../models/User";
 import { getWordDefinition } from "../services/OpenAIService";
+import { updateQuestProgress } from "../services/QuestService";
 
 export const saveWord = async (req: AuthRequest, res: Response) => {
   try {
@@ -36,6 +37,9 @@ export const saveWord = async (req: AuthRequest, res: Response) => {
     };
     user.savedWords.push(newWordEntry as any);
     await user.save();
+    updateQuestProgress(userId, "WORD_SAVE", 1).catch((err) =>
+      console.log(err)
+    );
     res.status(201).json({ message: "Kelime kaydedildi.", word: newWordEntry });
   } catch (error) {
     console.error("Save Word Error:", error);
