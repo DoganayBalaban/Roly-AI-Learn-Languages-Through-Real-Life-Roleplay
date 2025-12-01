@@ -27,6 +27,33 @@ export default function ProgressScreen() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
 
+  // Gün kısaltmalarını çevir
+  const translateDayAbbr = (dayAbbr: string): string => {
+    const dayMap: { [key: string]: number } = {
+      Paz: 0,
+      Pzt: 1,
+      Sal: 2,
+      Çar: 3,
+      Per: 4,
+      Cum: 5,
+      Cmt: 6,
+      Sun: 0,
+      Mon: 1,
+      Tue: 2,
+      Wed: 3,
+      Thu: 4,
+      Fri: 5,
+      Sat: 6,
+    };
+
+    const dayIndex = dayMap[dayAbbr];
+    if (dayIndex !== undefined) {
+      const weekdays = t("weekdays_short", { returnObjects: true }) as string[];
+      return weekdays[dayIndex] || dayAbbr;
+    }
+    return dayAbbr;
+  };
+
   // Tarihi formatla (i18n kullanarak)
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -67,20 +94,7 @@ export default function ProgressScreen() {
       />
 
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.iconButton}
-          accessibilityLabel={t("back")}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("progress_title")}</Text>
-        <TouchableOpacity
-          style={styles.iconButton}
-          accessibilityLabel={t("settings")}
-        >
-          <MaterialIcons name="settings" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -174,55 +188,23 @@ export default function ProgressScreen() {
 
             <View style={styles.chartContainer}>
               {Array.isArray(stats?.chart) &&
-                stats.chart.map((item: any, index: number) => (
-                  <View key={index} style={styles.barWrapper}>
-                    {/* Barın yüksekliği dinamik */}
-                    <View
-                      style={[
-                        styles.barFill,
-                        { height: `${Math.max(item.percent, 5)}%` },
-                      ]}
-                      accessibilityLabel={`${item.day}: ${item.percent}%`}
-                    />
-                    <Text style={styles.barLabel}>{item.day}</Text>
-                  </View>
-                ))}
+                stats.chart.map((item: any, index: number) => {
+                  const translatedDay = translateDayAbbr(item.day);
+                  return (
+                    <View key={index} style={styles.barWrapper}>
+                      {/* Barın yüksekliği dinamik */}
+                      <View
+                        style={[
+                          styles.barFill,
+                          { height: `${Math.max(item.percent, 5)}%` },
+                        ]}
+                        accessibilityLabel={`${translatedDay}: ${item.percent}%`}
+                      />
+                      <Text style={styles.barLabel}>{translatedDay}</Text>
+                    </View>
+                  );
+                })}
             </View>
-          </View>
-
-          {/* --- SON GERİ BİLDİRİMLER --- */}
-          <Text style={styles.sectionTitle}>{t("recent_feedback")}</Text>
-          <View style={styles.recentList}>
-            {stats?.recentReports?.length > 0 ? (
-              stats.recentReports.map((item: any) => (
-                <TouchableOpacity
-                  key={item._id}
-                  style={styles.recentItem}
-                  onPress={() =>
-                    navigation.navigate("Chat", {
-                      sessionId: item._id,
-                      title: item.scenario,
-                    })
-                  }
-                >
-                  <View>
-                    <Text style={styles.recentTitle}>{item.scenario}</Text>
-                    <Text style={styles.recentDate}>
-                      {formatDate(item.updatedAt)}
-                    </Text>
-                  </View>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color={COLORS.textGrey}
-                  />
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text style={{ color: COLORS.textGrey, fontStyle: "italic" }}>
-                {t("no_reports")}
-              </Text>
-            )}
           </View>
         </ScrollView>
       )}

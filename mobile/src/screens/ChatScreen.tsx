@@ -35,6 +35,7 @@ import api, {
 import { COLORS } from "../constants/color";
 import { useAuth } from "../context/AuthContext";
 import { MALE_NAMES_LIST } from "../constants/name";
+import SkeletonItem from "../components/SkeletonItem";
 // --- REKLAM BİRİMİ ---
 const adUnitId = __DEV__
   ? TestIds.INTERSTITIAL
@@ -504,7 +505,7 @@ export default function ChatScreen() {
 
       {/* FOOTER & INPUT */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
         <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
@@ -570,34 +571,62 @@ export default function ChatScreen() {
           onPress={() => setModalVisible(false)}
         >
           <View style={styles.wordPopup} onStartShouldSetResponder={() => true}>
+            {/* Kelime Başlığı (Anında gelir, skeletona gerek yok) */}
             <Text style={styles.popupWord}>{selectedWordData?.word}</Text>
 
+            {/* --- DEĞİŞİKLİK BURADA: Skeleton Eklendi --- */}
             {isLookingUp ? (
-              <View style={styles.loadingBox}>
-                <ActivityIndicator color={COLORS.primary} />
-                <Text style={styles.loadingText}>{t("chat_looking_up")}</Text>
+              <View
+                style={{
+                  width: "100%",
+                  alignItems: "flex-start",
+                  paddingTop: 10,
+                }}
+              >
+                {/* 1. Anlam Kısmı (Ortada) */}
+                <SkeletonItem
+                  width={180}
+                  height={24}
+                  borderRadius={4}
+                  style={{ alignSelf: "center", marginBottom: 20 }}
+                />
+
+                {/* 2. "Bağlam:" Etiketi */}
+                <SkeletonItem
+                  width={60}
+                  height={14}
+                  borderRadius={4}
+                  style={{ marginBottom: 8 }}
+                />
+
+                {/* 3. Cümle Kutusu */}
+                <SkeletonItem
+                  width="100%"
+                  height={60}
+                  borderRadius={8}
+                  style={{ marginBottom: 24 }}
+                />
               </View>
             ) : (
               <View>
                 <Text style={styles.popupTranslation}>
                   {selectedWordData?.translation}
                 </Text>
-                <Text style={styles.popupContextLabel}>
-                  {t("chat_context_label")}
-                </Text>
+                <Text style={styles.popupContextLabel}>Bağlam:</Text>
                 <Text style={styles.popupContext}>
                   "{selectedWordData?.context}"
                 </Text>
               </View>
             )}
 
+            {/* Butonlar (Yüklenirken gizli kalsın) */}
             {!isLookingUp && (
               <View style={styles.popupButtons}>
                 <TouchableOpacity
                   style={styles.btnCancel}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={styles.btnTextCancel}>{t("close")}</Text>
+                  <Text style={styles.btnTextCancel}>Kapat</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -610,7 +639,7 @@ export default function ChatScreen() {
                     color={COLORS.backgroundDark}
                     style={{ marginRight: 5 }}
                   />
-                  <Text style={styles.btnTextSave}>{t("chat_save_word")}</Text>
+                  <Text style={styles.btnTextSave}>Kaydet</Text>
                 </TouchableOpacity>
               </View>
             )}
