@@ -263,9 +263,10 @@ export default function ProgressScreen() {
                 source={{
                   uri:
                     "https://api.dicebear.com/9.x/avataaars/png?seed=" +
-                    (user?.fullName || "User"),
+                    (user?.avatarId || user?.fullName || "User"),
                 }}
                 style={styles.avatar}
+                contentFit="cover"
               />
               <View>
                 <Text style={styles.userName}>{user?.fullName}</Text>

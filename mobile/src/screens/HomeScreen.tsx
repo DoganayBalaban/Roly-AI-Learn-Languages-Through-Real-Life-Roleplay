@@ -174,7 +174,7 @@ export default function HomeScreen() {
                 source={{
                   uri:
                     "https://api.dicebear.com/9.x/avataaars/png?seed=" +
-                    user?.avatarId,
+                    (user?.avatarId || user?.fullName || "User"),
                 }}
                 style={styles.avatar}
                 contentFit="cover"

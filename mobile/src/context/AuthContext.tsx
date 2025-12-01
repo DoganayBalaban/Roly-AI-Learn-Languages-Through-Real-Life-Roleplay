@@ -103,9 +103,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
-      const { user, token } = res.data;
+      const { token } = res.data;
       await SecureStore.setItemAsync("user_token", token);
-      setUser(user);
+      // Token kaydedildikten sonra tam kullanıcı verisini çek
+      await fetchUserProfile();
     } catch (error: any) {
       throw error.response?.data || { message: "Login failed" };
     }
@@ -121,9 +122,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
-      const { user, token } = res.data;
+      const { token } = res.data;
       await SecureStore.setItemAsync("user_token", token);
-      setUser(user);
+      // Token kaydedildikten sonra tam kullanıcı verisini çek
+      await fetchUserProfile();
     } catch (error: any) {
       throw error.response?.data || { message: "Registration failed" };
     }
@@ -137,9 +139,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const res = await api.post("/auth/google", {
           idToken,
         });
-        const { user, token } = res.data;
+        const { token } = res.data;
         await SecureStore.setItemAsync("user_token", token);
-        setUser(user);
+        // Token kaydedildikten sonra tam kullanıcı verisini çek
+        await fetchUserProfile();
       }
     } catch (error) {
       console.log("Google login failed:", error);
