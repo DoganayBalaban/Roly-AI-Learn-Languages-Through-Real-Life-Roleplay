@@ -7,7 +7,16 @@ interface ISavedWord {
   contextSentence?: string; // Hangi cümlede geçti?
   savedAt: Date;
 }
-
+interface IQuest {
+  id: string;
+  type: "SESSION_COMPLETE" | "WORD_SAVE" | "VOICE_USE";
+  description: string;
+  target: number; // Hedef (Örn: 3 kelime)
+  progress: number; // Şu anki (Örn: 1 kelime)
+  isCompleted: boolean;
+  isClaimed: boolean; // Ödül alındı mı?
+  xpReward: number;
+}
 export interface IUser extends Document {
   email: string;
   password: string;
@@ -30,6 +39,10 @@ export interface IUser extends Document {
   };
   savedWords: ISavedWord[]; // <--- GÜNCELLENDİ: Sadece string değil, obje tutacak
   createdAt: Date;
+  quests: {
+    lastResetDate: Date;
+    daily: IQuest[];
+  };
 }
 
 const userSchema = new Schema(
@@ -70,6 +83,24 @@ const userSchema = new Schema(
         savedAt: { type: Date, default: Date.now },
       },
     ],
+    quests: {
+      lastResetDate: { type: Date, default: Date.now },
+      daily: [
+        {
+          id: String,
+          type: {
+            type: String,
+            enum: ["SESSION_COMPLETE", "WORD_SAVE", "VOICE_USE"],
+          },
+          description: String,
+          target: Number,
+          progress: { type: Number, default: 0 },
+          isCompleted: { type: Boolean, default: false },
+          isClaimed: { type: Boolean, default: false },
+          xpReward: Number,
+        },
+      ],
+    },
   },
   { timestamps: true }
 );

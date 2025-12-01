@@ -102,4 +102,8 @@ export const getVoiceAudio = async (text: string, voice?: string) => {
   const response = await api.post("/chat/speak", { text, voice });
   return response.data.audio; // Base64 string döner
 };
+export const claimQuest = async (questId: string) => {
+  const response = await api.post("/auth/quests/claim", { questId });
+  return response.data;
+};
 export default api;
