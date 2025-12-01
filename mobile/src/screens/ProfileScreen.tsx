@@ -23,21 +23,22 @@ import api from "../services/api";
 import * as SecureStore from "expo-secure-store";
 import { COLORS } from "../constants/color";
 import { AVATAR_SEEDS } from "../constants/avatar";
-// Seçilebilir Diller Listesi
-const LANGUAGES = [
-  { code: "Turkish", label: "Türkçe", flag: "🇹🇷" },
-  { code: "English", label: "İngilizce", flag: "🇬🇧" },
-  { code: "Spanish", label: "İspanyolca", flag: "🇪🇸" },
-  { code: "German", label: "Almanca", flag: "🇩🇪" },
-  { code: "French", label: "Fransızca", flag: "🇫🇷" },
-  { code: "Italian", label: "İtalyanca", flag: "🇮🇹" },
-  { code: "Japanese", label: "Japonca", flag: "🇯🇵" },
-  { code: "Korean", label: "Korece", flag: "🇰🇷" },
-  { code: "Russian", label: "Rusça", flag: "🇷🇺" },
-];
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
+
+  // Seçilebilir Diller Listesi (dinamik çeviri ile)
+  const LANGUAGES = [
+    { code: "Turkish", labelKey: "lang_turkish", flag: "🇹🇷" },
+    { code: "English", labelKey: "lang_english", flag: "🇬🇧" },
+    { code: "Spanish", labelKey: "lang_spanish", flag: "🇪🇸" },
+    { code: "German", labelKey: "lang_german", flag: "🇩🇪" },
+    { code: "French", labelKey: "lang_french", flag: "🇫🇷" },
+    { code: "Italian", labelKey: "lang_italian", flag: "🇮🇹" },
+    { code: "Japanese", labelKey: "lang_japanese", flag: "🇯🇵" },
+    { code: "Korean", labelKey: "lang_korean", flag: "🇰🇷" },
+    { code: "Russian", labelKey: "lang_russian", flag: "🇷🇺" },
+  ];
   const navigation = useNavigation<any>();
   const { user, logout, updateUser, deleteUser } = useAuth();
   const insets = useSafeAreaInsets();
@@ -209,12 +210,6 @@ export default function ProfileScreen() {
       />
 
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile_settings")}</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -254,11 +249,11 @@ export default function ProfileScreen() {
             <SettingRow
               icon="translate"
               title={t("target_language")}
-              value={
+              value={t(
                 LANGUAGES.find(
                   (l) => l.code === user?.preferences?.targetLanguage
-                )?.label || user?.preferences?.targetLanguage
-              }
+                )?.labelKey || "lang_english"
+              )}
               onPress={() => openModal("target")}
             />
             <View style={styles.divider} />
@@ -266,11 +261,11 @@ export default function ProfileScreen() {
             <SettingRow
               icon="language"
               title={t("native_language")}
-              value={
+              value={t(
                 LANGUAGES.find(
                   (l) => l.code === user?.preferences?.nativeLanguage
-                )?.label || user?.preferences?.nativeLanguage
-              }
+                )?.labelKey || "lang_turkish"
+              )}
               onPress={() => openModal("native")}
             />
           </View>
@@ -405,7 +400,7 @@ export default function ProfileScreen() {
                   disabled={loading}
                 >
                   <Text style={styles.langFlag}>{item.flag}</Text>
-                  <Text style={styles.langLabel}>{item.label}</Text>
+                  <Text style={styles.langLabel}>{t(item.labelKey)}</Text>
                   {/* Seçili olanı işaretle */}
                   {(activeSelection === "target" &&
                     user?.preferences?.targetLanguage === item.code) ||

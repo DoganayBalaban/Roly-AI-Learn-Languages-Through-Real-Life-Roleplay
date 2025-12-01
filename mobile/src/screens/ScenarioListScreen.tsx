@@ -19,23 +19,29 @@ import { NAMES } from "../constants/name";
 import { COLORS } from "../constants/color";
 import { SCENARIOS } from "../constants/scenarios";
 
-const FILTERS = ["Tümü", "Kolay", "Orta", "Zor"];
-
 export default function ScenarioListScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useAuth(); // Kullanıcının hedef dilini almak için
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("Tümü");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+
+  const FILTERS = [
+    { key: "all", label: t("all") },
+    { key: "easy", label: t("easy") },
+    { key: "medium", label: t("medium") },
+    { key: "hard", label: t("hard") },
+  ];
 
   // Filtreleme Mantığı
   const filteredScenarios = SCENARIOS.filter((item) => {
-    const matchesSearch = item.title
+    const translatedTitle = t(item.titleKey);
+    const matchesSearch = translatedTitle
       .toLowerCase()
       .includes(searchText.toLowerCase());
     const matchesFilter =
-      selectedFilter === "Tümü" || item.level === selectedFilter;
+      selectedFilter === "all" || item.levelKey === selectedFilter;
     return matchesSearch && matchesFilter;
   });
 
@@ -60,7 +66,7 @@ export default function ScenarioListScreen() {
           {
             text: t("buy_premium"),
             onPress: () => navigation.navigate("Paywall"),
-          }, // Ödeme sayfasına yönlendir
+          },
         ]);
         return;
       }
@@ -68,13 +74,14 @@ export default function ScenarioListScreen() {
       const botName = getRandomName();
       const targetLang = user?.preferences?.targetLanguage || "English";
       // 2. Backend'e gönderilecek veriyi hazırla
-      // DİKKAT: Botun rolünü (Garson vb.) unutmaması için senaryo başlığına ekliyoruz.
-      // Ama Chat ekranında sadece "Jessica" ismi görünecek.
+      const translatedTitle = t(item.titleKey);
+      const translatedRole = t(item.roleKey);
+
       const payload = {
-        scenario: item.title,
+        scenario: translatedTitle,
         role: botName,
-        difficultyLevel: item.level,
-        roleDescription: item.role,
+        difficultyLevel: t(item.levelKey),
+        roleDescription: translatedRole,
         targetLanguage: targetLang,
       };
 
@@ -82,7 +89,7 @@ export default function ScenarioListScreen() {
 
       const sessionId = response.data._id;
       // Chat ekranına yönlendir
-      navigation.navigate("Chat", { sessionId, title: item.title });
+      navigation.navigate("Chat", { sessionId, title: translatedTitle });
     } catch (error) {
       Alert.alert(t("error"), t("scenario_start_error"));
     } finally {
@@ -90,13 +97,13 @@ export default function ScenarioListScreen() {
     }
   };
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "Kolay":
+  const getLevelColor = (levelKey: string) => {
+    switch (levelKey) {
+      case "easy":
         return COLORS.levelEasy;
-      case "Orta":
+      case "medium":
         return COLORS.levelMedium;
-      case "Zor":
+      case "hard":
         return COLORS.levelHard;
       default:
         return COLORS.textGrey;
@@ -126,9 +133,11 @@ export default function ScenarioListScreen() {
         />
       </View>
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={[styles.levelText, { color: getLevelColor(item.level) }]}>
-          {item.level}
+        <Text style={styles.cardTitle}>{t(item.titleKey)}</Text>
+        <Text
+          style={[styles.levelText, { color: getLevelColor(item.levelKey) }]}
+        >
+          {t(item.levelKey)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -147,9 +156,7 @@ export default function ScenarioListScreen() {
           <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("scenarios_title")}</Text>
-        <TouchableOpacity style={styles.iconButton}>
-          <MaterialIcons name="settings" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton}></TouchableOpacity>
       </View>
 
       {/* Search Bar */}
@@ -175,24 +182,24 @@ export default function ScenarioListScreen() {
       <View style={styles.filterContainer}>
         {FILTERS.map((filter) => (
           <TouchableOpacity
-            key={filter}
+            key={filter.key}
             style={[
               styles.chip,
-              selectedFilter === filter
+              selectedFilter === filter.key
                 ? styles.chipActive
                 : styles.chipInactive,
             ]}
-            onPress={() => setSelectedFilter(filter)}
+            onPress={() => setSelectedFilter(filter.key)}
           >
             <Text
               style={[
                 styles.chipText,
-                selectedFilter === filter
+                selectedFilter === filter.key
                   ? { color: COLORS.textWhite }
                   : { color: COLORS.textGrey },
               ]}
             >
-              {filter}
+              {filter.label}
             </Text>
           </TouchableOpacity>
         ))}

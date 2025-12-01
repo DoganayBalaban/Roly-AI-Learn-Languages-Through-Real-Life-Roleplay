@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, ActivityIndicator, Platform } from "react-native";
+import { View, ActivityIndicator, Platform, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -9,6 +9,7 @@ import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import "./src/i18n.ts";
+import { useTranslation } from "react-i18next";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -33,14 +34,16 @@ const API_KEYS = {
 };
 // --- TAB BAR YAPISI ---
 function MainTabs() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: COLORS.tabBarBg,
-          borderTopWidth: 0, // Çizgiyi kaldır
+          borderTopWidth: 0,
           elevation: 0,
           height: 60 + (insets.bottom > 0 ? insets.bottom : 10),
           paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
@@ -51,18 +54,16 @@ function MainTabs() {
           fontWeight: "500",
           marginTop: 4,
         },
-        tabBarActiveTintColor: COLORS.primary, // Seçiliyken Neon Yeşil
-        tabBarInactiveTintColor: COLORS.textGrey, // Seçili değilken Gri
-
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textGrey,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof MaterialIcons.glyphMap = "home";
 
-          if (route.name === "Ana Sayfa") {
+          if (route.name === "Home") {
             iconName = "home";
-          } else if (route.name === "İlerleme") {
-            // HTML'de 'leaderboard' kullanılmış
+          } else if (route.name === "Progress") {
             iconName = "leaderboard";
-          } else if (route.name === "Profil") {
+          } else if (route.name === "Profile") {
             iconName = "person";
           }
 
@@ -70,9 +71,27 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="Ana Sayfa" component={HomeScreen} />
-      <Tab.Screen name="İlerleme" component={ProgressScreen} />
-      <Tab.Screen name="Profil" component={ProfileScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: t("tab_home"),
+        }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{
+          tabBarLabel: t("tab_progress"),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: t("tab_profile"),
+        }}
+      />
     </Tab.Navigator>
   );
 }

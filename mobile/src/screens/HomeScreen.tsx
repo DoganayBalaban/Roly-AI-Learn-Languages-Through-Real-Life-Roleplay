@@ -43,6 +43,56 @@ export default function HomeScreen() {
   const [lastSession, setLastSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Senaryo adını çeviri anahtarına çevir
+  const getScenarioTranslationKey = (scenarioName: string): string => {
+    // Türkçe senaryo adlarını key'lere map et
+    const scenarioMap: { [key: string]: string } = {
+      "Havaalanında Check-in": "scenario_airport_checkin",
+      "Kafede Tanışma": "scenario_cafe_meeting",
+      "İş Görüşmesi": "scenario_job_interview",
+      "Market Alışverişi": "scenario_grocery_shopping",
+      "Restoranda Sipariş Verme": "scenario_restaurant_order",
+      "Taksi Çağırma": "scenario_taxi_call",
+      "Otel Resepsiyonu": "scenario_hotel_reception",
+      "Adres Sorma": "scenario_asking_directions",
+      "Doktor Muayenesi": "scenario_doctor_appointment",
+      "Kıyafet Alışverişi": "scenario_clothes_shopping",
+      "Polise Kayıp İhbarı": "scenario_police_report",
+      "Spor Salonu Kaydı": "scenario_gym_registration",
+      "Film Hakkında Sohbet": "scenario_movie_chat",
+      "Eczaneden İlaç Alma": "scenario_pharmacy",
+      "Teknik Destek (İnternet)": "scenario_tech_support",
+      "Kuaför Randevusu": "scenario_hair_salon",
+      "Ev Kiralama": "scenario_house_rental",
+      "Tren Bileti Alma": "scenario_train_ticket",
+      "Kütüphane Üyeliği": "scenario_library_membership",
+      "Araba Kiralama": "scenario_car_rental",
+      // İngilizce versiyonları da ekle (eğer backend İngilizce kaydetmişse)
+      "Airport Check-in": "scenario_airport_checkin",
+      "Meeting at Cafe": "scenario_cafe_meeting",
+      "Job Interview": "scenario_job_interview",
+      "Grocery Shopping": "scenario_grocery_shopping",
+      "Ordering at Restaurant": "scenario_restaurant_order",
+      "Calling a Taxi": "scenario_taxi_call",
+      "Hotel Reception": "scenario_hotel_reception",
+      "Asking for Directions": "scenario_asking_directions",
+      "Doctor's Appointment": "scenario_doctor_appointment",
+      "Clothes Shopping": "scenario_clothes_shopping",
+      "Police Report": "scenario_police_report",
+      "Gym Registration": "scenario_gym_registration",
+      "Chatting About Movies": "scenario_movie_chat",
+      "Getting Medicine at Pharmacy": "scenario_pharmacy",
+      "Tech Support (Internet)": "scenario_tech_support",
+      "Hair Salon Appointment": "scenario_hair_salon",
+      "House Rental": "scenario_house_rental",
+      "Buying Train Ticket": "scenario_train_ticket",
+      "Library Membership": "scenario_library_membership",
+      "Car Rental": "scenario_car_rental",
+    };
+
+    return scenarioMap[scenarioName] || scenarioName;
+  };
+
   // useFocusEffect: Ekran her odaklandığında (geri gelince) çalışır
   useFocusEffect(
     useCallback(() => {
@@ -148,7 +198,7 @@ export default function HomeScreen() {
               onPress={() =>
                 navigation.navigate("Chat", {
                   sessionId: lastSession._id,
-                  title: lastSession.scenario,
+                  title: t(getScenarioTranslationKey(lastSession.scenario)),
                 })
               }
             >
@@ -171,7 +221,9 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.cardInfo}>
-                  <Text style={styles.cardTitle}>{lastSession.scenario}</Text>
+                  <Text style={styles.cardTitle}>
+                    {t(getScenarioTranslationKey(lastSession.scenario))}
+                  </Text>
                   <View style={styles.progressBarBg}>
                     <View
                       style={[
