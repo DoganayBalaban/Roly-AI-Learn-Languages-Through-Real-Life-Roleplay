@@ -17,11 +17,13 @@
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
+    "expo-server-sdk": "^4.0.0",
     "express": "^5.1.0",
     "google-auth-library": "^10.5.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.20.0",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "openai": "^6.9.1",
     "zod": "^4.1.12"
   },

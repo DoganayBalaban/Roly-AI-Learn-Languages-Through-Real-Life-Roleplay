@@ -13,6 +13,7 @@ import {
   deleteAccount,
   updateAvatar,
   claimQuestReward,
+  updatePushToken,
 } from "../controllers/user.controller";
 import { protect } from "../middlewares/auth.middleware";
 
@@ -31,4 +32,5 @@ router.post("/google", googleLogin);
 router.delete("/delete", protect, deleteAccount);
 router.put("/avatar", protect, updateAvatar);
 router.post("/quests/claim", protect, claimQuestReward);
+router.put("/push-token", protect, updatePushToken);
 export default router;

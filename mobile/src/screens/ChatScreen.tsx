@@ -13,6 +13,7 @@ import {
   Animated,
   Alert,
   Modal,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Audio } from "expo-av";
@@ -36,6 +37,7 @@ import { COLORS } from "../constants/color";
 import { useAuth } from "../context/AuthContext";
 import { MALE_NAMES_LIST } from "../constants/name";
 import SkeletonItem from "../components/SkeletonItem";
+
 // --- REKLAM BİRİMİ ---
 const adUnitId = __DEV__
   ? TestIds.INTERSTITIAL
@@ -506,9 +508,11 @@ export default function ChatScreen() {
       {/* FOOTER & INPUT */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top - 80 : 0}
       >
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <ScrollView
+          style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
+        >
           <TouchableOpacity onPress={endSession} style={styles.endButton}>
             <Text style={styles.endButtonText}>
               {loadingFeedback ? (
@@ -555,7 +559,7 @@ export default function ChatScreen() {
               />
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
 
       {/* KELİME MODALI */}

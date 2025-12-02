@@ -6,8 +6,9 @@ import React, {
   useState,
 } from "react";
 import * as SecureStore from "expo-secure-store";
-import api from "../services/api";
+import api, { registerPushToken } from "../services/api";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { getExpoPushToken } from "../utils/notifications";
 
 // 1. User Interface'ini Güncelledik (Preferences ekledik)
 interface User {
@@ -72,6 +73,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initAuth();
   }, []);
 
+  const syncPushToken = async () => {
+    try {
+      const token = await getExpoPushToken();
+      if (token) {
+        await registerPushToken(token);
+        console.log("Push token registered");
+      }
+    } catch (error) {
+      console.log("Push token sync hatası");
+    }
+  };
+
   const checkWelcomeStatus = async () => {
     try {
       const hasSeen = await SecureStore.getItemAsync("has_seen_welcome");
@@ -101,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Token yoksa loading'i bitir
         setIsLoading(false);
       }
+      syncPushToken();
     } catch (error) {
       console.log("Login check failed:", error);
       setIsLoading(false);
@@ -131,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await SecureStore.setItemAsync("user_token", token);
       // Token kaydedildikten sonra tam kullanıcı verisini çek
       await fetchUserProfile();
+      syncPushToken();
     } catch (error: any) {
       throw error.response?.data || { message: "Login failed" };
     }
@@ -151,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Token kaydedildikten sonra tam kullanıcı verisini çek
       await fetchUserProfile();
       setIsNewUser(true);
+      syncPushToken();
     } catch (error: any) {
       throw error.response?.data || { message: "Registration failed" };
     }
@@ -167,6 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { token } = res.data;
         await SecureStore.setItemAsync("user_token", token);
         setIsNewUser(true);
+        syncPushToken();
         // Token kaydedildikten sonra tam kullanıcı verisini çek
         await fetchUserProfile();
       }

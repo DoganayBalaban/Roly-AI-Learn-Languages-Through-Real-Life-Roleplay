@@ -416,3 +416,12 @@ export const claimQuestReward = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Ödül alınamadı." });
   }
 };
+export const updatePushToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const { token } = req.body;
+    await User.findByIdAndUpdate(req.user._id, { pushToken: token });
+    res.json({ message: "Token güncellendi." });
+  } catch (error) {
+    res.status(500).json({ message: "Token hatası" });
+  }
+};

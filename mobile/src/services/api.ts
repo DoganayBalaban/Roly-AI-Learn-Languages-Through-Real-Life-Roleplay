@@ -106,4 +106,7 @@ export const claimQuest = async (questId: string) => {
   const response = await api.post("/auth/quests/claim", { questId });
   return response.data;
 };
+export const registerPushToken = async (token: string) => {
+  await api.put("/auth/push-token", { token });
+};
 export default api;

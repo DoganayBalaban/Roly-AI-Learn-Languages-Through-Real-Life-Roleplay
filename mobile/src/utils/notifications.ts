@@ -1,6 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { Alert, Platform } from "react-native";
-
+import * as Device from "expo-device";
+import Constants from "expo-constants";
 // 1. Bildirim İzni İste
 export async function registerForPushNotificationsAsync() {
   let token;
@@ -64,3 +65,25 @@ export async function scheduleDailyReminder() {
 export async function cancelReminders() {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
+
+export const getExpoPushToken = async () => {
+  if (!Device.isDevice) {
+    console.log("Simülatörde push token alınamaz.");
+    return null;
+  }
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+  if (existingStatus !== "granted") {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+  if (finalStatus !== "granted") {
+    console.log("İzin verilmedi.");
+    return null;
+  }
+  const projectId =
+    Constants.expoConfig?.extra?.eas.projectId ||
+    Constants.easConfig?.projectId;
+  const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+  return tokenData.data;
+};
