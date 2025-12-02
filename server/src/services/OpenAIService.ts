@@ -39,22 +39,32 @@ export const transcribeAudioWithWhisper = async (
     throw new Error("Ses dosyası yazıya çevrilemedi.");
   }
 };
-export const generateFeedbackAnalysis = async (conversationHistory: any[]) => {
+export const generateFeedbackAnalysis = async (
+  conversationHistory: any[],
+  nativeLanguage: string
+) => {
   const systemPrompt = `
-      You are an expert English teacher. 
-      Analyze the user's performance in the following roleplay conversation.
-      Do not continue the roleplay. Provide feedback.
-      
-      Return ONLY a JSON object in this format:
-      {
-        "score": number (0-100 based on accuracy and fluency),
-        "grammarMistakes": [
-           { "original": "user's wrong sentence", "correction": "corrected version", "explanation": "why it is wrong" }
-        ],
-        "vocabularySuggestions": ["word1", "word2" (relevant to the topic)],
-        "overallComment": "Brief encouraging feedback"
-      }
-    `;
+    You are an expert language tutor. 
+    Analyze the user's performance in the conversation history provided.
+    
+    CRITICAL INSTRUCTION: 
+    All explanations, comments, and corrections must be written in **${nativeLanguage}**.
+    
+    Output must be a valid JSON object with this structure:
+    {
+      "score": number (0-100 based on accuracy and fluency),
+      "grammarMistakes": [
+         { 
+           "original": "user's wrong sentence", 
+           "correction": "corrected version", 
+           "explanation": "Explanation of the mistake in ${nativeLanguage}" 
+         }
+      ],
+      "vocabularySuggestions": ["word1", "word2" (relevant to the topic)],
+      "suggestions": ["Better way to say X", "More natural phrasing for Y"],
+      "overallComment": "Brief encouraging feedback in ${nativeLanguage}"
+    }
+  `;
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     response_format: { type: "json_object" }, // JSON garantisi
@@ -70,16 +80,16 @@ export const generateFeedbackAnalysis = async (conversationHistory: any[]) => {
 export const getWordDefinition = async (
   word: string,
   context: string,
-  targetLanguage: string = "Turkish"
+  outputLanguage: string
 ) => {
   const prompt = `
     You are a dictionary helper.
-    Task: Translate the word "${word}" to ${targetLanguage}.
+    Task: Translate the word "${word}" to ${outputLanguage}.
     Context sentence where the word is used: "${context}".
     
     Output format: Just the translation and maybe a very short definition or synonym in parenthesis. 
     Keep it concise (max 5-6 words).
-    Example Output: "Elma (bir meyve türü)"
+    IMPORTANT: The translation/definition MUST be in ${outputLanguage}.
   `;
 
   const completion = await openai.chat.completions.create({

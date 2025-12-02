@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 
 // React Native'in global değişkeni __DEV__:
 // Geliştirme modundaysan (bilgisayara bağlıysan) 'true' döner.
@@ -25,9 +25,10 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 15000,
 });
 
-// Request Interceptor (Aynen kalsın)
+// Request Interceptor
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("user_token");
@@ -37,6 +38,51 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+api.interceptors.response.use(
+  (response) => {
+    // Başarılı cevapları olduğu gibi geçir
+    return response;
+  },
+  async (error) => {
+    // 1. İNTERNET BAĞLANTISI YOKSA
+    // "Network Error" genelde internet kapalıyken veya sunucu kapalıyken döner.
+    if (error.message === "Network Error" || !error.response) {
+      Alert.alert(
+        "Bağlantı Hatası ⚠️",
+        "Sunucuya ulaşılamıyor. Lütfen internet bağlantınızı kontrol edin."
+      );
+      return Promise.reject(error);
+    }
+
+    // 2. ZAMAN AŞIMI (TIMEOUT)
+    // İnternet çok yavaşsa ve 15 saniye boyunca cevap gelmediyse.
+    if (error.code === "ECONNABORTED") {
+      Alert.alert(
+        "Zaman Aşımı ⏳",
+        "İstek çok uzun sürdü. Lütfen tekrar deneyin."
+      );
+      return Promise.reject(error);
+    }
+
+    // 3. YETKİSİZ GİRİŞ (401 Unauthorized)
+    // Token süresi dolduysa veya geçersizse.
+    if (error.response?.status === 401) {
+      // Burada sessizce hatayı dönebiliriz, AuthContext logout işlemini yönetir.
+      // Veya direkt uyarı verebiliriz:
+      // Alert.alert("Oturum Doldu", "Lütfen tekrar giriş yapın.");
+    }
+
+    // 4. SUNUCU HATASI (500)
+    if (error.response?.status >= 500) {
+      Alert.alert(
+        "Sunucu Hatası ",
+        "Bizden kaynaklı bir sorun oluştu. Lütfen daha sonra tekrar deneyin."
+      );
+    }
+
+    return Promise.reject(error);
+  }
 );
 export const uploadAudio = async (uri: string) => {
   const formData = new FormData();
