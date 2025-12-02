@@ -109,6 +109,7 @@ export const endSession = async (req: AuthRequest, res: Response) => {
   try {
     const { sessionId } = req.body;
     const userId = req.user._id;
+    const user = await User.findById(userId);
     const session = await Session.findOne({
       _id: sessionId,
       userId,
@@ -116,14 +117,17 @@ export const endSession = async (req: AuthRequest, res: Response) => {
     if (!session) {
       return res.status(404).json({ message: "Session not found" });
     }
-    const feedback = await generateFeedbackAnalysis(session.messages);
+    const nativeLang = user?.preferences?.nativeLanguage || "English";
+    const feedback = await generateFeedbackAnalysis(
+      session.messages,
+      nativeLang
+    );
     if (!feedback) {
       return res
         .status(500)
         .json({ message: "Failed to parse feedback from AI" });
     }
     const xpEarned = feedback.score || 0;
-    const user = await User.findById(userId);
     const today = new Date();
     let newStreak = user?.stats.streak || 0;
     let lastDate = user?.stats.lastActivityDate

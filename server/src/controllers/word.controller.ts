@@ -76,7 +76,11 @@ export const translate = async (req: AuthRequest, res: Response) => {
   try {
     const { word, contextSentence } = req.body;
     const user = await User.findById(req.user._id);
-    const nativeLang = user?.preferences?.nativeLanguage;
+
+    // Kullanıcının ana dilini al (Varsayılan İngilizce olsun global için)
+    const nativeLang = user?.preferences?.nativeLanguage || "English";
+
+    // Servise nativeLang'i gönderiyoruz
     const translation = await getWordDefinition(
       word,
       contextSentence,
@@ -85,7 +89,6 @@ export const translate = async (req: AuthRequest, res: Response) => {
 
     res.json({ translation });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Çeviri yapılamadı." });
+    res.status(500).json({ message: "Translation failed." });
   }
 };
