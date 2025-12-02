@@ -25,6 +25,8 @@ import FeedbackScreen from "./src/screens/FeedbackScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import PaywallScreen from "./src/screens/PaywallScreen";
 import VocabularyScreen from "./src/screens/VocabularyScreen";
+import OnboardingScreen from "./src/screens/OnboardingScreen";
+import WelcomeScreen from "./src/screens/WelcomeScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -98,7 +100,7 @@ function MainTabs() {
 
 // --- ANA NAVİGASYON ---
 const AppNavigator = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isNewUser, isFirstLaunch } = useAuth();
 
   if (isLoading) {
     return (
@@ -112,48 +114,62 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator>
         {user ? (
-          // GİRİŞ YAPMIŞ KULLANICI
-          <>
-            {/* Ana ekran artık Tab Bar olacak */}
+          isNewUser ? (
             <Stack.Screen
-              name="MainTabs"
-              component={MainTabs}
+              name="Onboarding"
+              component={OnboardingScreen}
               options={{ headerShown: false }}
             />
+          ) : (
+            <>
+              {/* Ana ekran artık Tab Bar olacak */}
+              <Stack.Screen
+                name="MainTabs"
+                component={MainTabs}
+                options={{ headerShown: false }}
+              />
 
-            {/* Chat ekranı Tab Bar'ın dışında (üstünde) açılmalı */}
-            <Stack.Screen
-              name="Chat"
-              component={ChatScreen}
-              options={{ headerBackTitle: "Geri" }}
-            />
-            <Stack.Screen
-              name="ScenarioList"
-              component={ScenarioListScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Feedback"
-              component={FeedbackScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Paywall"
-              component={PaywallScreen}
-              options={{
-                headerShown: false,
-                presentation: "modal", // Bu, ekranın aşağıdan yukarı kayarak açılmasını sağlar (iOS'te çok şık durur)
-              }}
-            />
-            <Stack.Screen
-              name="Vocabulary"
-              component={VocabularyScreen}
-              options={{ headerShown: false }}
-            />
-          </>
+              {/* Chat ekranı Tab Bar'ın dışında (üstünde) açılmalı */}
+              <Stack.Screen
+                name="Chat"
+                component={ChatScreen}
+                options={{ headerBackTitle: "Geri" }}
+              />
+              <Stack.Screen
+                name="ScenarioList"
+                component={ScenarioListScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Feedback"
+                component={FeedbackScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Paywall"
+                component={PaywallScreen}
+                options={{
+                  headerShown: false,
+                  presentation: "modal", // Bu, ekranın aşağıdan yukarı kayarak açılmasını sağlar (iOS'te çok şık durur)
+                }}
+              />
+              <Stack.Screen
+                name="Vocabulary"
+                component={VocabularyScreen}
+                options={{ headerShown: false }}
+              />
+            </>
+          )
         ) : (
           // GİRİŞ YAPMAMIŞ KULLANICI
           <>
+            {isFirstLaunch && (
+              <Stack.Screen
+                name="Welcome"
+                component={WelcomeScreen}
+                options={{ headerShown: false }}
+              />
+            )}
             <Stack.Screen
               name="Login"
               component={LoginScreen}

@@ -41,31 +41,55 @@ interface AuthContextType {
   logout: () => Promise<void>;
   deleteUser: () => Promise<void>;
   updateUser: (userData: User) => void;
+  isNewUser: boolean;
+  setIsNewUser: React.Dispatch<React.SetStateAction<boolean>>;
+  isFirstLaunch: boolean;
+  completeWelcome: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [isNewUser, setIsNewUser] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isFirstLaunch, setIsFirstLaunch] = useState(true);
   useEffect(() => {
     const initAuth = async () => {
-      // 1. Google Ayarları (Env + Expo Constants)
       GoogleSignin.configure({
-        // Backend için Web Client ID (Google Cloud'dan aldığın)
         webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-
-        // iOS Simülatörü / cihaz için Native Client ID
         iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
       });
 
       // 2. Mevcut oturumu kontrol et
-      await checkLoginStatus();
+      await Promise.all([
+        checkLoginStatus(),
+        checkWelcomeStatus(), // <-- Bunu çağırıyoruz
+      ]);
+      setIsLoading(false);
     };
 
     initAuth();
   }, []);
+
+  const checkWelcomeStatus = async () => {
+    try {
+      const hasSeen = await SecureStore.getItemAsync("has_seen_welcome");
+      if (hasSeen === "true") {
+        setIsFirstLaunch(false); // Daha önce görmüş
+      } else {
+        setIsFirstLaunch(true); // Görmemiş
+      }
+    } catch (e) {
+      console.log("Welcome check failed");
+    }
+  };
+
+  // --- YENİ: Tanıtımı Bitir ---
+  const completeWelcome = async () => {
+    await SecureStore.setItemAsync("has_seen_welcome", "true");
+    setIsFirstLaunch(false);
+  };
 
   const checkLoginStatus = async () => {
     try {
@@ -126,6 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await SecureStore.setItemAsync("user_token", token);
       // Token kaydedildikten sonra tam kullanıcı verisini çek
       await fetchUserProfile();
+      setIsNewUser(true);
     } catch (error: any) {
       throw error.response?.data || { message: "Registration failed" };
     }
@@ -141,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         const { token } = res.data;
         await SecureStore.setItemAsync("user_token", token);
+        setIsNewUser(true);
         // Token kaydedildikten sonra tam kullanıcı verisini çek
         await fetchUserProfile();
       }
@@ -173,6 +199,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         updateUser,
         deleteUser,
+        isNewUser,
+        setIsNewUser,
+        isFirstLaunch,
+        completeWelcome,
       }}
     >
       {children}

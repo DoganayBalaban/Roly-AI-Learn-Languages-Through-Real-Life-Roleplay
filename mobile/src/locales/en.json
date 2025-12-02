@@ -237,6 +237,22 @@
   "progress_fraction": "{{current}}/{{target}}",
   "quest_session_complete": "Complete 1 Scenario",
   "quest_word_save": "Save 3 New Words",
-  "quest_voice_use": "Use Voice Chat"
+  "quest_voice_use": "Use Voice Chat",
+  "onboarding_step": "STEP {{step}} / 2",
+  "onboarding_native_title": "What's your native language?",
+  "onboarding_target_title": "Which language do you want to learn?",
+  "onboarding_native_subtitle": "Select the language you know so we can help you better.",
+  "onboarding_target_subtitle": "Scenarios and practices will be in this language.",
+  "onboarding_continue": "Continue",
+  "onboarding_start": "Start",
+  "welcome_slide1_title": "Don't Memorize, Live It",
+  "welcome_slide1_desc": "Forget boring word lists. Learn languages by role-playing in real-life scenarios.",
+  "welcome_slide2_title": "Your AI Coach",
+  "welcome_slide2_desc": "Analyzes your speech instantly, corrects your mistakes, and improves your pronunciation.",
+  "welcome_slide3_title": "Track Your Progress",
+  "welcome_slide3_desc": "Complete daily quests, earn XP, and take your language level to the top.",
+  "welcome_skip": "Skip",
+  "welcome_next": "Next",
+  "welcome_start": "Start"
 }
   
