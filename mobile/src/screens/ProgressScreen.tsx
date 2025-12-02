@@ -189,16 +189,7 @@ export default function ProgressScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.iconButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("progress_and_quests")}</Text>
-        <TouchableOpacity style={styles.iconButton}>
-          <MaterialIcons name="settings" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
       </View>
 
       {/* SEGMENTED CONTROL (TAB) */}

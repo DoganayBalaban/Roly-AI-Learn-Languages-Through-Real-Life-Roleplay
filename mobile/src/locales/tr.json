@@ -237,6 +237,22 @@
   "progress_fraction": "{{current}}/{{target}}",
   "quest_session_complete": "1 Senaryo Tamamla",
   "quest_word_save": "3 Yeni Kelime Kaydet",
-  "quest_voice_use": "Sesli Konuşma Yap"
+  "quest_voice_use": "Sesli Konuşma Yap",
+  "onboarding_step": "ADIM {{step}} / 2",
+  "onboarding_native_title": "Ana dilin nedir?",
+  "onboarding_target_title": "Hangi dili öğrenmek istiyorsun?",
+  "onboarding_native_subtitle": "Sana daha iyi yardımcı olabilmemiz için bildiğin dili seç.",
+  "onboarding_target_subtitle": "Senaryolar ve pratikler bu dilde olacak.",
+  "onboarding_continue": "Devam Et",
+  "onboarding_start": "Başla",
+  "welcome_slide1_title": "Ezberleme, Yaşa",
+  "welcome_slide1_desc": "Sıkıcı kelime listelerini unut. Gerçek hayat senaryolarında rol yaparak dil öğren.",
+  "welcome_slide2_title": "Yapay Zeka Koçun",
+  "welcome_slide2_desc": "Konuşmanı anında analiz eder, hatalarını düzeltir ve telaffuzunu geliştirir.",
+  "welcome_slide3_title": "Gelişimini Takip Et",
+  "welcome_slide3_desc": "Günlük görevleri tamamla, XP kazan ve dil seviyeni zirveye taşı.",
+  "welcome_skip": "Atla",
+  "welcome_next": "İlerle",
+  "welcome_start": "Başla"
 }
   
