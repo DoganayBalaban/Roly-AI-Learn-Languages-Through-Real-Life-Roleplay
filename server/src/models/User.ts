@@ -23,6 +23,7 @@ export interface IUser extends Document {
   fullName: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  pushToken?: string;
   isPremium: boolean;
   avatarId: string;
   preferences: {
@@ -54,6 +55,7 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
+    pushToken: { type: String, default: null },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpires: { type: Date, default: null },
     isPremium: { type: Boolean, default: false },
