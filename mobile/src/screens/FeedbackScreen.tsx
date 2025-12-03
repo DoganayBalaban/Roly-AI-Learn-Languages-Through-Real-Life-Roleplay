@@ -105,15 +105,10 @@ export default function FeedbackScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.iconButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton}></TouchableOpacity>
         <Text style={styles.headerTitle}>{t("feedback_title")}</Text>
         <TouchableOpacity style={styles.iconButton}>
-          <MaterialIcons name="share" size={24} color={COLORS.textWhite} />
+          //Paylaşma gelecek
         </TouchableOpacity>
       </View>
 
