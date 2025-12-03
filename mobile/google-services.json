@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "618439721328",
+    "project_id": "rolyai-479321",
+    "storage_bucket": "rolyai-479321.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:618439721328:android:d1faeeddbe92a04ed54fb5",
+        "android_client_info": {
+          "package_name": "com.doganay.rolyai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "618439721328-jkgqdna2q6pmhq5i0vu2feg7l08l6bor.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doganay.rolyai",
+            "certificate_hash": "c089adf8750702f708bf9d9ed7bb0e53b151b442"
+          }
+        },
+        {
+          "client_id": "618439721328-l9o03a085hhiej167m327kkveif6tccn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2y-KBeJNVtnl7_FHrJlL9VAq6o2LE37M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "618439721328-l9o03a085hhiej167m327kkveif6tccn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "618439721328-9namoain2tk94d7qvnlte7k8rovk9ois.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.doganay.rolyai"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
