@@ -478,7 +478,7 @@ export default function ChatScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <MaterialIcons name="arrow-back" size={28} color={COLORS.textWhite} />
+            <MaterialIcons name="arrow-back" size={28} color={COLORS.textWhite} />
         </TouchableOpacity>
 
         <View style={styles.headerProfile}>
@@ -507,8 +507,8 @@ export default function ChatScreen() {
 
       {/* FOOTER & INPUT */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top - 80 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "padding"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top - 80 : insets.top - 40}
       >
         <ScrollView
           style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}

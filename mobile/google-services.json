@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "618439721328-7okqamgr8o7f7vgu2n6d5bo87ct2ps2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doganay.rolyai",
+            "certificate_hash": "da74ceb351aa1a24617a505327431c8f62d06893"
+          }
+        },
+        {
+          "client_id": "618439721328-jd3jj6q2erkca96tm0ebev7pr7vbteid.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doganay.rolyai",
+            "certificate_hash": "0fca5772f3f4187020612704076d28c6d4d063ca"
+          }
+        },
+        {
           "client_id": "618439721328-jkgqdna2q6pmhq5i0vu2feg7l08l6bor.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -22,7 +38,7 @@
           }
         },
         {
-          "client_id": "618439721328-l9o03a085hhiej167m327kkveif6tccn.apps.googleusercontent.com",
+          "client_id": "618439721328-hmiuug11kangt0ibijki61hb6nnbbf1b.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,11 +51,11 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "618439721328-l9o03a085hhiej167m327kkveif6tccn.apps.googleusercontent.com",
+              "client_id": "618439721328-hmiuug11kangt0ibijki61hb6nnbbf1b.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "618439721328-9namoain2tk94d7qvnlte7k8rovk9ois.apps.googleusercontent.com",
+              "client_id": "618439721328-74etka11iq1a17ved0gu8m8h4rn769a8.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.doganay.rolyai"
