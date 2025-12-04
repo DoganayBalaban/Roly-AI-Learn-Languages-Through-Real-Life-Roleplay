@@ -13,6 +13,11 @@ interface IFeedback {
     correction: string;
     explanation: string;
   }>;
+  pronunciationMistakes: Array<{
+    word: string;
+    correctPronunciation: string;
+    explanation: string;
+  }>;
   vocabularySuggestions: string[];
   overallComment: string;
 }
@@ -58,6 +63,13 @@ const sessionSchema = new mongoose.Schema(
         {
           original: String,
           correction: String,
+          explanation: String,
+        },
+      ],
+      pronunciationMistakes: [
+        {
+          word: String,
+          correctPronunciation: String,
           explanation: String,
         },
       ],

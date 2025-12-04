@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "dev:ios:start":"expo start --dev-client",
+    "dev:ios:start": "expo start --dev-client",
     "dev:ios:build": "eas build --profile development-simulator --platform ios"
   },
   "dependencies": {
@@ -21,11 +21,13 @@
     "expo-av": "~16.0.7",
     "expo-dev-client": "~6.0.18",
     "expo-device": "~8.0.9",
+    "expo-file-system": "^19.0.19",
     "expo-image": "~3.0.10",
     "expo-localization": "~17.0.7",
     "expo-notifications": "~0.32.13",
     "expo-router": "~6.0.15",
     "expo-secure-store": "~15.0.7",
+    "expo-sharing": "^14.0.7",
     "expo-speech": "~14.0.7",
     "expo-status-bar": "~3.0.8",
     "i18next": "^25.6.3",
@@ -36,7 +38,8 @@
     "react-native-google-mobile-ads": "^16.0.0",
     "react-native-purchases": "^9.6.8",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0"
+    "react-native-screens": "~4.16.0",
+    "react-native-view-shot": "^4.0.3"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

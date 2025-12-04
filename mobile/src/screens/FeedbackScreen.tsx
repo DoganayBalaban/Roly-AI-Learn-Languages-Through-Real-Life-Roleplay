@@ -8,19 +8,76 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  Share,
+  Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../constants/color";
-import { saveWord } from "../services/api"; // <-- EKLENDI
+import { saveWord } from "../services/api";
 
-// --- ACCORDION COMPONENT ---
+// --- PRONUNCIATION ITEM COMPONENT ---
+const PronunciationItem = ({
+  word,
+  correctPronunciation,
+  explanation,
+}: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <View
+      style={[styles.accordionContainer, { borderLeftColor: COLORS.danger }]}
+    >
+      <TouchableOpacity
+        style={styles.accordionHeader}
+        onPress={() => setIsOpen(!isOpen)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.accordionTitleRow}>
+          <MaterialIcons
+            name="volume-up"
+            size={20}
+            color={COLORS.danger}
+            style={{ marginTop: 2 }}
+          />
+          <Text style={styles.accordionTitle}>{word}</Text>
+        </View>
+        <MaterialIcons
+          name={isOpen ? "expand-less" : "expand-more"}
+          size={24}
+          color={COLORS.textWhite}
+        />
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View style={styles.accordionBody}>
+          <View style={styles.correctionRow}>
+            <MaterialIcons
+              name="volume-up"
+              size={20}
+              color={COLORS.success}
+              style={{ marginTop: 2 }}
+            />
+            <Text style={styles.correctionText}>
+              {word} → {correctPronunciation}
+            </Text>
+          </View>
+          <Text style={styles.explanationText}>{explanation}</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// --- GRAMMAR ITEM COMPONENT ---
 const GrammarItem = ({ original, correction, explanation }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={styles.accordionContainer}>
+    <View
+      style={[styles.accordionContainer, { borderLeftColor: COLORS.error }]}
+    >
       <TouchableOpacity
         style={styles.accordionHeader}
         onPress={() => setIsOpen(!isOpen)}
@@ -65,6 +122,92 @@ export default function FeedbackScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
+  // --- PAYLAŞMA FONKSİYONU ---
+  const handleShare = async () => {
+    try {
+      const message = generateShareMessage(data);
+
+      const shareOptions = {
+        message: message,
+        title: t("feedback_share_title"),
+        // iOS'te paylaşım başlığı
+        dialogTitle: t("feedback_share_title"),
+        // Android'de paylaşım başlığı
+        subject: t("feedback_share_title"),
+      };
+
+      const result = await Share.share(shareOptions);
+
+      if (result.action === Share.sharedAction) {
+        // Paylaşım başarılı oldu
+        if (result.activityType) {
+          // Seçilen paylaşım yöntemi (örneğin: mail, mesaj, vs.)
+          console.log("Shared with activity type:", result.activityType);
+        } else {
+          // Paylaşım yapıldı ama özel bir aktivite seçilmedi
+          console.log("Shared");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Kullanıcı paylaşımı iptal etti
+        console.log("Share dismissed");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      Alert.alert(t("error"), t("share_error"));
+    }
+  };
+
+  // --- PAYLAŞIM MESAJI OLUŞTURMA ---
+  const generateShareMessage = (feedbackData: any) => {
+    let message = `${t("feedback_share_message")}\n\n`;
+
+    // Genel Puan
+    message += `⭐ ${t("overall_score")}: ${feedbackData.score}/100\n`;
+    message += `📊 ${t("cefr_level", { level: feedbackData.cefr })}\n\n`;
+
+    // Dilbilgisi Hataları
+    if (feedbackData.grammarMistakes?.length > 0) {
+      message += `📝 ${t("grammar_review")}:\n`;
+      feedbackData.grammarMistakes.forEach((mistake: any, index: number) => {
+        message += `${index + 1}. ${mistake.original} → ${
+          mistake.correction
+        }\n`;
+      });
+      message += "\n";
+    }
+
+    // Telaffuz Hataları
+    if (feedbackData.pronunciationMistakes?.length > 0) {
+      message += `🔊 ${t("pronunciation_review")}:\n`;
+      feedbackData.pronunciationMistakes.forEach(
+        (mistake: any, index: number) => {
+          message += `${index + 1}. ${mistake.word} → ${
+            mistake.correctPronunciation
+          }\n`;
+        }
+      );
+      message += "\n";
+    }
+
+    // Öneriler
+    if (feedbackData.suggestions?.length > 0) {
+      message += `💡 ${t("suggestions")}:\n`;
+      feedbackData.suggestions.forEach((suggestion: string, index: number) => {
+        message += `• ${suggestion}\n`;
+      });
+      message += "\n";
+    }
+
+    // Genel Yorum
+    if (feedbackData.comment) {
+      message += `💬 ${t("feedback_comment")}:\n${feedbackData.comment}\n\n`;
+    }
+
+    message += t("shared_via_roly");
+
+    return message;
+  };
+
   const { feedback, xpEarned } = route.params || { feedback: {}, xpEarned: 0 };
 
   // --- LOCAL STATE: O an kaydedilen kelimeleri takip etmek için ---
@@ -74,6 +217,7 @@ export default function FeedbackScreen() {
     score: feedback?.score || 0,
     cefr: feedback?.cefr || "A1",
     grammarMistakes: feedback?.grammarMistakes || [],
+    pronunciationMistakes: feedback?.pronunciationMistakes || [],
     suggestions: feedback?.suggestions || [],
     vocabulary: feedback?.vocabularySuggestions || [],
     comment: feedback?.overallComment || "Pratik tamamlandı.",
@@ -107,8 +251,13 @@ export default function FeedbackScreen() {
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton}></TouchableOpacity>
         <Text style={styles.headerTitle}>{t("feedback_title")}</Text>
-        <TouchableOpacity style={styles.iconButton}>
-          //Paylaşma gelecek
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={handleShare}
+          accessibilityLabel={t("share_feedback")}
+          accessibilityHint={t("share_feedback_hint")}
+        >
+          <MaterialIcons name="share" size={24} color={COLORS.textWhite} />
         </TouchableOpacity>
       </View>
 
@@ -167,7 +316,22 @@ export default function FeedbackScreen() {
             </View>
             <View style={styles.gap12}>
               {data.grammarMistakes.map((item: any, index: number) => (
-                <GrammarItem key={index} {...item} />
+                <GrammarItem key={`grammar-${index}`} {...item} />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* PRONUNCIATION */}
+        {data.pronunciationMistakes.length > 0 && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <MaterialIcons name="volume-up" size={24} color={COLORS.danger} />
+              <Text style={styles.cardTitle}>{t("pronunciation_review")}</Text>
+            </View>
+            <View style={styles.gap12}>
+              {data.pronunciationMistakes.map((item: any, index: number) => (
+                <PronunciationItem key={`pronunciation-${index}`} {...item} />
               ))}
             </View>
           </View>
@@ -336,9 +500,12 @@ const styles = StyleSheet.create({
 
   gap12: { gap: 12 },
   accordionContainer: {
-    backgroundColor: "rgba(255,255,255,0.03)",
-    borderRadius: 12,
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 8,
     overflow: "hidden",
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.error, // Default color, can be overridden
+    marginBottom: 12,
   },
   accordionHeader: {
     flexDirection: "row",
