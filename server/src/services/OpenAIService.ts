@@ -128,3 +128,23 @@ export const textToSpeech = async (text: string, voice: string = "alloy") => {
     throw new Error("Ses oluşturulamadı.");
   }
 };
+export const getSentenceDefinition = async (
+  sentence: string,
+  nativeLang: string
+) => {
+  const prompt = `
+    You are a dictionary helper.
+    Task: Translate the sentence "${sentence}" to ${nativeLang}.
+    
+    Output format: Just the translation.
+    IMPORTANT: The translation/definition MUST be in ${nativeLang}.
+  `;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 30,
+  });
+
+  return completion.choices[0].message.content || "Anlam bulunamadı.";
+};

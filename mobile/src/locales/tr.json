@@ -224,7 +224,6 @@
   "progress_and_quests": "İlerleme ve Görevler",
   "progress_tab": "İlerleme",
   "daily_quests_tab": "Günlük Görevler",
-  "reached_level": "{{level}} Seviyesine Ulaştın!",
   "current_english_level": "Mevcut İngilizce Seviyen: {{level}}",
   "level_remaining_percent": "{{next}} seviyesine %{{remaining}} kaldı",
   "completed_scenarios_label": "Tamamlanan Senaryolar",
@@ -261,6 +260,10 @@
   "welcome_slide3_desc": "Günlük görevleri tamamla, XP kazan ve dil seviyeni zirveye taşı.",
   "welcome_skip": "Atla",
   "welcome_next": "İlerle",
-  "welcome_start": "Başla"
+  "welcome_start": "Başla",
+  "chat_translation":"Çeviri",
+  "go_premium":"Premium'a Geç",
+  "unlock_pronunciation":"Telaffuzu Aç",
+  "unlock_pronunciation_desc":"Telaffuzu açarak kelimelerinizin nasıl seslendiğini duyabilirsiniz."
 }
   

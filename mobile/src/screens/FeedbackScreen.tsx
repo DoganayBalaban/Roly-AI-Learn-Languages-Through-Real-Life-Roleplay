@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// FeedbackScreen.js
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +9,6 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Share,
   Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -16,6 +16,10 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { COLORS } from "../constants/color";
 import { saveWord } from "../services/api";
+import ViewShot from "react-native-view-shot";
+import Share from "react-native-share";
+import { ShareCard } from "../components/ShareCard";
+import { useAuth } from "../context/AuthContext";
 
 // --- PRONUNCIATION ITEM COMPONENT ---
 const PronunciationItem = ({
@@ -121,97 +125,13 @@ export default function FeedbackScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { user } = useAuth();
 
-  // --- PAYLAŞMA FONKSİYONU ---
-  const handleShare = async () => {
-    try {
-      const message = generateShareMessage(data);
-
-      const shareOptions = {
-        message: message,
-        title: t("feedback_share_title"),
-        // iOS'te paylaşım başlığı
-        dialogTitle: t("feedback_share_title"),
-        // Android'de paylaşım başlığı
-        subject: t("feedback_share_title"),
-      };
-
-      const result = await Share.share(shareOptions);
-
-      if (result.action === Share.sharedAction) {
-        // Paylaşım başarılı oldu
-        if (result.activityType) {
-          // Seçilen paylaşım yöntemi (örneğin: mail, mesaj, vs.)
-          console.log("Shared with activity type:", result.activityType);
-        } else {
-          // Paylaşım yapıldı ama özel bir aktivite seçilmedi
-          console.log("Shared");
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // Kullanıcı paylaşımı iptal etti
-        console.log("Share dismissed");
-      }
-    } catch (error) {
-      console.error("Error sharing:", error);
-      Alert.alert(t("error"), t("share_error"));
-    }
-  };
-
-  // --- PAYLAŞIM MESAJI OLUŞTURMA ---
-  const generateShareMessage = (feedbackData: any) => {
-    let message = `${t("feedback_share_message")}\n\n`;
-
-    // Genel Puan
-    message += `⭐ ${t("overall_score")}: ${feedbackData.score}/100\n`;
-    message += `📊 ${t("cefr_level", { level: feedbackData.cefr })}\n\n`;
-
-    // Dilbilgisi Hataları
-    if (feedbackData.grammarMistakes?.length > 0) {
-      message += `📝 ${t("grammar_review")}:\n`;
-      feedbackData.grammarMistakes.forEach((mistake: any, index: number) => {
-        message += `${index + 1}. ${mistake.original} → ${
-          mistake.correction
-        }\n`;
-      });
-      message += "\n";
-    }
-
-    // Telaffuz Hataları
-    if (feedbackData.pronunciationMistakes?.length > 0) {
-      message += `🔊 ${t("pronunciation_review")}:\n`;
-      feedbackData.pronunciationMistakes.forEach(
-        (mistake: any, index: number) => {
-          message += `${index + 1}. ${mistake.word} → ${
-            mistake.correctPronunciation
-          }\n`;
-        }
-      );
-      message += "\n";
-    }
-
-    // Öneriler
-    if (feedbackData.suggestions?.length > 0) {
-      message += `💡 ${t("suggestions")}:\n`;
-      feedbackData.suggestions.forEach((suggestion: string, index: number) => {
-        message += `• ${suggestion}\n`;
-      });
-      message += "\n";
-    }
-
-    // Genel Yorum
-    if (feedbackData.comment) {
-      message += `💬 ${t("feedback_comment")}:\n${feedbackData.comment}\n\n`;
-    }
-
-    message += t("shared_via_roly");
-
-    return message;
-  };
+  const shotRef = useRef<any>(null);
+  const [savedLocalWords, setSavedLocalWords] = useState<string[]>([]);
+  const [sharing, setSharing] = useState(false);
 
   const { feedback, xpEarned } = route.params || { feedback: {}, xpEarned: 0 };
-
-  // --- LOCAL STATE: O an kaydedilen kelimeleri takip etmek için ---
-  const [savedLocalWords, setSavedLocalWords] = useState<string[]>([]);
 
   const data = {
     score: feedback?.score || 0,
@@ -225,21 +145,98 @@ export default function FeedbackScreen() {
 
   // --- KELİME KAYDETME FONKSİYONU ---
   const handleSaveSuggestion = async (word: string) => {
-    // Zaten kaydettiyse tekrar işlem yapma
     if (savedLocalWords.includes(word)) return;
 
     try {
-      // Backend'e kaydet (Context olarak "Feedback Önerisi" gönderiyoruz)
       await saveWord(word, "Feedback Raporu Önerisi");
-
-      // State güncelle (İkonu dolu yapmak için)
       setSavedLocalWords((prev) => [...prev, word]);
-
       Alert.alert(t("word_saved"), t("word_saved_message", { word }));
     } catch (error) {
       Alert.alert(t("info"), t("word_already_saved"));
-      // Hata olsa bile UI'da kaydedilmiş gibi gösterelim ki kullanıcı tekrar basmasın
       setSavedLocalWords((prev) => [...prev, word]);
+    }
+  };
+
+  // --- METİN PAYLAŞIMI (FALLBACK) ---
+  const generateShareMessage = (feedbackData: any) => {
+    let message = `${t("feedback_share_message")}\n\n`;
+
+    message += `⭐ ${t("overall_score")}: ${feedbackData.score}/100\n`;
+    message += `📊 ${t("cefr_level", { level: feedbackData.cefr })}\n\n`;
+
+    if (feedbackData.grammarMistakes?.length > 0) {
+      message += `📝 ${t("grammar_review")}:\n`;
+      feedbackData.grammarMistakes.forEach((mistake: any, index: number) => {
+        message += `${index + 1}. ${mistake.original} → ${
+          mistake.correction
+        }\n`;
+      });
+      message += "\n";
+    }
+
+    if (feedbackData.pronunciationMistakes?.length > 0) {
+      message += `🔊 ${t("pronunciation_review")}:\n`;
+      feedbackData.pronunciationMistakes.forEach(
+        (mistake: any, index: number) => {
+          message += `${index + 1}. ${mistake.word} → ${
+            mistake.correctPronunciation
+          }\n`;
+        }
+      );
+      message += "\n";
+    }
+
+    if (feedbackData.suggestions?.length > 0) {
+      message += `💡 ${t("suggestions")}:\n`;
+      feedbackData.suggestions.forEach((suggestion: string, index: number) => {
+        message += `• ${suggestion}\n`;
+      });
+      message += "\n";
+    }
+
+    if (feedbackData.comment) {
+      message += `💬 ${t("feedback_comment")}:\n${feedbackData.comment}\n\n`;
+    }
+
+    message += t("shared_via_roly");
+
+    return message;
+  };
+
+  // --- PAYLAŞIM: ÖNCE GÖRSEL, BAŞARISIZSA METİN FALLBACK ---
+  const handleShare = async () => {
+    try {
+      setSharing(true);
+
+      // capture: result tmpfile -> geçici dosya yolu
+      const uri = await shotRef.current.capture({
+        format: "png",
+        quality: 0.95,
+        result: "tmpfile",
+        width: 1080, // yüksek çözünürlük için fixed width
+      });
+
+      const shareOptions: any = {
+        title: t("feedback_share_title"),
+        url: Platform.OS === "android" ? "file://" + uri : uri,
+        message: t("feedback_share_message"),
+        failOnCancel: false,
+      };
+
+      await Share.open(shareOptions);
+    } catch (error) {
+      console.warn("Image share failed, falling back to text share:", error);
+      try {
+        await Share.open({
+          message: generateShareMessage(data),
+          failOnCancel: false,
+        });
+      } catch (e) {
+        console.error("Text share failed:", e);
+        Alert.alert(t("error"), t("share_error"));
+      }
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -328,12 +325,50 @@ export default function FeedbackScreen() {
             <View style={styles.cardHeader}>
               <MaterialIcons name="volume-up" size={24} color={COLORS.danger} />
               <Text style={styles.cardTitle}>{t("pronunciation_review")}</Text>
+
+              {/* Premium değilse başlığın yanına küçük bir kilit ikonu koyalım */}
+              {!user?.isPremium && (
+                <View style={styles.lockBadge}>
+                  <MaterialIcons
+                    name="lock"
+                    size={14}
+                    color={COLORS.textWhite}
+                  />
+                  <Text style={styles.lockBadgeText}>PRO</Text>
+                </View>
+              )}
             </View>
-            <View style={styles.gap12}>
-              {data.pronunciationMistakes.map((item: any, index: number) => (
-                <PronunciationItem key={`pronunciation-${index}`} {...item} />
-              ))}
-            </View>
+
+            {user?.isPremium ? (
+              // --- KULLANICI PREMIUM İSE LİSTEYİ GÖSTER ---
+              <View style={styles.gap12}>
+                {data.pronunciationMistakes.map((item: any, index: number) => (
+                  <PronunciationItem key={`pronunciation-${index}`} {...item} />
+                ))}
+              </View>
+            ) : (
+              // --- KULLANICI PREMIUM DEĞİLSE KİLİT EKRANI GÖSTER ---
+              <View style={styles.lockedContainer}>
+                <View style={styles.lockedIconBg}>
+                  <MaterialIcons name="lock" size={32} color={COLORS.primary} />
+                </View>
+                <Text style={styles.lockedTitle}>
+                  {t("unlock_pronunciation")}
+                </Text>
+                <Text style={styles.lockedSub}>
+                  {t("unlock_pronunciation_desc")}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.upgradeButton}
+                  onPress={() => navigation.navigate("Paywall")} // Premium alma sayfana yönlendir
+                >
+                  <Text style={styles.upgradeButtonText}>
+                    {t("go_premium")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
@@ -418,6 +453,13 @@ export default function FeedbackScreen() {
           <Text style={styles.secondaryButtonText}>{t("back_to_home")}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Offscreen ShareCard for capture (görünmez, ekranı bozmaz) */}
+      <View style={{ position: "absolute", left: -10000, top: -10000 }}>
+        <ViewShot ref={shotRef} options={{ format: "png", quality: 0.95 }}>
+          <ShareCard data={data} xpEarned={xpEarned} />
+        </ViewShot>
+      </View>
     </SafeAreaView>
   );
 }
@@ -568,5 +610,69 @@ const styles = StyleSheet.create({
     color: COLORS.textWhite,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  lockBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fbbf24", // Amber rengi
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 4,
+    marginLeft: "auto", // Sağa yaslar
+  },
+  lockBadgeText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  lockedContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    backgroundColor: "rgba(0,0,0,0.2)", // Hafif koyu bir zemin
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderStyle: "dashed", // Kesikli çizgi şık durur
+  },
+  lockedIconBg: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(43, 238, 121, 0.1)", // Primary rengin opak hali
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  lockedTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.textWhite,
+    marginBottom: 8,
+  },
+  lockedSub: {
+    fontSize: 14,
+    color: COLORS.textGrey,
+    textAlign: "center",
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  upgradeButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  upgradeButtonText: {
+    color: "#000", // Primary üzerine siyah yazı okunabilirliği artırır
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });

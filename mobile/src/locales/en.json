@@ -30,7 +30,6 @@
   "today": "Today",
   "yesterday": "Yesterday",
   "days_ago": "{{count}} days ago",
-  "reached_level": "You've reached level {{level}}!",
   "current_level": "Current English Level: {{level}}",
   "level_progress": "{{progress}}%",
   "level_remaining": "{{next}} level — {{remaining}}% to go",
@@ -262,6 +261,10 @@
   "welcome_slide3_desc": "Complete daily quests, earn XP, and take your language level to the top.",
   "welcome_skip": "Skip",
   "welcome_next": "Next",
-  "welcome_start": "Start"
+  "welcome_start": "Start",
+  "chat_translation":"Translation",
+  "go_premium":"Go Premium",
+  "unlock_pronunciation":"Unlock Pronunciation",
+  "unlock_pronunciation_desc":"Unlock pronunciation to hear how your words sound."
 }
   
