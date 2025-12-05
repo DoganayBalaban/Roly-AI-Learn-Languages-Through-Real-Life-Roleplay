@@ -32,6 +32,7 @@ import api, {
   saveWord,
   lookupWord,
   getVoiceAudio,
+  translateSentence,
 } from "../services/api";
 import { COLORS } from "../constants/color";
 import { useAuth } from "../context/AuthContext";
@@ -160,6 +161,14 @@ export default function ChatScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedWordData, setSelectedWordData] = useState<any>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
+
+  // Çeviri durumları
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedSentence, setTranslatedSentence] = useState<string>("");
+  const [
+    isTranslatedSentenceModalVisible,
+    setIsTranslatedSentenceModalVisible,
+  ] = useState(false);
 
   // Dinamik Rol ve Avatar
   const [botRole, setBotRole] = useState<string>("Asistan");
@@ -423,6 +432,27 @@ export default function ChatScreen() {
     }
   };
 
+  // Yeni: cümle çevirisi ve modal açma
+  const handleTranslateSentence = async (sentence: string) => {
+    if (!sentence) return;
+    try {
+      setIsTranslating(true);
+      // Modal'ı aç (spinner gösterebilmek için önce aç)
+      setIsTranslatedSentenceModalVisible(true);
+      setTranslatedSentence(""); // temizle eski veriyi
+
+      const res = await translateSentence(sentence);
+      const translation = res?.translation || "";
+      setTranslatedSentence(translation);
+    } catch (error) {
+      console.log("Çeviri hatası:", error);
+      Alert.alert(t("error"), t("chat_translate_error") || "Çeviri başarısız.");
+      setTranslatedSentence(t("chat_translate_error") || "Çeviri başarısız.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   // --- RENDER ---
   const renderItem = ({ item }: { item: Message }) => {
     const isBot = item.sender === "bot";
@@ -443,21 +473,39 @@ export default function ChatScreen() {
             ]}
           />
           {isBot && (
-            <TouchableOpacity
-              style={styles.speakerIcon}
-              onPress={() => handleSpeakMessage(item.text, item.id)}
-              disabled={speakingMessageId === item.id}
-            >
-              {speakingMessageId === item.id ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              ) : (
-                <MaterialIcons
-                  name="volume-up"
-                  size={18}
-                  color={COLORS.textGrey}
-                />
-              )}
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                style={styles.speakerIcon}
+                onPress={() => handleTranslateSentence(item.text)}
+                disabled={isTranslating}
+              >
+                {isTranslating ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                ) : (
+                  <MaterialIcons
+                    name="translate"
+                    size={18}
+                    color={COLORS.textGrey}
+                  />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.speakerIcon}
+                onPress={() => handleSpeakMessage(item.text, item.id)}
+                disabled={speakingMessageId === item.id}
+              >
+                {speakingMessageId === item.id ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                ) : (
+                  <MaterialIcons
+                    name="volume-up"
+                    size={18}
+                    color={COLORS.textGrey}
+                  />
+                )}
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       </View>
@@ -478,7 +526,7 @@ export default function ChatScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-            <MaterialIcons name="arrow-back" size={28} color={COLORS.textWhite} />
+          <MaterialIcons name="arrow-back" size={28} color={COLORS.textWhite} />
         </TouchableOpacity>
 
         <View style={styles.headerProfile}>
@@ -508,7 +556,9 @@ export default function ChatScreen() {
       {/* FOOTER & INPUT */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "padding"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top - 80 : insets.top - 40}
+        keyboardVerticalOffset={
+          Platform.OS === "ios" ? insets.top - 80 : insets.top - 40
+        }
       >
         <ScrollView
           style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
@@ -562,90 +612,159 @@ export default function ChatScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* KELİME MODALI */}
+      {/* KELİME / ÇEVİRİ MODALI */}
       <Modal
         animationType="fade"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        visible={modalVisible || isTranslatedSentenceModalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setIsTranslatedSentenceModalVisible(false);
+          setTranslatedSentence("");
+        }}
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setModalVisible(false)}
+          onPress={() => {
+            setModalVisible(false);
+            setIsTranslatedSentenceModalVisible(false);
+            setTranslatedSentence("");
+          }}
         >
           <View style={styles.wordPopup} onStartShouldSetResponder={() => true}>
-            {/* Kelime Başlığı (Anında gelir, skeletona gerek yok) */}
-            <Text style={styles.popupWord}>{selectedWordData?.word}</Text>
+            {/* Eğer kelime modalı açıksa kelime içeriğini göster */}
+            {modalVisible ? (
+              <>
+                <Text style={styles.popupWord}>{selectedWordData?.word}</Text>
 
-            {/* --- DEĞİŞİKLİK BURADA: Skeleton Eklendi --- */}
-            {isLookingUp ? (
-              <View
-                style={{
-                  width: "100%",
-                  alignItems: "flex-start",
-                  paddingTop: 10,
-                }}
-              >
-                {/* 1. Anlam Kısmı (Ortada) */}
-                <SkeletonItem
-                  width={180}
-                  height={24}
-                  borderRadius={4}
-                  style={{ alignSelf: "center", marginBottom: 20 }}
-                />
+                {isLookingUp ? (
+                  <View
+                    style={{
+                      width: "100%",
+                      alignItems: "flex-start",
+                      paddingTop: 10,
+                    }}
+                  >
+                    <SkeletonItem
+                      width={180}
+                      height={24}
+                      borderRadius={4}
+                      style={{ alignSelf: "center", marginBottom: 20 }}
+                    />
+                    <SkeletonItem
+                      width={60}
+                      height={14}
+                      borderRadius={4}
+                      style={{ marginBottom: 8 }}
+                    />
+                    <SkeletonItem
+                      width="100%"
+                      height={60}
+                      borderRadius={8}
+                      style={{ marginBottom: 24 }}
+                    />
+                  </View>
+                ) : (
+                  <View>
+                    <Text style={styles.popupTranslation}>
+                      {selectedWordData?.translation}
+                    </Text>
+                    <Text style={styles.popupContextLabel}>Bağlam:</Text>
+                    <Text style={styles.popupContext}>
+                      "{selectedWordData?.context}"
+                    </Text>
 
-                {/* 2. "Bağlam:" Etiketi */}
-                <SkeletonItem
-                  width={60}
-                  height={14}
-                  borderRadius={4}
-                  style={{ marginBottom: 8 }}
-                />
+                    <View style={styles.popupButtons}>
+                      <TouchableOpacity
+                        style={styles.btnCancel}
+                        onPress={() => setModalVisible(false)}
+                      >
+                        <Text style={styles.btnTextCancel}>Kapat</Text>
+                      </TouchableOpacity>
 
-                {/* 3. Cümle Kutusu */}
-                <SkeletonItem
-                  width="100%"
-                  height={60}
-                  borderRadius={8}
-                  style={{ marginBottom: 24 }}
-                />
-              </View>
+                      <TouchableOpacity
+                        style={styles.btnSave}
+                        onPress={handleSaveWord}
+                      >
+                        <MaterialIcons
+                          name="bookmark-border"
+                          size={20}
+                          color={COLORS.backgroundDark}
+                          style={{ marginRight: 5 }}
+                        />
+                        <Text style={styles.btnTextSave}>Kaydet</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </>
             ) : (
-              <View>
-                <Text style={styles.popupTranslation}>
-                  {selectedWordData?.translation}
-                </Text>
-                <Text style={styles.popupContextLabel}>Bağlam:</Text>
-                <Text style={styles.popupContext}>
-                  "{selectedWordData?.context}"
-                </Text>
-              </View>
-            )}
+              // Aksi halde çeviri modalı göster
+              <>
+                <Text style={styles.popupWord}>{t("chat_translation")}</Text>
+                {isTranslating ? (
+                  <View
+                    style={{
+                      width: "100%",
+                      alignItems: "flex-start",
+                      paddingTop: 10,
+                    }}
+                  >
+                    <SkeletonItem
+                      width={180}
+                      height={24}
+                      borderRadius={4}
+                      style={{ alignSelf: "center", marginBottom: 20 }}
+                    />
+                    <SkeletonItem
+                      width={60}
+                      height={14}
+                      borderRadius={4}
+                      style={{ marginBottom: 8 }}
+                    />
+                    <SkeletonItem
+                      width="100%"
+                      height={60}
+                      borderRadius={8}
+                      style={{ marginBottom: 24 }}
+                    />
+                  </View>
+                ) : (
+                  <View>
+                    <Text style={styles.popupTranslation}>
+                      {translatedSentence ||
+                        t("chat_no_translation") ||
+                        "Çeviri bulunamadı."}
+                    </Text>
 
-            {/* Butonlar (Yüklenirken gizli kalsın) */}
-            {!isLookingUp && (
-              <View style={styles.popupButtons}>
-                <TouchableOpacity
-                  style={styles.btnCancel}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.btnTextCancel}>Kapat</Text>
-                </TouchableOpacity>
+                    <View
+                      style={{ marginTop: 18, flexDirection: "row", gap: 12 }}
+                    >
+                      <TouchableOpacity
+                        style={styles.btnCancel}
+                        onPress={() => {
+                          setIsTranslatedSentenceModalVisible(false);
+                          setTranslatedSentence("");
+                        }}
+                      >
+                        <Text style={styles.btnTextCancel}>Kapat</Text>
+                      </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.btnSave}
-                  onPress={handleSaveWord}
-                >
-                  <MaterialIcons
-                    name="bookmark-border"
-                    size={20}
-                    color={COLORS.backgroundDark}
-                    style={{ marginRight: 5 }}
-                  />
-                  <Text style={styles.btnTextSave}>Kaydet</Text>
-                </TouchableOpacity>
-              </View>
+                      <TouchableOpacity
+                        style={styles.btnSave}
+                        onPress={() => {
+                          // İsteğe bağlı: çeviri kaydetme işlemi burada yapılabilir
+                          setIsTranslatedSentenceModalVisible(false);
+                          setTranslatedSentence("");
+                        }}
+                      >
+                        <Text style={styles.btnTextSave}>Tamam</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </>
             )}
           </View>
         </TouchableOpacity>

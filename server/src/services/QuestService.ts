@@ -9,8 +9,7 @@ const QUEST_TEMPLATES = [
     xp: 50,
   },
   { type: "WORD_SAVE", description: "3 Yeni Kelime Kaydet", target: 3, xp: 50 },
-  { type: "VOICE_USE", description: "Sesli Konuşma Yap", target: 1, xp: 50 }, // Basit tutalım
-  // İleride burayı çeşitlendirebilirsin (Örn: 5 dk konuş, 10 mesaj at vb.)
+  { type: "VOICE_USE", description: "Sesli Konuşma Yap", target: 1, xp: 50 },
 ];
 
 // --- GÜNLÜK GÖREVLERİ KONTROL ET VE OLUŞTUR ---
