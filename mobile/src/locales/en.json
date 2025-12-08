@@ -263,6 +263,8 @@
   "welcome_next": "Next",
   "welcome_start": "Start",
   "chat_translation":"Translation",
+  "chat_no_translation":"Translation not found.",
+  "chat_translate_error":"Translation failed.",
   "go_premium":"Go Premium",
   "unlock_pronunciation":"Unlock Pronunciation",
   "unlock_pronunciation_desc":"Unlock pronunciation to hear how your words sound."
