@@ -301,7 +301,7 @@ export default function ProfileScreen() {
             <SettingRow
               icon="lock"
               title={t("change_password")}
-              onPress={() => {}}
+              onPress={() => navigation.navigate("ForgotPassword")}
             />
             <View style={styles.divider} />
             <SettingRow

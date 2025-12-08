@@ -262,6 +262,8 @@
   "welcome_next": "İlerle",
   "welcome_start": "Başla",
   "chat_translation":"Çeviri",
+  "chat_no_translation":"Çeviri bulunamadı.",
+  "chat_translate_error":"Çeviri başarısız.",
   "go_premium":"Premium'a Geç",
   "unlock_pronunciation":"Telaffuzu Aç",
   "unlock_pronunciation_desc":"Telaffuzu açarak kelimelerinizin nasıl seslendiğini duyabilirsiniz."

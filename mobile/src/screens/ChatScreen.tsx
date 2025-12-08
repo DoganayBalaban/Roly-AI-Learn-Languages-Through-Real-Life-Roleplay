@@ -130,6 +130,7 @@ export default function ChatScreen() {
   const { sessionId, title } = route.params;
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -292,8 +293,18 @@ export default function ChatScreen() {
   const handleSpeakMessage = async (text: string, messageId: string) => {
     // Aynı mesaj tekrar tıklanırsa iptal et
     if (speakingMessageId === messageId) {
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
       setSpeakingMessageId(null);
       return;
+    }
+    if (soundRef.current) {
+      await soundRef.current.stopAsync();
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
     }
     const voiceId = getVoiceForRole(botRole);
 
@@ -307,19 +318,27 @@ export default function ChatScreen() {
         { uri: audioUri },
         { shouldPlay: true }
       );
+      soundRef.current = sound;
 
       // Ses oynatılmaya başladığında loading'i kaldır
       sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.isPlaying) {
-          // Ses oynatılmaya başladı, loading'i kaldır
-          setSpeakingMessageId(null);
-        }
-        if (status.isLoaded && status.didJustFinish) {
+        if (!status.isLoaded) return;
+
+        // Ses normal şekilde bittiğinde
+        if (status.didJustFinish) {
           sound.unloadAsync();
+          soundRef.current = null;
+          setSpeakingMessageId(null);
         }
       });
     } catch (error) {
       console.log("Ses çalma hatası:", error);
+      if (soundRef.current) {
+        try {
+          await soundRef.current.unloadAsync();
+        } catch {}
+        soundRef.current = null;
+      }
       setSpeakingMessageId(null);
       Alert.alert(t("error"), t("chat_audio_playback_error"));
     }
@@ -446,8 +465,8 @@ export default function ChatScreen() {
       setTranslatedSentence(translation);
     } catch (error) {
       console.log("Çeviri hatası:", error);
-      Alert.alert(t("error"), t("chat_translate_error") || "Çeviri başarısız.");
-      setTranslatedSentence(t("chat_translate_error") || "Çeviri başarısız.");
+      Alert.alert(t("error"), t("chat_translate_error"));
+      setTranslatedSentence(t("chat_translate_error"));
     } finally {
       setIsTranslating(false);
     }
@@ -479,31 +498,23 @@ export default function ChatScreen() {
                 onPress={() => handleTranslateSentence(item.text)}
                 disabled={isTranslating}
               >
-                {isTranslating ? (
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                ) : (
-                  <MaterialIcons
-                    name="translate"
-                    size={18}
-                    color={COLORS.textGrey}
-                  />
-                )}
+                <MaterialIcons
+                  name="translate"
+                  size={18}
+                  color={COLORS.textGrey}
+                />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.speakerIcon}
                 onPress={() => handleSpeakMessage(item.text, item.id)}
-                disabled={speakingMessageId === item.id}
               >
-                {speakingMessageId === item.id ? (
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                ) : (
-                  <MaterialIcons
-                    name="volume-up"
-                    size={18}
-                    color={COLORS.textGrey}
-                  />
-                )}
+                <MaterialIcons
+                  // O an bu mesaj çalıyorsa stop iconu, değilse volume-up
+                  name={speakingMessageId === item.id ? "stop" : "volume-up"}
+                  size={18}
+                  color={COLORS.textGrey}
+                />
               </TouchableOpacity>
             </View>
           )}
@@ -670,7 +681,9 @@ export default function ChatScreen() {
                     <Text style={styles.popupTranslation}>
                       {selectedWordData?.translation}
                     </Text>
-                    <Text style={styles.popupContextLabel}>Bağlam:</Text>
+                    <Text style={styles.popupContextLabel}>
+                      {t("chat_context_label")}
+                    </Text>
                     <Text style={styles.popupContext}>
                       "{selectedWordData?.context}"
                     </Text>
@@ -680,7 +693,7 @@ export default function ChatScreen() {
                         style={styles.btnCancel}
                         onPress={() => setModalVisible(false)}
                       >
-                        <Text style={styles.btnTextCancel}>Kapat</Text>
+                        <Text style={styles.btnTextCancel}>{t("close")}</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -693,7 +706,9 @@ export default function ChatScreen() {
                           color={COLORS.backgroundDark}
                           style={{ marginRight: 5 }}
                         />
-                        <Text style={styles.btnTextSave}>Kaydet</Text>
+                        <Text style={styles.btnTextSave}>
+                          {t("chat_save_word")}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -733,24 +748,12 @@ export default function ChatScreen() {
                 ) : (
                   <View>
                     <Text style={styles.popupTranslation}>
-                      {translatedSentence ||
-                        t("chat_no_translation") ||
-                        "Çeviri bulunamadı."}
+                      {translatedSentence || t("chat_no_translation")}
                     </Text>
 
                     <View
                       style={{ marginTop: 18, flexDirection: "row", gap: 12 }}
                     >
-                      <TouchableOpacity
-                        style={styles.btnCancel}
-                        onPress={() => {
-                          setIsTranslatedSentenceModalVisible(false);
-                          setTranslatedSentence("");
-                        }}
-                      >
-                        <Text style={styles.btnTextCancel}>Kapat</Text>
-                      </TouchableOpacity>
-
                       <TouchableOpacity
                         style={styles.btnSave}
                         onPress={() => {
@@ -759,7 +762,7 @@ export default function ChatScreen() {
                           setTranslatedSentence("");
                         }}
                       >
-                        <Text style={styles.btnTextSave}>Tamam</Text>
+                        <Text style={styles.btnTextSave}>{t("ok")}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
