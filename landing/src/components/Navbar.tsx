@@ -2,10 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 const navLinks = [
-  { id: 1, title: "Özellikler", href: "#features" },
-  { id: 2, title: "Nasıl Çalışır?", href: "#how-it-works" },
-  { id: 3, title: "İletişim", href: "#contact" },
-  { id: 4, title: "Gizlilik Sözleşmesi", href: "#privacy" },
+  { id: 1, title: "Features", href: "#features" },
+  { id: 2, title: "How It Works", href: "#how-it-works" },
+  { id: 3, title: "Contact", href: "#contact" },
+  { id: 4, title: "Privacy Policy", href: "#privacy" },
 ];
 
 const Navbar = () => {
@@ -59,7 +59,7 @@ const Navbar = () => {
 
         {/* CTA BUTONU */}
         <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition shadow-lg shadow-orange-100 hover:shadow-green-100 hover:-translate-y-0.5">
-          Uygulamayı İndir
+          Download the App
         </button>
       </div>
     </nav>

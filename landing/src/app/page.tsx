@@ -8,13 +8,7 @@ import { useRef } from "react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const languages = [
-  "İngilizce",
-  "Fransızca",
-  "İtalyanca",
-  "Almanca",
-  "İspanyolca",
-];
+const languages = ["English", "French", "Italian", "German", "Spanish"];
 
 export default function RolyAILanding() {
   const containerRef = useRef(null);
@@ -48,7 +42,7 @@ export default function RolyAILanding() {
           {
             scale: 0.7,
             xPercent: -100,
-            yPercent: -100,
+            yPercent: -110,
             rotation: 0,
             duration: 4,
             ease: "power1.inOut",
@@ -107,7 +101,7 @@ export default function RolyAILanding() {
       {/* 1. TELEFON */}
       <div
         ref={phoneRef}
-        className="absolute top-[880px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
+        className="absolute top-[950px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
       >
         <Image
           src={"/rolyaihomescreen.png"}
@@ -125,7 +119,7 @@ export default function RolyAILanding() {
       >
         <h1 className="text-6xl font-bold mb-4 text-center flex flex-col justify-center items-center gap-5">
           <div className="space-x-4">
-            <span>Konuşarak</span>
+            <span>Speak your way to</span>
             <span className="relative h-[1.1em] w-[10ch] overflow-hidden inline-flex items-start text-green-600">
               <span ref={textSliderRef} className="flex flex-col text-left">
                 {languages.map((lang, i) => (
@@ -139,11 +133,11 @@ export default function RolyAILanding() {
               </span>
             </span>
           </div>
-          <span className="text-start">Öğren</span>
+          <span className="text-start">fluency</span>
         </h1>
         <p className="text-l text-gray-500 max-w-lg text-center mb-8">
-          Sadece ezber yapma. RolyAI ile gerçek senaryolarda konuşarak özgüven
-          kazan.
+          Don&apos;t just memorize. Build confidence by speaking with RolyAI in
+          real-life scenarios.
         </p>
 
         {/* Play Store Butonu */}
@@ -167,11 +161,11 @@ export default function RolyAILanding() {
       >
         <div className="p-6 rounded-xl">
           <h3 className="text-3xl font-bold mb-3 text-gray-800">
-            Gerçek Hayat Senaryoları
+            Real-life Scenarios
           </h3>
           <p className="text-gray-600">
-            Kafede sipariş vermekten iş görüşmesine kadar, her duruma yapay zeka
-            ile rol yaparak hazırlan. Hatalarını anında gör.
+            From ordering at a cafe to a job interview, role-play every
+            situation with AI and see your mistakes instantly.
           </p>
         </div>
       </div>
