@@ -1,7 +1,10 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import User from "../models/User";
-import { getWordDefinition } from "../services/OpenAIService";
+import {
+  getSentenceDefinition,
+  getWordDefinition,
+} from "../services/OpenAIService";
 import { updateQuestProgress } from "../services/QuestService";
 
 export const saveWord = async (req: AuthRequest, res: Response) => {
@@ -72,7 +75,7 @@ export const deleteWord = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Silme işlemi başarısız." });
   }
 };
-export const translate = async (req: AuthRequest, res: Response) => {
+export const translateWord = async (req: AuthRequest, res: Response) => {
   try {
     const { word, contextSentence } = req.body;
     const user = await User.findById(req.user._id);
@@ -90,5 +93,23 @@ export const translate = async (req: AuthRequest, res: Response) => {
     res.json({ translation });
   } catch (error) {
     res.status(500).json({ message: "Translation failed." });
+  }
+};
+export const translateSentence = async (req: AuthRequest, res: Response) => {
+  try {
+    const { sentence } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı Bulunamadı" });
+    }
+    const nativeLang = user?.preferences?.nativeLanguage || "English";
+    const translation = await getSentenceDefinition(sentence, nativeLang);
+    if (!translation) {
+      return res.status(400).json({ message: "Anlam Bulunamadı." });
+    }
+    res.json({ translation });
+  } catch (error) {
+    res.status(500).json({ message: "Translation failed." });
+    console.error(error);
   }
 };

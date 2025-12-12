@@ -158,6 +158,11 @@ const AppNavigator = () => {
                 component={VocabularyScreen}
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="ForgotPassword"
+                component={ForgotPasswordScreen}
+                options={{ headerShown: false }}
+              />
             </>
           )
         ) : (

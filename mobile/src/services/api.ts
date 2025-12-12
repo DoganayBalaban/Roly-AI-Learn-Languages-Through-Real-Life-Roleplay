@@ -144,6 +144,10 @@ export const lookupWord = async (word: string, contextSentence: string) => {
   });
   return response.data;
 };
+export const translateSentence = async (sentence: string) => {
+  const response = await api.post("/words/sentence", { sentence });
+  return response.data;
+};
 export const getVoiceAudio = async (text: string, voice?: string) => {
   const response = await api.post("/chat/speak", { text, voice });
   return response.data.audio; // Base64 string döner

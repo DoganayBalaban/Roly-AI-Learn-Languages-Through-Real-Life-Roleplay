@@ -2,7 +2,7 @@
   "expo": {
     "name": "RolyAI",
     "slug": "rolyai",
-    "version": "1.2.2",
+    "version": "1.2.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -29,7 +29,7 @@
     },
     "android": {
       "package": "com.doganay.rolyai",
-      "versionCode":7,
+      "versionCode":9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -41,7 +41,8 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.INTERNET",
-        "com.android.vending.BILLING"
+        "com.android.vending.BILLING",
+        "com.google.android.gms.permission.AD_ID"
       ]
     },
     "web": {

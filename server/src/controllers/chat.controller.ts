@@ -258,7 +258,6 @@ const getExtensionFromMimeType = (mimeType: string): string => {
   // Varsayılan olarak m4a (en yaygın format)
   return "m4a";
 };
-
 export const transcribeAudio = async (req: any, res: Response) => {
   let newPath = ""; // Temizlik için dışarıda tanımladık
 
@@ -283,6 +282,10 @@ export const transcribeAudio = async (req: any, res: Response) => {
 
     // 4. Temizlik
     if (fs.existsSync(newPath)) fs.unlinkSync(newPath);
+
+    updateQuestProgress(req.user._id, "VOICE_USE", 1).catch((err) =>
+      console.log(err)
+    );
 
     res.json({ text });
   } catch (error) {
