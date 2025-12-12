@@ -1,9 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&display=swap");
 @import "tailwindcss";
 /* 1. DÜZELTME: "inline" kelimesi kaldırıldı */
 @theme {
   /* 2. DÜZELTME: Font değişkeni doğrudan Noto Sans'a bağlandı */
-  --font-sans: "Noto Sans", sans-serif;
+  --font-sans: "Martian-Mono", sans-serif;
 
   /* Eğer özel bir mono fontun yoksa varsayılanı kullanır, 
      Geist Mono değişkenini kullanmak istemiyorsan burayı silebilirsin */
@@ -28,5 +28,5 @@ body {
   color: var(--foreground);
   /* Burada tekrar belirtmene gerek yok, Tailwind "font-sans"ı varsayılan yapar,
      ama garanti olsun dersen kalabilir. */
-  font-family: "Noto Sans", sans-serif;
+  font-family: "Martian-Mono", sans-serif;
 }

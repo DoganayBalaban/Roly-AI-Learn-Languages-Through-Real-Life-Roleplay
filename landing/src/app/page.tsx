@@ -72,7 +72,7 @@ export default function RolyAILanding() {
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: `
-            radial-gradient(circle at center, #FFF991 0%, transparent 70%)
+            radial-gradient(circle at center, #AFFC88 0%, transparent 70%)
           `,
           opacity: 0.6,
           mixBlendMode: "multiply",
@@ -125,17 +125,14 @@ export default function RolyAILanding() {
         ref={featureTextRef}
         className="absolute top-1/2 right-[10%] -translate-y-1/2 w-1/3 z-10"
       >
-        <div className="bg-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm">
+        <div className="p-6 rounded-xl">
           <h3 className="text-3xl font-bold mb-3 text-gray-800">
             Gerçek Hayat Senaryoları
           </h3>
           <p className="text-gray-600">
             Kafede sipariş vermekten iş görüşmesine kadar, her duruma yapay zeka
-            ile rol yaparak (roleplay) hazırlan. Hatalarını anında gör.
+            ile rol yaparak hazırlan. Hatalarını anında gör.
           </p>
-          <button className="mt-4 text-orange-600 font-semibold border-b-2 border-orange-600 hover:text-orange-800 transition-colors">
-            Ücretsiz Başla &rarr;
-          </button>
         </div>
       </div>
     </div>
