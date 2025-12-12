@@ -20,8 +20,8 @@ const FEATURES = [
     // Telefonun konumu
     phoneState: {
       scale: 0.7,
-      xPercent: -70, // Sola git
-      yPercent: -100,
+      xPercent: -90, // Sola git
+      yPercent: -120, // biraz daha yukarı
       rotation: -10,
     },
     textAlign: "right",
@@ -35,8 +35,8 @@ const FEATURES = [
       "Get detailed grammar and pronunciation corrections immediately.",
     phoneState: {
       scale: 0.7,
-      xPercent: 50, // Sağa git
-      yPercent: -100,
+      xPercent: 10, // Sağa git
+      yPercent: -120, // biraz daha yukarı
       rotation: 10,
     },
     textAlign: "left",
@@ -47,9 +47,9 @@ const FEATURES = [
     title: "Gamified Learning",
     description: "Earn XP, maintain streaks, and climb the leaderboard.",
     phoneState: {
-      scale: 0.8,
+      scale: 0.6,
       xPercent: -50, // Ortaya gel
-      yPercent: -85,
+      yPercent: -135, // biraz daha yukarı
       rotation: 0,
     },
     textAlign: "center",
@@ -193,9 +193,9 @@ export default function RolyAILanding() {
           {FEATURES.map((feature, i) => (
             <div
               key={i}
-          ref={(el) => {
-            screensRef.current[i] = el;
-          }} // Ref ataması
+              ref={(el) => {
+                screensRef.current[i] = el;
+              }} // Ref ataması
               className="absolute inset-0 w-full h-full" // Hepsi üst üste
             >
               <Image
