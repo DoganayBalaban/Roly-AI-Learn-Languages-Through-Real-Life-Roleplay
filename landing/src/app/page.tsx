@@ -8,11 +8,20 @@ import { useRef } from "react";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const languages = [
+  "İngilizce",
+  "Fransızca",
+  "İtalyanca",
+  "Almanca",
+  "İspanyolca",
+];
+
 export default function RolyAILanding() {
   const containerRef = useRef(null);
   const phoneRef = useRef(null);
   const heroTextRef = useRef(null);
   const featureTextRef = useRef(null);
+  const textSliderRef = useRef<HTMLSpanElement | null>(null);
 
   useGSAP(
     () => {
@@ -57,6 +66,22 @@ export default function RolyAILanding() {
           },
           "-=2"
         );
+
+      // Diller için sonsuz döngülü kaydırma
+      const totalSlides = languages.length + 1; // ilk elemanın kopyası için +1
+      const stepPercent = 100 / totalSlides;
+      const tlText = gsap.timeline({ repeat: -1 });
+
+      languages.forEach((_, index) => {
+        tlText.to(textSliderRef.current, {
+          yPercent: -stepPercent * (index + 1),
+          duration: 0.5,
+          ease: "power2.inOut",
+          delay: 1.5,
+        });
+      });
+
+      tlText.set(textSliderRef.current, { yPercent: 0 });
     },
     { scope: containerRef }
   );
@@ -98,8 +123,23 @@ export default function RolyAILanding() {
         ref={heroTextRef}
         className="absolute top-52 w-full flex flex-col items-center z-10 px-4"
       >
-        <h1 className="text-6xl font-bold mb-4 text-center">
-          <span className="text-green-600">Konuşarak</span> İngilizce Öğren
+        <h1 className="text-6xl font-bold mb-4 text-center flex flex-col justify-center items-center gap-5">
+          <div className="space-x-4">
+            <span>Konuşarak</span>
+            <span className="relative h-[1.1em] w-[10ch] overflow-hidden inline-flex items-start text-green-600">
+              <span ref={textSliderRef} className="flex flex-col text-left">
+                {languages.map((lang, i) => (
+                  <span key={i} className="h-[1.1em] flex items-center">
+                    {lang}
+                  </span>
+                ))}
+                <span className="h-[1.2em] flex items-center">
+                  {languages[0]}
+                </span>
+              </span>
+            </span>
+          </div>
+          <span className="text-start">Öğren</span>
         </h1>
         <p className="text-l text-gray-500 max-w-lg text-center mb-8">
           Sadece ezber yapma. RolyAI ile gerçek senaryolarda konuşarak özgüven
