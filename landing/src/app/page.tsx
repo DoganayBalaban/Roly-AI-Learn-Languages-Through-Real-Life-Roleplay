@@ -277,8 +277,8 @@ export default function RolyAILanding() {
           </div>
         ))}
       </div>
-      <FAQ />
       <WaitlistSection />
+      <FAQ />
       <Testimonials />
     </>
   );
