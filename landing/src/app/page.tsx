@@ -1,5 +1,6 @@
 "use client";
 import FAQ from "@/components/FAQ";
+import Testimonials from "@/components/Testimonials";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -184,7 +185,7 @@ export default function RolyAILanding() {
         {/* --- TELEFON (SABİT ÇERÇEVE) --- */}
         <div
           ref={phoneRef}
-          className="absolute top-[950px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[350px] h-[700px] bg-black rounded-[55px] border-[12px] border-black shadow-2xl overflow-hidden"
+          className="absolute top-[950px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[350px] h-[700px] bg-black rounded-[55px] border-12 border-black shadow-2xl overflow-hidden"
         >
           {/* EKRAN İÇERİĞİ (MASKELENMİŞ ALAN) */}
           <div className="relative w-full h-full bg-gray-900 rounded-[40px] overflow-hidden">
@@ -276,6 +277,7 @@ export default function RolyAILanding() {
         ))}
       </div>
       <FAQ />
+      <Testimonials />
     </>
   );
 }

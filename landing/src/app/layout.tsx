@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import { Footer2 } from "@/components/ui/shadcnblocks-com-footer2";
 import type { Metadata } from "next";
 import { Martian_Mono } from "next/font/google";
 import "./globals.css";
@@ -65,6 +66,7 @@ export default function RootLayout({
       <body className={`${martianMono.variable} font-mono antialiased`}>
         <Navbar />
         {children}
+        <Footer2 />
       </body>
     </html>
   );
