@@ -37,7 +37,7 @@ export default function WaitlistSection() {
   };
 
   return (
-    <section className="relative py-24 text-black overflow-hidden">
+    <section className="relative py-24 text-black overflow-hidden" id="beta">
       {/* Background Effect */}
       <div
         className="pointer-events-none absolute inset-0 z-0"

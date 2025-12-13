@@ -5,7 +5,10 @@ import { reviews } from "../constants/REVIEWS";
 
 export default function Testimonials() {
   return (
-    <section className="relative py-24 bg-white text-gray-900 overflow-hidden">
+    <section
+      id="reviews"
+      className="relative py-24 bg-white text-gray-900 overflow-hidden"
+    >
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{

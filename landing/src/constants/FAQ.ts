@@ -22,6 +22,6 @@ export const FAQS = [
   {
     question: "Can I practice languages other than English?",
     answer:
-      "Currently, RolyAI is specialized in English to provide the most accurate pronunciation and grammar analysis. However, we are working hard to add Spanish, French, and German in our upcoming updates!",
+      "Yes! RolyAI currently supports English, Turkish, Spanish, German, French, Italian, Japanese, Korean, and Russian. You can practice speaking and get feedback in any of these languages.",
   },
 ];

@@ -241,7 +241,7 @@ export default function RolyAILanding() {
             in real-life scenarios.
           </p>
           <Link
-            href={"#"}
+            href={"#beta"}
             className="flex items-center rounded-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
           >
             <Image
@@ -256,6 +256,7 @@ export default function RolyAILanding() {
         {/* FEATURES TEXT LOOP */}
         {FEATURES.map((feature, index) => (
           <div
+            id="features"
             key={feature.id}
             ref={(el) => {
               featuresRef.current[index] = el;

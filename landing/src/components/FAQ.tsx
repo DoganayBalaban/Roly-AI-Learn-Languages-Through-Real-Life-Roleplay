@@ -41,7 +41,7 @@ const FAQ = () => {
   );
 
   return (
-    <section ref={containerRef} className="relative w-full py-24">
+    <section id="faq" ref={containerRef} className="relative w-full py-24">
       {/* Background */}
       <div
         className="pointer-events-none absolute inset-0 z-0"

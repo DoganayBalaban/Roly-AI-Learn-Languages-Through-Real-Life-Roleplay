@@ -37,8 +37,8 @@ const Footer2 = ({
     {
       title: "Product",
       links: [
-        { text: "Features", url: "/" },
-        { text: "Download App", url: "#download" },
+        { text: "Features", url: "" },
+        { text: "Download App", url: "" },
       ],
     },
     {
