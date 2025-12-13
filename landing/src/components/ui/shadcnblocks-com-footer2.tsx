@@ -44,7 +44,10 @@ const Footer2 = ({
     {
       title: "Company",
       links: [
-        { text: "About Us", url: "/about" },
+        {
+          text: "About Us",
+          url: "https://www.linkedin.com/in/doganay-balaban/",
+        },
         { text: "Contact", url: "mailto:balabandoganay@gmail.com" },
       ],
     },

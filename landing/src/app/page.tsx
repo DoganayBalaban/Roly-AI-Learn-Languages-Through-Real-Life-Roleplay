@@ -1,6 +1,7 @@
 "use client";
 import FAQ from "@/components/FAQ";
 import Testimonials from "@/components/Testimonials";
+import WaitlistSection from "@/components/WaitlistSection";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -277,6 +278,7 @@ export default function RolyAILanding() {
         ))}
       </div>
       <FAQ />
+      <WaitlistSection />
       <Testimonials />
     </>
   );
