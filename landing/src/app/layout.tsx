@@ -11,6 +11,7 @@ const martianMono = Martian_Mono({
 });
 
 export const metadata: Metadata = {
+
   title: "RolyAI | Speak your way to fluency",
   description:
     "Practice real-life conversations with AI, get instant feedback, and build fluency faster with RolyAI.",
@@ -54,6 +55,7 @@ export const metadata: Metadata = {
       "Practice real-life conversations with AI, get instant feedback, and build fluency faster with RolyAI.",
     images: ["/og.png"],
   },
+
 };
 
 export default function RootLayout({
