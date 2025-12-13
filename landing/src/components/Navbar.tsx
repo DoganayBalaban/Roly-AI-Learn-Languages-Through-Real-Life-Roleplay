@@ -3,9 +3,8 @@ import Link from "next/link";
 
 const navLinks = [
   { id: 1, title: "Features", href: "#features" },
-  { id: 2, title: "How It Works", href: "#how-it-works" },
-  { id: 3, title: "Contact", href: "#contact" },
-  { id: 4, title: "Privacy Policy", href: "#privacy" },
+  { id: 2, title: "FAQ", href: "#faq" },
+  { id: 3, title: "Reviews", href: "#reviews" },
 ];
 
 const Navbar = () => {
@@ -58,9 +57,11 @@ const Navbar = () => {
         </div>
 
         {/* CTA BUTONU */}
-        <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition shadow-lg shadow-orange-100 hover:shadow-green-100 hover:-translate-y-0.5">
-          Download the App
-        </button>
+        <Link href={"#beta"}>
+          <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition shadow-lg shadow-orange-100 hover:shadow-green-100 hover:-translate-y-0.5">
+            Download the App
+          </button>
+        </Link>
       </div>
     </nav>
   );

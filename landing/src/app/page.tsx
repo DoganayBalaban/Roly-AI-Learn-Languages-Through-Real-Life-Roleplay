@@ -1,4 +1,7 @@
 "use client";
+import FAQ from "@/components/FAQ";
+import Testimonials from "@/components/Testimonials";
+import WaitlistSection from "@/components/WaitlistSection";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -165,113 +168,119 @@ export default function RolyAILanding() {
   );
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-screen overflow-hidden bg-white text-black"
-    >
-      {/* Background Glow */}
+    <>
       <div
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(circle at center, #AFFC88 0%, transparent 70%)`,
-          opacity: 0.6,
-          mixBlendMode: "multiply",
-        }}
-      />
-
-      {/* --- TELEFON (SABİT ÇERÇEVE) --- */}
-      <div
-        ref={phoneRef}
-        className="absolute top-[950px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[350px] h-[700px] bg-black rounded-[55px] border-[12px] border-black shadow-2xl overflow-hidden"
+        ref={containerRef}
+        className="relative w-full h-screen overflow-hidden bg-white text-black"
       >
-        {/* EKRAN İÇERİĞİ (MASKELENMİŞ ALAN) */}
-        <div className="relative w-full h-full bg-gray-900 rounded-[40px] overflow-hidden">
-          {/* ÇENTİK (Dynamic Island) */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-8 bg-black rounded-full z-50"></div>
+        {/* Background Glow */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at center, #AFFC88 0%, transparent 70%)`,
+            opacity: 0.6,
+            mixBlendMode: "multiply",
+          }}
+        />
 
-          {/* --- RESİMLERİN HEPSİNİ BURAYA BASIYORUZ --- */}
-          {FEATURES.map((feature, i) => (
-            <div
-              key={i}
-              ref={(el) => {
-                screensRef.current[i] = el;
-              }} // Ref ataması
-              className="absolute inset-0 w-full h-full" // Hepsi üst üste
-            >
-              <Image
-                src={feature.image} // Config'den gelen resim yolu
-                alt={feature.title}
-                fill // Container'ı doldur
-                className="object-cover"
-              />
-            </div>
-          ))}
+        {/* --- TELEFON (SABİT ÇERÇEVE) --- */}
+        <div
+          ref={phoneRef}
+          className="absolute top-[950px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[350px] h-[700px] bg-black rounded-[55px] border-12 border-black shadow-2xl overflow-hidden"
+        >
+          {/* EKRAN İÇERİĞİ (MASKELENMİŞ ALAN) */}
+          <div className="relative w-full h-full bg-gray-900 rounded-[40px] overflow-hidden">
+            {/* ÇENTİK (Dynamic Island) */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-8 bg-black rounded-full z-50"></div>
+
+            {/* --- RESİMLERİN HEPSİNİ BURAYA BASIYORUZ --- */}
+            {FEATURES.map((feature, i) => (
+              <div
+                key={i}
+                ref={(el) => {
+                  screensRef.current[i] = el;
+                }} // Ref ataması
+                className="absolute inset-0 w-full h-full" // Hepsi üst üste
+              >
+                <Image
+                  src={feature.image} // Config'den gelen resim yolu
+                  alt={feature.title}
+                  fill // Container'ı doldur
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* HERO SECTION */}
-      <div
-        ref={heroTextRef}
-        className="absolute top-52 w-full flex flex-col items-center z-10 px-4"
-      >
-        <h1 className="text-6xl font-bold mb-4 text-center flex flex-col justify-center items-center gap-5">
-          <div className="space-x-4">
-            <span>Speak your way to</span>
-            <span className="relative h-[1.1em] w-[10ch] overflow-hidden inline-flex items-start text-green-600">
-              <span ref={textSliderRef} className="flex flex-col text-left">
-                {languages.map((lang, i) => (
-                  <span key={i} className="h-[1.1em] flex items-center">
-                    {lang}
+        {/* HERO SECTION */}
+        <div
+          ref={heroTextRef}
+          className="absolute top-52 w-full flex flex-col items-center z-10 px-4"
+        >
+          <h1 className="text-6xl font-bold mb-4 text-center flex flex-col justify-center items-center gap-5">
+            <div className="space-x-4">
+              <span>Speak your way to</span>
+              <span className="relative h-[1.1em] w-[10ch] overflow-hidden inline-flex items-start text-green-600">
+                <span ref={textSliderRef} className="flex flex-col text-left">
+                  {languages.map((lang, i) => (
+                    <span key={i} className="h-[1.1em] flex items-center">
+                      {lang}
+                    </span>
+                  ))}
+                  <span className="h-[1.2em] flex items-center">
+                    {languages[0]}
                   </span>
-                ))}
-                <span className="h-[1.2em] flex items-center">
-                  {languages[0]}
                 </span>
               </span>
-            </span>
-          </div>
-          <span className="text-start">fluency</span>
-        </h1>
-        <p className="text-l text-gray-500 max-w-lg text-center mb-8">
-          Don&apos;t just memorize. Build confidence by speaking with RolyAI in
-          real-life scenarios.
-        </p>
-        <Link
-          href={"#"}
-          className="flex items-center rounded-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
-        >
-          <Image
-            src={"/googleplay.svg"}
-            alt="googleplaystore"
-            width={180}
-            height={180}
-          />
-        </Link>
-      </div>
-
-      {/* FEATURES TEXT LOOP */}
-      {FEATURES.map((feature, index) => (
-        <div
-          key={feature.id}
-          ref={(el) => {
-            featuresRef.current[index] = el;
-          }}
-          className={`absolute top-1/2 -translate-y-1/2 w-1/3 z-10 opacity-0 ${
-            feature.textAlign === "right"
-              ? "right-[10%] text-left"
-              : feature.textAlign === "left"
-              ? "left-[10%] text-left"
-              : "left-1/2 -translate-x-1/2 top-[80%] text-center w-full px-4"
-          }`}
-        >
-          <div className="p-6 rounded-xl">
-            <h3 className="text-3xl font-bold mb-3 text-gray-800">
-              {feature.title}
-            </h3>
-            <p className="text-gray-600 text-lg">{feature.description}</p>
-          </div>
+            </div>
+            <span className="text-start">fluency</span>
+          </h1>
+          <p className="text-l text-gray-500 max-w-lg text-center mb-8">
+            Don&apos;t just memorize. Build confidence by speaking with RolyAI
+            in real-life scenarios.
+          </p>
+          <Link
+            href={"#beta"}
+            className="flex items-center rounded-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+          >
+            <Image
+              src={"/googleplay.svg"}
+              alt="googleplaystore"
+              width={180}
+              height={180}
+            />
+          </Link>
         </div>
-      ))}
-    </div>
+
+        {/* FEATURES TEXT LOOP */}
+        {FEATURES.map((feature, index) => (
+          <div
+            id="features"
+            key={feature.id}
+            ref={(el) => {
+              featuresRef.current[index] = el;
+            }}
+            className={`absolute top-1/2 -translate-y-1/2 w-1/3 z-10 opacity-0 ${
+              feature.textAlign === "right"
+                ? "right-[10%] text-left"
+                : feature.textAlign === "left"
+                ? "left-[10%] text-left"
+                : "left-1/2 -translate-x-1/2 top-[80%] text-center w-full px-4"
+            }`}
+          >
+            <div className="p-6 rounded-xl">
+              <h3 className="text-3xl font-bold mb-3 text-gray-800">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600 text-lg">{feature.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <WaitlistSection />
+      <FAQ />
+      <Testimonials />
+    </>
   );
 }
