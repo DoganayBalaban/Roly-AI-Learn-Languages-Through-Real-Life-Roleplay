@@ -267,6 +267,14 @@
   "chat_translate_error":"Translation failed.",
   "go_premium":"Go Premium",
   "unlock_pronunciation":"Unlock Pronunciation",
-  "unlock_pronunciation_desc":"Unlock pronunciation to hear how your words sound."
+  "unlock_pronunciation_desc":"Unlock pronunciation to hear how your words sound.",
+  "leaderboard_title":"Leaderboard",
+  "leaderboard_weekly":"Weekly",
+  "leaderboard_all_time":"All Time",
+  "leaderboard_you":"You",
+  "leaderboard_this_week":"This week",
+  "leaderboard_loading":"Loading...",
+  "leaderboard_error":"Failed to load leaderboard.",
+  "learning_language":"Learning {{lang}}"
 }
   

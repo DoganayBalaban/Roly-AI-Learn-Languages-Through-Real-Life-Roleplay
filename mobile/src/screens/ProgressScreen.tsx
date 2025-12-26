@@ -1,34 +1,22 @@
-import React, { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  ActivityIndicator,
-} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import SkeletonItem from "../components/SkeletonItem"; // Skeleton bileşeni
+import { COLORS } from "../constants/color";
 import { useAuth } from "../context/AuthContext";
 import api, { claimQuest } from "../services/api";
-import SkeletonItem from "../components/SkeletonItem"; // Skeleton bileşeni
-
-// Tasarım Renkleri
-const COLORS = {
-  primary: "#2bee79",
-  background: "#102217",
-  cardBg: "rgba(255, 255, 255, 0.05)",
-  borderColor: "rgba(255, 255, 255, 0.1)",
-  textWhite: "#FFFFFF",
-  textGrey: "#94a3b8",
-  barBg: "rgba(43, 238, 121, 0.2)",
-  tabActiveBg: "#1e293b", // Slate-800
-  tabInactiveText: "#94a3b8",
-};
 
 // --- GÖREVLER SKELETON ---
 const QuestSkeleton = () => (
@@ -194,45 +182,33 @@ export default function ProgressScreen() {
 
       {/* SEGMENTED CONTROL (TAB) */}
       <View style={styles.tabContainer}>
-        <View style={styles.tabWrapper}>
-          <TouchableOpacity
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "progress" && styles.tabActive]}
+          onPress={() => setActiveTab("progress")}
+        >
+          <Text
             style={[
-              styles.tabButton,
-              activeTab === "progress" && styles.tabActive,
+              styles.tabText,
+              activeTab === "progress" && styles.tabTextActive,
             ]}
-            onPress={() => setActiveTab("progress")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "progress"
-                  ? { color: COLORS.textWhite, fontWeight: "bold" }
-                  : { color: COLORS.textGrey },
-              ]}
-            >
-              {t("progress_tab")}
-            </Text>
-          </TouchableOpacity>
+            {t("progress_tab")}
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "quests" && styles.tabActive]}
+          onPress={() => setActiveTab("quests")}
+        >
+          <Text
             style={[
-              styles.tabButton,
-              activeTab === "quests" && styles.tabActive,
+              styles.tabText,
+              activeTab === "quests" && styles.tabTextActive,
             ]}
-            onPress={() => setActiveTab("quests")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "quests"
-                  ? { color: COLORS.textWhite, fontWeight: "bold" }
-                  : { color: COLORS.textGrey },
-              ]}
-            >
-              {t("daily_quests_tab")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {t("daily_quests_tab")}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -530,27 +506,31 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textWhite },
 
   // Tab Bar
-  tabContainer: { paddingHorizontal: 16, marginBottom: 16 },
-  tabWrapper: {
+  tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#1e293b",
-    borderRadius: 25,
-    padding: 4,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 12,
   },
-  tabButton: {
+  tab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: COLORS.chipInactive,
     alignItems: "center",
-    borderRadius: 20,
   },
   tabActive: {
-    backgroundColor: COLORS.cardBg,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
-  }, // Daha açık renk (cardBg) aktif
-  tabText: { fontSize: 14 },
+    backgroundColor: COLORS.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.textGrey,
+  },
+  tabTextActive: {
+    color: COLORS.backgroundDark,
+  },
 
   scrollContent: { padding: 16, paddingBottom: 40 },
 

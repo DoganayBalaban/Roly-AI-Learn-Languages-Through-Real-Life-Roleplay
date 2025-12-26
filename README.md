@@ -1,148 +1,140 @@
-# Roly AI - Learn Languages Through Real-Life Roleplay
+# RolyAI
+RolyAI is an AI-powered language-learning platform focused on speaking, not memorizing.
+It puts learners into real-life roleplay conversations so practice feels practical.
+Instant feedback helps fix pronunciation and grammar before bad habits stick.
+The goal is confidence for meetings, travel, and everyday conversations.
+This repo ships the landing site + waitlist, a mobile app, and the API server.
 
-<div align="center">
-  <img src="https://img.shields.io/badge/React_Native-0.72.5-61DAFB?style=for-the-badge&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" />
-</div>
+**Live Demo**
+- App: https://rolyai.vercel.app/
+- GitHub repo: https://github.com/DoganayBalaban/Roly-AI-Learn-Languages-Through-Real-Life-Roleplay
 
-## 🌍 Overview
+## Problem
+Most language apps train vocabulary and reading, but people freeze when it matters: speaking. Learners lack safe, realistic practice and timely feedback, so confidence lags behind knowledge.
 
-Roly AI is an innovative language learning application that helps users practice new languages through AI-powered roleplay conversations. The app provides an immersive experience where users can engage in realistic dialogues, receive instant feedback, and track their progress over time.
+## Solution
+RolyAI provides AI-driven roleplay conversations with immediate feedback on pronunciation and grammar. The experience is designed to build confidence through realistic practice and progression.
 
-## ✨ Features
+## Key Features
+- Real-life roleplay scenarios that mirror everyday situations
+- Instant pronunciation + grammar feedback
+- Adaptive learning for different proficiency levels
+- Gamified progression (XP, streaks, leaderboards)
+- Multi-language support (English, Turkish, Spanish, German, French, Italian, Japanese, Korean, Russian)
 
-- **AI-Powered Conversations**: Practice real-life dialogues with an AI language partner
-- **Multiple Languages**: Support for various target languages with customizable difficulty levels (A1-C2)
-- **Progress Tracking**: Monitor your learning journey with detailed statistics and achievements
-- **Vocabulary Builder**: Save and review new words with translations and examples
-- **Speech Recognition**: Improve your pronunciation with voice input and feedback
-- **Personalized Learning**: Adaptive difficulty based on your progress and preferences
+## Screenshots
+<p align="center">
+  <img src="mobile/assets/readme-images/ss1.png" alt="Roleplay conversation screen" width="260" />
+  <img src="mobile/assets/readme-images/ss2.png" alt="Session flow and feedback" width="260" />
+  <img src="mobile/assets/readme-images/ss3.png" alt="Progress overview" width="260" />
+  <img src="mobile/assets/readme-images/ss4.png" alt="Scenario selection" width="260" />
+  <img src="mobile/assets/readme-images/ss5.png" alt="Performance insights" width="260" />
+  <img src="mobile/assets/readme-images/ss6.png" alt="Leaderboard and rewards" width="260" />
+</p>
 
-## 🚀 Tech Stack
+## Tech Stack
+- **Landing**: Next.js (App Router), React, TypeScript, Tailwind CSS, GSAP — fast SSR/SEO for marketing pages, typed UI components, and smooth animation for hero/scroll effects.
+- **Mobile**: React Native (Expo), React Navigation, Expo AV/Speech, i18next — single codebase for iOS/Android, built-in media/speech for speaking drills, and i18n for multiple languages.
+- **Backend**: Node.js, Express, TypeScript, MongoDB (Mongoose), JWT, Zod — lightweight APIs with schema validation, JWT auth, and document storage that fits conversational data.
+- **AI**: OpenAI API — reliable speech/text understanding and generation to power feedback and roleplay.
+- **Infra**: Docker, Docker Compose, Resend (waitlist email capture) — reproducible dev/prod setup and simple transactional email for the waitlist.
+- **Services**: Google OAuth, RevenueCat, Google AdMob — easy sign-in, subscriptions, and monetization/ads out of the box.
 
-### Frontend (Mobile)
-- **Framework**: React Native with Expo
-- **State Management**: React Context API
-- **Navigation**: React Navigation
-- **UI Components**: React Native Paper, @expo/vector-icons
-- **HTTP Client**: Axios
 
-### Backend
-- **Runtime**: Node.js with Express
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT (JSON Web Tokens)
-- **AI Integration**: OpenAI API
-- **Validation**: Zod
+## Architecture Notes
+- Monorepo structure with `landing/`, `mobile/`, and `server/` directories
+- Next.js Server Actions handle waitlist submissions on the landing page
+- Express API handles authentication, users, chat, word, and AI orchestration for the mobile app
+- MongoDB stores users, sessions, and vocabulary data
+- Docker Compose configuration for easy local development and deployment
+- Environment variables are injected via `.env` files for each service
 
-## 🛠️ Installation
+## Getting Started
 
-### Prerequisites
-- Node.js (v16 or later)
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
-- MongoDB (local or cloud instance)
-- OpenAI API key
+### Option 1: Docker Compose (Recommended)
 
-### Backend Setup
+Run all services with Docker Compose:
 
-1. Navigate to the server directory:
-   ```bash
-   cd server
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file in the server root with the following variables:
-   ```
-   PORT=3000
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   OPENAI_API_KEY=your_openai_api_key
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-### Mobile App Setup
-
-1. Navigate to the mobile directory:
-   ```bash
-   cd mobile
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file in the mobile root with your API URL:
-   ```
-   API_URL=http://your-local-ip:3000
-   ```
-
-4. Start the development server:
-   ```bash
-   expo start
-   ```
-
-5. Use the Expo Go app on your device or an emulator to run the application.
-
-## 📱 Screenshots
-
-*(Screenshots will be added here)*
-
-## 📊 Project Structure
-
-```
-RolyAI/
-├── mobile/                 # React Native mobile application
-│   ├── src/
-│   │   ├── screens/       # Application screens
-│   │   ├── components/    # Reusable components
-│   │   ├── context/       # React context providers
-│   │   ├── services/      # API services
-│   │   └── utils/         # Utility functions
-│   └── app.json           # Expo configuration
-│
-└── server/                # Node.js backend
-    ├── src/
-    │   ├── controllers/   # Route controllers
-    │   ├── models/        # Database models
-    │   ├── routes/        # API routes
-    │   ├── services/      # Business logic
-    │   └── utils/         # Helper functions
-    └── .env.example       # Environment variables template
+```bash
+docker-compose up
 ```
 
-## 🤝 Contributing
+This will start:
+- **Server** on `http://localhost:5000`
+- **Landing** on `http://localhost:3000`
+- **Mobile** (Expo) on `http://localhost:8081`
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+For development with hot reload:
+```bash
+docker-compose up --build
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Option 2: Local Development
 
-## 📄 License
+#### Landing (Next.js)
+```bash
+cd landing
+npm install
+npm run dev
+```
+Runs on `http://localhost:3000`
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+#### Server (Express)
+```bash
+cd server
+npm install
+npm run dev
+```
+Runs on `http://localhost:5000` (or PORT from .env)
 
-## 🙏 Acknowledgments
+#### Mobile (Expo)
+```bash
+cd mobile
+npm install
+npx expo start
+```
+Starts Expo development server
 
-- OpenAI for their powerful language models
-- Expo for the amazing cross-platform development experience
-- The open-source community for their invaluable contributions
+## Environment Variables
 
----
+### Landing
+| Variable | Purpose |
+| --- | --- |
+| `RESEND_API_KEY` | Resend API key for waitlist email capture |
 
-<div align="center">
-  Made with ❤️ by Roly AI Team
-</div>
+### Server
+Create a `.env` file in the `server/` directory:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `MONGODB_URI` | MongoDB connection string | - |
+| `JWT_SECRET` | JWT signing secret for authentication | - |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - |
+| `OPENAI_API_KEY` | OpenAI API key for AI responses | - |
+| `PORT` | Server port | 3000 |
+
+### Mobile
+Create a `.env` file in the `mobile/` directory:
+
+| Variable | Purpose |
+| --- | --- |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google OAuth web client ID |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google OAuth iOS client ID |
+| `EXPO_PUBLIC_API_URL_ANDROID` | API base URL for Android development (e.g., `http://10.0.2.2:5000`) |
+| `EXPO_PUBLIC_API_URL_IOS` | API base URL for iOS development (e.g., `http://localhost:5000`) |
+| `EXPO_PUBLIC_API_URL_PROD` | API base URL for production |
+| `EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID` | Google AdMob interstitial ad unit ID |
+| `EXPO_PUBLIC_ADMOB_BANNER_ID` | Google AdMob banner ad unit ID |
+| `EXPO_PUBLIC_PRIVACY_URL` | Privacy policy page URL |
+| `EXPO_PUBLIC_TERMS_URL` | Terms of service page URL |
+| `EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_ANDROID` | RevenueCat public API key for Android |
+| `EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_IOS` | RevenueCat public API key for iOS |
+
+## Roadmap
+- [TODO] In-app speaking sessions with richer feedback UI
+- [TODO] Leaderboard
+- [TODO] Multi-language content packs and scenario expansion
+- [TODO] App store launch and public beta rollout
+
+## Contributing
+Issues and PRs are welcome. Please open an issue first for large changes so we can align on scope.
