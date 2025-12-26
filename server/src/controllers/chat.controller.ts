@@ -1,15 +1,14 @@
 import { Response } from "express";
+import fs from "fs";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import Session from "../models/Session";
-import fs from "fs";
-import path from "path";
-import {
-  getChatCompletion,
-  generateFeedbackAnalysis,
-  transcribeAudioWithWhisper,
-  textToSpeech,
-} from "../services/OpenAIService";
 import User from "../models/User";
+import {
+  generateFeedbackAnalysis,
+  getChatCompletion,
+  textToSpeech,
+  transcribeAudioWithWhisper,
+} from "../services/OpenAIService";
 import { updateQuestProgress } from "../services/QuestService";
 const isSameDay = (d1: Date, d2: Date) => {
   return (
@@ -146,7 +145,17 @@ export const endSession = async (req: AuthRequest, res: Response) => {
       // İlk defa yapıyor
       newStreak = 1;
     }
-    await User.findByIdAndUpdate(userId, {
+    // Haftalık XP sıfırlama kontrolü (Her Pazartesi sıfırla)
+    const lastReset = user?.stats.lastWeeklyReset
+      ? new Date(user.stats.lastWeeklyReset)
+      : null;
+    const shouldResetWeekly =
+      !lastReset ||
+      (today.getDay() === 1 && // Pazartesi
+        lastReset &&
+        today.getTime() - lastReset.getTime() >= 7 * 24 * 60 * 60 * 1000); // En az 7 gün geçmişse
+
+    const updateData: any = {
       $inc: {
         "stats.xp": xpEarned, // XP'yi artır
         "stats.totalSessions": 1, // Toplam oturumu 1 artır
@@ -158,7 +167,18 @@ export const endSession = async (req: AuthRequest, res: Response) => {
       $push: {
         "stats.activityHistory": today,
       },
-    });
+    };
+
+    if (shouldResetWeekly) {
+      // Haftalık XP'yi sıfırla ve yeni XP'yi ekle
+      updateData.$set["stats.weeklyXp"] = xpEarned;
+      updateData.$set["stats.lastWeeklyReset"] = today;
+    } else {
+      // Haftalık XP'yi artır
+      updateData.$inc["stats.weeklyXp"] = xpEarned;
+    }
+
+    await User.findByIdAndUpdate(userId, updateData);
     session.feedback = feedback;
     session.status = "completed";
     await session.save();

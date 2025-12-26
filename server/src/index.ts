@@ -1,8 +1,9 @@
+import cors from "cors";
 import express from "express";
 import { connectDB } from "./config/db";
-import cors from "cors";
-import userRoutes from "./routes/user.route";
 import chatRoutes from "./routes/chat.route";
+import leaderboardRoutes from "./routes/leaderboard.route";
+import userRoutes from "./routes/user.route";
 import wordRoutes from "./routes/word.route";
 import { initCronJobs } from "./services/NotificationService";
 const app = express();
@@ -13,6 +14,7 @@ app.use(cors());
 app.use("/api/auth", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/words", wordRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 initCronJobs();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

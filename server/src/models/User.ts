@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 // Kelime Defteri için detaylı yapı
 interface ISavedWord {
@@ -33,10 +33,12 @@ export interface IUser extends Document {
   };
   stats: {
     xp: number;
+    weeklyXp: number; // Haftalık XP
     streak: number;
     totalSessions: number;
     lastActivityDate?: Date; // <--- YENİ: Seriyi (Streak) hesaplamak için şart
     activityHistory: Date[];
+    lastWeeklyReset?: Date; // Haftalık XP sıfırlama tarihi
   };
   savedWords: ISavedWord[]; // <--- GÜNCELLENDİ: Sadece string değil, obje tutacak
   createdAt: Date;
@@ -71,10 +73,12 @@ const userSchema = new Schema(
 
     stats: {
       xp: { type: Number, default: 0 },
+      weeklyXp: { type: Number, default: 0 },
       streak: { type: Number, default: 0 },
       totalSessions: { type: Number, default: 0 },
       lastActivityDate: { type: Date, default: null },
       activityHistory: [{ type: Date }],
+      lastWeeklyReset: { type: Date, default: null },
     },
 
     savedWords: [

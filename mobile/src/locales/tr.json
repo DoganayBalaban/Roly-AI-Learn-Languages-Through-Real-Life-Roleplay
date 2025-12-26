@@ -266,6 +266,14 @@
   "chat_translate_error":"Çeviri başarısız.",
   "go_premium":"Premium'a Geç",
   "unlock_pronunciation":"Telaffuzu Aç",
-  "unlock_pronunciation_desc":"Telaffuzu açarak kelimelerinizin nasıl seslendiğini duyabilirsiniz."
+  "unlock_pronunciation_desc":"Telaffuzu açarak kelimelerinizin nasıl seslendiğini duyabilirsiniz.",
+  "leaderboard_title":"Liderlik Tablosu",
+  "leaderboard_weekly":"Haftalık",
+  "leaderboard_all_time":"Tüm Zamanlar",
+  "leaderboard_you":"Sen",
+  "leaderboard_this_week":"Bu hafta",
+  "leaderboard_loading":"Yükleniyor...",
+  "leaderboard_error":"Liderlik tablosu yüklenemedi.",
+  "learning_language":"{{lang}} Öğreniyor"
 }
   
