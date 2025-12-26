@@ -1,31 +1,32 @@
-import React, { useEffect } from "react";
-import { View, ActivityIndicator, Platform, Text } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { COLORS } from "./src/constants/color";
 import * as Notifications from "expo-notifications";
-import { AuthProvider, useAuth } from "./src/context/AuthContext";
-import Purchases, { LOG_LEVEL } from "react-native-purchases";
-import "./src/i18n.ts";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { ActivityIndicator, Platform, View } from "react-native";
+import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { COLORS } from "./src/constants/color";
+import { AuthProvider, useAuth } from "./src/context/AuthContext";
+import "./src/i18n.ts";
 // Ekranlar
-import LoginScreen from "./src/screens/LoginScreen";
-import HomeScreen from "./src/screens/HomeScreen";
 import ChatScreen from "./src/screens/ChatScreen";
-import ProgressScreen from "./src/screens/ProgressScreen";
-import ProfileScreen from "./src/screens/ProfileScreen";
-import ScenarioListScreen from "./src/screens/ScenarioListScreen";
 import FeedbackScreen from "./src/screens/FeedbackScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
-import PaywallScreen from "./src/screens/PaywallScreen";
-import VocabularyScreen from "./src/screens/VocabularyScreen";
+import HomeScreen from "./src/screens/HomeScreen";
+import Leaderboard from "./src/screens/Leaderboard";
+import LoginScreen from "./src/screens/LoginScreen";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
+import PaywallScreen from "./src/screens/PaywallScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import ProgressScreen from "./src/screens/ProgressScreen";
+import ScenarioListScreen from "./src/screens/ScenarioListScreen";
+import VocabularyScreen from "./src/screens/VocabularyScreen";
 import WelcomeScreen from "./src/screens/WelcomeScreen";
 
 const Stack = createNativeStackNavigator();
@@ -64,6 +65,8 @@ function MainTabs() {
           if (route.name === "Home") {
             iconName = "home";
           } else if (route.name === "Progress") {
+            iconName = "trending-up";
+          } else if (route.name === "Leaderboard") {
             iconName = "leaderboard";
           } else if (route.name === "Profile") {
             iconName = "person";
@@ -85,6 +88,13 @@ function MainTabs() {
         component={ProgressScreen}
         options={{
           tabBarLabel: t("tab_progress"),
+        }}
+      />
+      <Tab.Screen
+        name="Leaderboard"
+        component={Leaderboard}
+        options={{
+          tabBarLabel: t("leaderboard_title"),
         }}
       />
       <Tab.Screen

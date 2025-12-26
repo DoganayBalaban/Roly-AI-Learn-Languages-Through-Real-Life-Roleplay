@@ -159,4 +159,10 @@ export const claimQuest = async (questId: string) => {
 export const registerPushToken = async (token: string) => {
   await api.put("/auth/push-token", { token });
 };
+
+export const getLeaderboard = async (type: "weekly" | "all" = "all") => {
+  const response = await api.get(`/leaderboard?type=${type}`);
+  return response.data;
+};
+
 export default api;
