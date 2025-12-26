@@ -22,71 +22,117 @@ RolyAI provides AI-driven roleplay conversations with immediate feedback on pron
 - Gamified progression (XP, streaks, leaderboards)
 - Multi-language support (English, Turkish, Spanish, German, French, Italian, Japanese, Korean, Russian)
 
-## Tech Stack
-- Frontend: Next.js (App Router), React, TypeScript, Tailwind CSS, GSAP
-- Mobile: React Native (Expo), React Navigation, Expo AV/Speech
-- Backend: Node.js, Express, MongoDB (Mongoose), JWT, Zod
-- AI: OpenAI API
-- Infra: Resend (waitlist email capture), [TODO: hosting/deployment]
+## Screenshots
+<p align="center">
+  <img src="mobile/assets/readme-images/ss1.png" alt="Roleplay conversation screen" width="260" />
+  <img src="mobile/assets/readme-images/ss2.png" alt="Session flow and feedback" width="260" />
+  <img src="mobile/assets/readme-images/ss3.png" alt="Progress overview" width="260" />
+  <img src="mobile/assets/readme-images/ss4.png" alt="Scenario selection" width="260" />
+  <img src="mobile/assets/readme-images/ss5.png" alt="Performance insights" width="260" />
+  <img src="mobile/assets/readme-images/ss6.png" alt="Leaderboard and rewards" width="260" />
+</p>
 
-## System Overview
-1. User visits the Next.js landing page and scrolls through product highlights.
-2. GSAP animations present feature steps and device screens.
-3. The waitlist form submits via a Next.js Server Action.
-4. The server action validates the email and stores it in Resend.
-5. Mobile client authenticates users and calls the Express API.
-6. The API stores user data in MongoDB and issues JWTs.
-7. AI responses/feedback are generated via the OpenAI API.
+## Tech Stack
+- **Landing**: Next.js (App Router), React, TypeScript, Tailwind CSS, GSAP — fast SSR/SEO for marketing pages, typed UI components, and smooth animation for hero/scroll effects.
+- **Mobile**: React Native (Expo), React Navigation, Expo AV/Speech, i18next — single codebase for iOS/Android, built-in media/speech for speaking drills, and i18n for multiple languages.
+- **Backend**: Node.js, Express, TypeScript, MongoDB (Mongoose), JWT, Zod — lightweight APIs with schema validation, JWT auth, and document storage that fits conversational data.
+- **AI**: OpenAI API — reliable speech/text understanding and generation to power feedback and roleplay.
+- **Infra**: Docker, Docker Compose, Resend (waitlist email capture) — reproducible dev/prod setup and simple transactional email for the waitlist.
+- **Services**: Google OAuth, RevenueCat, Google AdMob — easy sign-in, subscriptions, and monetization/ads out of the box.
+
 
 ## Architecture Notes
-- Monorepo with `landing/`, `mobile/`, and `server/` apps
+- Monorepo structure with `landing/`, `mobile/`, and `server/` directories
 - Next.js Server Actions handle waitlist submissions on the landing page
-- Express API handles auth + AI orchestration for the mobile app
-- MongoDB stores users and content; secrets are injected via env vars
+- Express API handles authentication, users, chat, word, and AI orchestration for the mobile app
+- MongoDB stores users, sessions, and vocabulary data
+- Docker Compose configuration for easy local development and deployment
+- Environment variables are injected via `.env` files for each service
 
 ## Getting Started
 
-### Landing (Next.js)
+### Option 1: Docker Compose (Recommended)
+
+Run all services with Docker Compose:
+
+```bash
+docker-compose up
+```
+
+This will start:
+- **Server** on `http://localhost:5000`
+- **Landing** on `http://localhost:3000`
+- **Mobile** (Expo) on `http://localhost:8081`
+
+For development with hot reload:
+```bash
+docker-compose up --build
+```
+
+### Option 2: Local Development
+
+#### Landing (Next.js)
 ```bash
 cd landing
 npm install
 npm run dev
 ```
+Runs on `http://localhost:3000`
 
-### Server (Express)
+#### Server (Express)
 ```bash
 cd server
 npm install
 npm run dev
 ```
+Runs on `http://localhost:5000` (or PORT from .env)
 
-### Mobile (Expo)
+#### Mobile (Expo)
 ```bash
 cd mobile
 npm install
-npm start
+npx expo start
 ```
+Starts Expo development server
 
 ## Environment Variables
-| App | Variable | Purpose |
-| --- | --- | --- |
-| landing | `RESEND_API_KEY` | Resend API key for waitlist capture |
-| landing | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for metadata |
-| server | `MONGODB_URI` | MongoDB connection string |
-| server | `JWT_SECRET` | JWT signing secret |
-| server | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| server | `OPENAI_API_KEY` | OpenAI API key |
-| server | `PORT` | API port (defaults to 3000) |
 
-## Challenges & Learnings
-- Coordinating GSAP scroll-timelines with pinned hero sections
-- Keeping animations type-safe with dynamic refs in TypeScript
-- Designing a waitlist flow that feels instant yet reliable
-- Balancing marketing polish with app readiness across web + mobile
+### Landing
+| Variable | Purpose |
+| --- | --- |
+| `RESEND_API_KEY` | Resend API key for waitlist email capture |
+
+### Server
+Create a `.env` file in the `server/` directory:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `MONGODB_URI` | MongoDB connection string | - |
+| `JWT_SECRET` | JWT signing secret for authentication | - |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - |
+| `OPENAI_API_KEY` | OpenAI API key for AI responses | - |
+| `PORT` | Server port | 3000 |
+
+### Mobile
+Create a `.env` file in the `mobile/` directory:
+
+| Variable | Purpose |
+| --- | --- |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google OAuth web client ID |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google OAuth iOS client ID |
+| `EXPO_PUBLIC_API_URL_ANDROID` | API base URL for Android development (e.g., `http://10.0.2.2:5000`) |
+| `EXPO_PUBLIC_API_URL_IOS` | API base URL for iOS development (e.g., `http://localhost:5000`) |
+| `EXPO_PUBLIC_API_URL_PROD` | API base URL for production |
+| `EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID` | Google AdMob interstitial ad unit ID |
+| `EXPO_PUBLIC_ADMOB_BANNER_ID` | Google AdMob banner ad unit ID |
+| `EXPO_PUBLIC_PRIVACY_URL` | Privacy policy page URL |
+| `EXPO_PUBLIC_TERMS_URL` | Terms of service page URL |
+| `EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_ANDROID` | RevenueCat public API key for Android |
+| `EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_IOS` | RevenueCat public API key for iOS |
 
 ## Roadmap
 - [TODO] In-app speaking sessions with richer feedback UI
-- [TODO] Personalized study plans and goal tracking
+- [TODO] Leaderboard
 - [TODO] Multi-language content packs and scenario expansion
 - [TODO] App store launch and public beta rollout
 
