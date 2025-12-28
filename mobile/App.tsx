@@ -2,8 +2,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Platform, View } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
@@ -11,9 +12,11 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import UpdateCheck from "./src/components/UpdateCheck";
 import { COLORS } from "./src/constants/color";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import "./src/i18n.ts";
+import { checkAppVersion } from "./src/services/api";
 // Ekranlar
 import ChatScreen from "./src/screens/ChatScreen";
 import FeedbackScreen from "./src/screens/FeedbackScreen";
@@ -216,6 +219,9 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  const [requiresUpdate, setRequiresUpdate] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(true);
+
   useEffect(() => {
     const initPurchases = async () => {
       // Hata ayıklama için logları açalım
@@ -228,12 +234,94 @@ export default function App() {
       }
     };
 
+    const checkVersion = async () => {
+      try {
+        // Sadece production build'lerde kontrol et
+        if (!__DEV__) {
+          const currentVersion = Constants.expoConfig?.version || "1.0.0";
+          const currentVersionCode =
+            Platform.OS === "android"
+              ? Constants.expoConfig?.android?.versionCode || 1
+              : undefined;
+
+          const versionData = await checkAppVersion();
+
+          if (versionData.requiresUpdate) {
+            // Backend'den gelen minimum sürüm ile karşılaştır
+            const minVersion = versionData.minimumVersion;
+            const minVersionCode = versionData.minimumVersionCode;
+
+            let needsUpdate = false;
+
+            if (
+              Platform.OS === "android" &&
+              minVersionCode &&
+              currentVersionCode !== undefined
+            ) {
+              // Android için versionCode karşılaştırması
+              needsUpdate = currentVersionCode < minVersionCode;
+            } else if (minVersion) {
+              // Version string karşılaştırması (örn: "1.2.4")
+              const currentParts = currentVersion.split(".").map(Number);
+              const minParts = minVersion.split(".").map(Number);
+
+              for (
+                let i = 0;
+                i < Math.max(currentParts.length, minParts.length);
+                i++
+              ) {
+                const current = currentParts[i] || 0;
+                const min = minParts[i] || 0;
+
+                if (current < min) {
+                  needsUpdate = true;
+                  break;
+                } else if (current > min) {
+                  break;
+                }
+              }
+            }
+
+            if (needsUpdate) {
+              setRequiresUpdate(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.log("Version check error:", error);
+        // Hata durumunda uygulamayı açmaya devam et
+      } finally {
+        setIsCheckingUpdate(false);
+      }
+    };
+
     initPurchases();
+    checkVersion();
   }, []);
+
+  // Güncelleme kontrolü yapılırken loading göster
+  if (isCheckingUpdate && !__DEV__) {
+    return (
+      <SafeAreaProvider>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <AuthProvider>
         <AppNavigator />
+        <UpdateCheck
+          visible={requiresUpdate}
+          onUpdate={() => {
+            // UpdateCheck component'i zaten Play Store'a yönlendiriyor
+          }}
+        />
       </AuthProvider>
     </SafeAreaProvider>
   );
