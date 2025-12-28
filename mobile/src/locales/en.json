@@ -275,6 +275,10 @@
   "leaderboard_this_week":"This week",
   "leaderboard_loading":"Loading...",
   "leaderboard_error":"Failed to load leaderboard.",
-  "learning_language":"Learning {{lang}}"
+  "learning_language":"Learning {{lang}}",
+  "update_required_title":"Update Available",
+  "update_required_message":"A new version of the app is available. Please update the app to continue.",
+  "update_button":"Update",
+  "update_hint":"Restart the app after updating"
 }
   
