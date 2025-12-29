@@ -274,6 +274,11 @@
   "leaderboard_this_week":"Bu hafta",
   "leaderboard_loading":"Yükleniyor...",
   "leaderboard_error":"Liderlik tablosu yüklenemedi.",
-  "learning_language":"{{lang}} Öğreniyor"
+  "learning_language":"{{lang}} Öğreniyor",
+  "update_required_title":"Yeni Güncelleme Mevcut",
+  "update_required_message":"Uygulamanın yeni bir sürümü mevcut. Devam etmek için lütfen uygulamayı güncelleyin.",
+  "update_button":"Güncelle",
+  "update_hint":"Güncelleme yapıldıktan sonra uygulamayı yeniden başlatın"
+
 }
   

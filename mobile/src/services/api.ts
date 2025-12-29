@@ -165,4 +165,16 @@ export const getLeaderboard = async (type: "weekly" | "all" = "all") => {
   return response.data;
 };
 
+
+export const checkAppVersion = async () => {
+  try {
+    const response = await api.get("/app/version-check");
+    return response.data;
+  } catch (error: any) {
+    // Eğer endpoint yoksa veya hata varsa, güncelleme zorunlu değil
+    console.log("Version check failed:", error.message);
+    return { requiresUpdate: false };
+  }
+};
+
 export default api;

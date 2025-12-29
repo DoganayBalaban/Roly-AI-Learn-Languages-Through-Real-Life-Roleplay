@@ -33,3 +33,6 @@ services:
       - /app/node_modules
     stdin_open: true
     tty: true
+    env_file:
+      - ./mobile/.env
+
