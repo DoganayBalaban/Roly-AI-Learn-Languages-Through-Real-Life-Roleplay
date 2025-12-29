@@ -189,19 +189,22 @@ export default function RolyAILanding() {
           className="absolute top-36 sm:top-52 w-full flex flex-col items-center z-10 px-4"
         >
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 text-center">
-            Speak your way to{" "}
-            <span className="text-green-600">
-              <Typewriter
-                words={languages}
-                loop
-                cursor
-                cursorStyle="|"
-                typeSpeed={80}
-                deleteSpeed={50}
-                delaySpeed={1200}
-              />
-            </span>{" "}
-            fluency
+            <div className="flex flex-col space-y-2">
+              <span>Speak your way to</span>
+              <span className="text-green-600">
+                {" "}
+                <Typewriter
+                  words={languages}
+                  loop
+                  cursor
+                  cursorStyle="|"
+                  typeSpeed={80}
+                  deleteSpeed={50}
+                  delaySpeed={1200}
+                />
+              </span>{" "}
+              <span>fluency</span>
+            </div>
           </h1>
 
           <p className="text-gray-500 max-w-lg text-center mb-8">
