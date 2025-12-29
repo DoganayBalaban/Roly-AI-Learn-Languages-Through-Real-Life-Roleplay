@@ -218,7 +218,7 @@ export default function RolyAILanding() {
           ref={heroTextRef}
           className="absolute top-52 w-full flex flex-col items-center z-10 px-4"
         >
-          <h1 className="text-6xl font-bold mb-4 text-center flex flex-col justify-center items-center gap-5">
+          <h1 className="text-4xl lg:text-6xl font-bold mb-4 text-center flex flex-col justify-center items-center gap-5">
             <div className="space-x-4">
               <span>Speak your way to</span>
               <span className="relative h-[1.1em] w-[10ch] overflow-hidden inline-flex items-start text-green-600">

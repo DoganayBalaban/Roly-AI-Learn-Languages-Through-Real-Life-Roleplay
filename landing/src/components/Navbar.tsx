@@ -38,7 +38,7 @@ const Navbar = () => {
               className="object-cover"
             />
           </div>
-          <span className="font-bold text-2xl tracking-tight text-gray-900 group-hover:text-green-600 transition">
+          <span className="font-bold hidden lg:block text-2xl tracking-tight text-gray-900 group-hover:text-green-600 transition">
             Roly AI
           </span>
         </Link>
