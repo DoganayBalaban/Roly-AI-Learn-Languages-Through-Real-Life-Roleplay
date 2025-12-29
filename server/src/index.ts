@@ -1,7 +1,9 @@
 import cors from "cors";
 import express from "express";
 import { connectDB } from "./config/db";
+
 import appRoutes from "./routes/app.route";
+
 import chatRoutes from "./routes/chat.route";
 import leaderboardRoutes from "./routes/leaderboard.route";
 import userRoutes from "./routes/user.route";

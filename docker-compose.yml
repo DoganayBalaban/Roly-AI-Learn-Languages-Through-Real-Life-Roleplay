@@ -35,3 +35,4 @@ services:
     tty: true
     env_file:
       - ./mobile/.env
+

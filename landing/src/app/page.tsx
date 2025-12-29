@@ -1,5 +1,6 @@
 "use client";
 
+
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef } from "react";
@@ -151,6 +152,7 @@ export default function RolyAILanding() {
         ref={containerRef}
         className="relative w-full h-screen overflow-hidden bg-white text-black"
       >
+
         {/* Glow */}
         <div
           className="absolute inset-0 pointer-events-none"

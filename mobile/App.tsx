@@ -2,9 +2,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import React, { useEffect, useState } from "react";
+
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Platform, View } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
@@ -12,11 +14,13 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+
 import UpdateCheck from "./src/components/UpdateCheck";
 import { COLORS } from "./src/constants/color";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import "./src/i18n.ts";
 import { checkAppVersion } from "./src/services/api";
+
 // Ekranlar
 import ChatScreen from "./src/screens/ChatScreen";
 import FeedbackScreen from "./src/screens/FeedbackScreen";
