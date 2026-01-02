@@ -1,31 +1,24 @@
-import React, { useState, useCallback } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { Image } from "expo-image";
+import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
   ActivityIndicator,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-} from "react-native-google-mobile-ads";
-import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useAuth } from "../context/AuthContext";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import api from "../services/api";
 import StreakHeader from "../components/StreakHeader";
 import HomeSkeleton from "../components/skeletons/HomeSkeleton";
-import { useTranslation } from "react-i18next";
-const bannerAdUnitId = __DEV__
-  ? TestIds.BANNER
-  : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID;
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+
 const COLORS = {
   primary: "#2bee79",
   backgroundDark: "#102217",
@@ -289,15 +282,6 @@ export default function HomeScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          {!user?.isPremium && (
-            <View style={{ alignItems: "center", marginVertical: 10 }}>
-              <BannerAd
-                unitId={bannerAdUnitId} // <-- ARTIK DİNAMİK
-                size={BannerAdSize.BANNER}
-                requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-              />
-            </View>
-          )}
         </ScrollView>
       )}
     </View>
