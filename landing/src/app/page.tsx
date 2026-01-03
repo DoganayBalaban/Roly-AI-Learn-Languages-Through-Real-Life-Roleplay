@@ -1,9 +1,8 @@
 "use client";
 
-
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import FAQ from "@/components/FAQ";
 import Testimonials from "@/components/Testimonials";
@@ -49,9 +48,11 @@ const FEATURES = [
 ];
 
 export default function RolyAILanding() {
+  const [isClikedAppStore, setIsClikedAppStore] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const phoneRef = useRef<HTMLDivElement | null>(null);
   const heroTextRef = useRef<HTMLDivElement | null>(null);
+  const clickedAppStoreRef = useRef(false);
 
   const featuresRef = useRef<(HTMLDivElement | null)[]>([]);
   const screensRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -143,8 +144,16 @@ export default function RolyAILanding() {
         }
       });
     },
+
     { scope: containerRef }
   );
+  const handleClickAppStore = () => {
+    setIsClikedAppStore(true);
+    clickedAppStoreRef.current = true;
+    setTimeout(() => {
+      setIsClikedAppStore(false);
+    }, 2000);
+  };
 
   return (
     <>
@@ -152,7 +161,6 @@ export default function RolyAILanding() {
         ref={containerRef}
         className="relative w-full h-screen overflow-hidden bg-white text-black"
       >
-
         {/* Glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -214,14 +222,32 @@ export default function RolyAILanding() {
             in real-life scenarios.
           </p>
 
-          <Link href="#beta">
-            <Image
-              src="/googleplay.svg"
-              alt="Google Play"
-              width={180}
-              height={180}
-            />
-          </Link>
+          <div className="flex gap-4">
+            <Link href="#beta">
+              <Image
+                src="/googleplay.svg"
+                alt="Google Play"
+                width={180}
+                height={180}
+                className="cursor-pointer hover:-translate-y-1 transition-all duration-300"
+              />
+            </Link>
+            <Link href="#" onClick={handleClickAppStore}>
+              {isClikedAppStore ? (
+                <div className="cursor-pointer  w-[180px] h-[53px] rounded-sm bg-gray-900 flex items-center justify-center text-white text-lg font-bold">
+                  Coming Soon
+                </div>
+              ) : (
+                <Image
+                  src="/appstore.svg"
+                  alt="App Store"
+                  width={180}
+                  height={180}
+                  className="cursor-pointer hover:-translate-y-1 transition-all duration-300"
+                />
+              )}
+            </Link>
+          </div>
         </div>
 
         {/* FEATURES TEXT */}
