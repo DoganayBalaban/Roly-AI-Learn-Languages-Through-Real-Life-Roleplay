@@ -365,12 +365,6 @@ export default function Leaderboard() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textWhite} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("leaderboard_title")}</Text>
         <View style={styles.backButton} />
       </View>

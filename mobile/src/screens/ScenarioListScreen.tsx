@@ -1,23 +1,24 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  TextInput,
-  StatusBar,
-  Alert,
-} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import api from "../services/api";
-import { useAuth } from "../context/AuthContext";
-import { NAMES } from "../constants/name";
+import {
+  Alert,
+  Animated,
+  FlatList,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { COLORS } from "../constants/color";
+import { NAMES } from "../constants/name";
 import { SCENARIOS } from "../constants/scenarios";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 
 export default function ScenarioListScreen() {
   const { t } = useTranslation();
@@ -26,6 +27,16 @@ export default function ScenarioListScreen() {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  // Her item için ayrı animasyon değerleri tutmak için Map
+  const scaleAnims = useRef<Map<string, Animated.Value>>(new Map()).current;
+
+  // Her item için animasyon değeri al veya oluştur
+  const getScaleAnim = (itemId: string) => {
+    if (!scaleAnims.has(itemId)) {
+      scaleAnims.set(itemId, new Animated.Value(1));
+    }
+    return scaleAnims.get(itemId)!;
+  };
 
   const FILTERS = [
     { key: "all", label: t("all") },
@@ -110,38 +121,63 @@ export default function ScenarioListScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        // Premium ve kilitli ise biraz soluk gösterelim
-        item.isPremium && !user?.isPremium && { opacity: 0.7 },
-      ]}
-      onPress={() => handleStartScenario(item)}
-    >
-      {/* KİLİT İKONU (SAĞ ÜST) */}
-      {item.isPremium && !user?.isPremium && (
-        <View style={styles.lockIconContainer}>
-          <MaterialIcons name="lock" size={20} color="#fbbf24" />
-        </View>
-      )}
-      <View style={styles.iconBox}>
-        <MaterialIcons
-          name={item.icon as any}
-          size={32}
-          color={COLORS.primary}
-        />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{t(item.titleKey)}</Text>
-        <Text
-          style={[styles.levelText, { color: getLevelColor(item.levelKey) }]}
+  const renderItem = ({ item }: { item: any }) => {
+    const scaleAnim = getScaleAnim(item.id);
+
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          style={[
+            styles.card,
+            // Premium ve kilitli ise biraz soluk gösterelim
+            item.isPremium && !user?.isPremium && { opacity: 0.7 },
+          ]}
+          onPress={() => handleStartScenario(item)}
+          onPressIn={() =>
+            Animated.spring(scaleAnim, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnim, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
-          {t(item.levelKey)}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+          {/* KİLİT İKONU (SAĞ ÜST) */}
+          {item.isPremium && !user?.isPremium && (
+            <View style={styles.lockIconContainer}>
+              <MaterialIcons name="lock" size={20} color="#fbbf24" />
+            </View>
+          )}
+          <View style={styles.iconBox}>
+            <MaterialIcons
+              name={item.icon as any}
+              size={32}
+              color={COLORS.primary}
+            />
+          </View>
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle}>{t(item.titleKey)}</Text>
+            <Text
+              style={[
+                styles.levelText,
+                { color: getLevelColor(item.levelKey) },
+              ]}
+            >
+              {t(item.levelKey)}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
