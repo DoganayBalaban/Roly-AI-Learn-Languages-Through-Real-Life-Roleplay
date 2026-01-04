@@ -72,6 +72,17 @@ export default function ProgressScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const scaleAnimTab = useRef(new Animated.Value(1)).current;
+  const scaleAnimClaimBtn = useRef<Map<string, Animated.Value>>(
+    new Map()
+  ).current;
+
+  // Her quest için animasyon değeri al veya oluştur
+  const getClaimAnim = (questId: string) => {
+    if (!scaleAnimClaimBtn.has(questId)) {
+      scaleAnimClaimBtn.set(questId, new Animated.Value(1));
+    }
+    return scaleAnimClaimBtn.get(questId)!;
+  };
   // Helper - Tarihi formatla
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -492,22 +503,45 @@ export default function ProgressScreen() {
                         <Text style={styles.claimedText}>{t("claimed")}</Text>
                       </View>
                     ) : quest.isCompleted ? (
-                      <TouchableOpacity
-                        style={styles.claimButton}
-                        onPress={() => handleClaim(quest.id)}
-                        disabled={claimingId === quest.id}
+                      <Animated.View
+                        style={{
+                          transform: [{ scale: getClaimAnim(quest.id) }],
+                        }}
                       >
-                        {claimingId === quest.id ? (
-                          <ActivityIndicator
-                            color={COLORS.background}
-                            size="small"
-                          />
-                        ) : (
-                          <Text style={styles.claimButtonText}>
-                            {t("claim")}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.claimButton}
+                          onPress={() => handleClaim(quest.id)}
+                          disabled={claimingId === quest.id}
+                          onPressIn={() =>
+                            Animated.spring(getClaimAnim(quest.id), {
+                              toValue: 0.95,
+                              useNativeDriver: true,
+                              friction: 3,
+                              tension: 40,
+                            }).start()
+                          }
+                          onPressOut={() =>
+                            Animated.spring(getClaimAnim(quest.id), {
+                              toValue: 1,
+                              useNativeDriver: true,
+                              friction: 3,
+                              tension: 40,
+                            }).start()
+                          }
+                          activeOpacity={1}
+                        >
+                          {claimingId === quest.id ? (
+                            <ActivityIndicator
+                              color={COLORS.background}
+                              size="small"
+                            />
+                          ) : (
+                            <Text style={styles.claimButtonText}>
+                              {t("claim")}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      </Animated.View>
                     ) : (
                       // Bitmemiş görev için boş alan veya 0/3 gibi sayaç (yukarıda eklendi)
                       <View />
