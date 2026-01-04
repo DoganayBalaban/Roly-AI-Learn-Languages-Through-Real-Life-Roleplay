@@ -2,9 +2,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
+import { PostHogProvider } from "posthog-react-native";
 import React, { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
@@ -318,15 +318,22 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <AppNavigator />
-        <UpdateCheck
-          visible={requiresUpdate}
-          onUpdate={() => {
-            // UpdateCheck component'i zaten Play Store'a yönlendiriyor
-          }}
-        />
-      </AuthProvider>
+      <PostHogProvider
+        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
+        options={{
+          host: "https://eu.i.posthog.com",
+        }}
+      >
+        <AuthProvider>
+          <AppNavigator />
+          <UpdateCheck
+            visible={requiresUpdate}
+            onUpdate={() => {
+              // UpdateCheck component'i zaten Play Store'a yönlendiriyor
+            }}
+          />
+        </AuthProvider>
+      </PostHogProvider>
     </SafeAreaProvider>
   );
 }
