@@ -1,10 +1,11 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Animated,
   Platform,
   ScrollView,
   StatusBar,
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [lastSession, setLastSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Senaryo adını çeviri anahtarına çevir
   const getScenarioTranslationKey = (scenarioName: string): string => {
@@ -110,6 +112,25 @@ export default function HomeScreen() {
   // İlerleme yüzdesini mesaj sayısına göre uyduralım (Örn: 20 mesaj %100 olsun)
   const calculateProgress = (msgCount: number): number => {
     return Math.min(msgCount * 5, 100); // Her mesaj %5 artış
+  };
+
+  // Buton animasyon fonksiyonları
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      friction: 3,
+      tension: 40,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 3,
+      tension: 40,
+    }).start();
   };
 
   const recommendedScenarios = [
@@ -248,17 +269,22 @@ export default function HomeScreen() {
           )}
 
           {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
-          <TouchableOpacity
-            style={styles.bigButton}
-            onPress={() => navigation.navigate("ScenarioList")}
-          >
-            <MaterialIcons
-              name="play-arrow"
-              size={24}
-              color={COLORS.backgroundDark}
-            />
-            <Text style={styles.bigButtonText}>{t("new_practice")}</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <TouchableOpacity
+              style={styles.bigButton}
+              onPress={() => navigation.navigate("ScenarioList")}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              activeOpacity={1}
+            >
+              <MaterialIcons
+                name="play-arrow"
+                size={24}
+                color={COLORS.backgroundDark}
+              />
+              <Text style={styles.bigButtonText}>{t("new_practice")}</Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           {/* --- DİĞER KARTLAR --- */}
           <View style={styles.listContainer}>
