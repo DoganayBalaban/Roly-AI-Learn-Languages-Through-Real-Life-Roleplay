@@ -1,9 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Animated,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -57,6 +58,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const scaleAnimTab = useRef(new Animated.Value(1)).current;
 
   const fetchLeaderboard = async () => {
     try {
@@ -193,9 +195,13 @@ export default function Leaderboard() {
             return <View key={index} style={styles.topThreePlaceholder} />;
           const isFirst = index === 0;
           return (
-            <View
+            <Animated.View
               key={entry.userId}
-              style={[styles.topThreeItem, isFirst && styles.topThreeFirst]}
+              style={[
+                styles.topThreeItem,
+                isFirst && styles.topThreeFirst,
+                { transform: [{ scale: scaleAnimTab }] },
+              ]}
             >
               {isFirst && (
                 <MaterialIcons
@@ -253,7 +259,7 @@ export default function Leaderboard() {
               >
                 {entry.xp} XP
               </Text>
-            </View>
+            </Animated.View>
           );
         })}
       </View>
@@ -370,10 +376,28 @@ export default function Leaderboard() {
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabContainer}>
+      <Animated.View
+        style={[styles.tabContainer, { transform: [{ scale: scaleAnimTab }] }]}
+      >
         <TouchableOpacity
           style={[styles.tab, type === "weekly" && styles.tabActive]}
           onPress={() => setType("weekly")}
+          onPressIn={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
           <Text
             style={[styles.tabText, type === "weekly" && styles.tabTextActive]}
@@ -384,6 +408,22 @@ export default function Leaderboard() {
         <TouchableOpacity
           style={[styles.tab, type === "all" && styles.tabActive]}
           onPress={() => setType("all")}
+          onPressIn={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
           <Text
             style={[styles.tabText, type === "all" && styles.tabTextActive]}
@@ -391,7 +431,7 @@ export default function Leaderboard() {
             {t("leaderboard_all_time")}
           </Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {error ? (
         <View style={styles.errorContainer}>

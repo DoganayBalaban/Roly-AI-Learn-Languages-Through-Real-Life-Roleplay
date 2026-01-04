@@ -36,7 +36,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [lastSession, setLastSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnimBtn = useRef(new Animated.Value(1)).current;
+  const scaleAnimItem = useRef(new Animated.Value(1)).current;
 
   // Senaryo adını çeviri anahtarına çevir
   const getScenarioTranslationKey = (scenarioName: string): string => {
@@ -116,7 +117,7 @@ export default function HomeScreen() {
 
   // Buton animasyon fonksiyonları
   const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
+    Animated.spring(scaleAnimBtn, {
       toValue: 0.95,
       useNativeDriver: true,
       friction: 3,
@@ -125,7 +126,7 @@ export default function HomeScreen() {
   };
 
   const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
+    Animated.spring(scaleAnimBtn, {
       toValue: 1,
       useNativeDriver: true,
       friction: 3,
@@ -269,7 +270,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
-          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+          <Animated.View style={{ transform: [{ scale: scaleAnimBtn }] }}>
             <TouchableOpacity
               style={styles.bigButton}
               onPress={() => navigation.navigate("ScenarioList")}
@@ -287,27 +288,48 @@ export default function HomeScreen() {
           </Animated.View>
 
           {/* --- DİĞER KARTLAR --- */}
-          <View style={styles.listContainer}>
-            {recommendedScenarios.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.scenarioCard}
-                onPress={item.action}
-              >
-                <View style={styles.iconBox}>
-                  <MaterialIcons
-                    name={item.icon as any}
-                    size={24}
-                    color={COLORS.primary}
-                  />
-                </View>
-                <View style={styles.textContainer}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardDescription}>{item.description}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Animated.View style={{ transform: [{ scale: scaleAnimItem }] }}>
+            <View style={styles.listContainer}>
+              {recommendedScenarios.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.scenarioCard}
+                  onPress={item.action}
+                  onPressIn={() =>
+                    Animated.spring(scaleAnimItem, {
+                      toValue: 0.95,
+                      useNativeDriver: true,
+                      friction: 3,
+                      tension: 40,
+                    }).start()
+                  }
+                  onPressOut={() =>
+                    Animated.spring(scaleAnimItem, {
+                      toValue: 1,
+                      useNativeDriver: true,
+                      friction: 3,
+                      tension: 40,
+                    }).start()
+                  }
+                  activeOpacity={1}
+                >
+                  <View style={styles.iconBox}>
+                    <MaterialIcons
+                      name={item.icon as any}
+                      size={24}
+                      color={COLORS.primary}
+                    />
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text style={styles.cardTitle}>{item.title}</Text>
+                    <Text style={styles.cardDescription}>
+                      {item.description}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
         </ScrollView>
       )}
     </View>

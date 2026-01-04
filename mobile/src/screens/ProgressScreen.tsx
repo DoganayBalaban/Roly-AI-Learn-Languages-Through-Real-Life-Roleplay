@@ -1,10 +1,11 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Animated,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -70,7 +71,7 @@ export default function ProgressScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-
+  const scaleAnimTab = useRef(new Animated.Value(1)).current;
   // Helper - Tarihi formatla
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -181,10 +182,28 @@ export default function ProgressScreen() {
       </View>
 
       {/* SEGMENTED CONTROL (TAB) */}
-      <View style={styles.tabContainer}>
+      <Animated.View
+        style={[styles.tabContainer, { transform: [{ scale: scaleAnimTab }] }]}
+      >
         <TouchableOpacity
           style={[styles.tab, activeTab === "progress" && styles.tabActive]}
           onPress={() => setActiveTab("progress")}
+          onPressIn={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
           <Text
             style={[
@@ -199,6 +218,22 @@ export default function ProgressScreen() {
         <TouchableOpacity
           style={[styles.tab, activeTab === "quests" && styles.tabActive]}
           onPress={() => setActiveTab("quests")}
+          onPressIn={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
           <Text
             style={[
@@ -209,7 +244,7 @@ export default function ProgressScreen() {
             {t("daily_quests_tab")}
           </Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

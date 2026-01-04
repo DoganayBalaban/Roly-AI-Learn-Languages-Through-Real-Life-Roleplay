@@ -1,28 +1,28 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { Image } from "expo-image";
+import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  Switch,
   Alert,
-  Modal,
   FlatList,
+  Modal,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { scheduleDailyReminder, cancelReminders } from "../utils/notifications";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../context/AuthContext";
-import { useTranslation } from "react-i18next";
-import api from "../services/api";
-import * as SecureStore from "expo-secure-store";
-import { COLORS } from "../constants/color";
 import { AVATAR_SEEDS } from "../constants/avatar";
+import { COLORS } from "../constants/color";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+import { cancelReminders, scheduleDailyReminder } from "../utils/notifications";
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
