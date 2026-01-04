@@ -1,28 +1,29 @@
-import React, { useEffect, useState } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { Image } from "expo-image";
+import * as SecureStore from "expo-secure-store";
+import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  Switch,
   Alert,
-  Modal,
+  Animated,
   FlatList,
+  Modal,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { scheduleDailyReminder, cancelReminders } from "../utils/notifications";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../context/AuthContext";
-import { useTranslation } from "react-i18next";
-import api from "../services/api";
-import * as SecureStore from "expo-secure-store";
-import { COLORS } from "../constants/color";
 import { AVATAR_SEEDS } from "../constants/avatar";
+import { COLORS } from "../constants/color";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+import { cancelReminders, scheduleDailyReminder } from "../utils/notifications";
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
@@ -42,6 +43,28 @@ export default function ProfileScreen() {
   const navigation = useNavigation<any>();
   const { user, logout, updateUser, deleteUser } = useAuth();
   const insets = useSafeAreaInsets();
+  const scaleAnimEditBtn = useRef(new Animated.Value(1)).current;
+  const scaleAnimSettingRow = useRef<Map<string, Animated.Value>>(
+    new Map()
+  ).current;
+  const scaleAnimModalBtn = useRef<Map<string, Animated.Value>>(
+    new Map()
+  ).current;
+
+  // Her setting row için animasyon değeri al veya oluştur
+  const getSettingRowAnim = (key: string) => {
+    if (!scaleAnimSettingRow.has(key)) {
+      scaleAnimSettingRow.set(key, new Animated.Value(1));
+    }
+    return scaleAnimSettingRow.get(key)!;
+  };
+
+  const getModalBtnAnim = (key: string) => {
+    if (!scaleAnimModalBtn.has(key)) {
+      scaleAnimModalBtn.set(key, new Animated.Value(1));
+    }
+    return scaleAnimModalBtn.get(key)!;
+  };
 
   // Modal State'leri
   const [modalVisible, setModalVisible] = useState(false);
@@ -163,28 +186,59 @@ export default function ProfileScreen() {
     onPress,
     isDestructive = false,
     showChevron = true,
-  }: any) => (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.rowLeft}>
-        <MaterialIcons
-          name={icon}
-          size={24}
-          color={isDestructive ? COLORS.danger : COLORS.iconGreen}
-        />
-        <Text
-          style={[styles.rowTitle, isDestructive && { color: COLORS.danger }]}
+    animKey,
+  }: any) => {
+    const scaleAnim = animKey
+      ? getSettingRowAnim(animKey)
+      : new Animated.Value(1);
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={onPress}
+          onPressIn={() =>
+            Animated.spring(scaleAnim, {
+              toValue: 0.97,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnim, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          activeOpacity={1}
         >
-          {title}
-        </Text>
-      </View>
-      <View style={styles.rowRight}>
-        {value && <Text style={styles.rowValue}>{value}</Text>}
-        {showChevron && (
-          <MaterialIcons name="chevron-right" size={24} color="#525252" />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+          <View style={styles.rowLeft}>
+            <MaterialIcons
+              name={icon}
+              size={24}
+              color={isDestructive ? COLORS.danger : COLORS.iconGreen}
+            />
+            <Text
+              style={[
+                styles.rowTitle,
+                isDestructive && { color: COLORS.danger },
+              ]}
+            >
+              {title}
+            </Text>
+          </View>
+          <View style={styles.rowRight}>
+            {value && <Text style={styles.rowValue}>{value}</Text>}
+            {showChevron && (
+              <MaterialIcons name="chevron-right" size={24} color="#525252" />
+            )}
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   const SwitchRow = ({ icon, title, value, onValueChange }: any) => (
     <View style={styles.row}>
@@ -230,12 +284,31 @@ export default function ProfileScreen() {
               contentFit="cover"
               style={styles.avatar}
             />
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setAvatarModalVisible(true)}
-            >
-              <MaterialIcons name="edit" size={16} color="#000" />
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: scaleAnimEditBtn }] }}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => setAvatarModalVisible(true)}
+                onPressIn={() =>
+                  Animated.spring(scaleAnimEditBtn, {
+                    toValue: 0.9,
+                    useNativeDriver: true,
+                    friction: 3,
+                    tension: 40,
+                  }).start()
+                }
+                onPressOut={() =>
+                  Animated.spring(scaleAnimEditBtn, {
+                    toValue: 1,
+                    useNativeDriver: true,
+                    friction: 3,
+                    tension: 40,
+                  }).start()
+                }
+                activeOpacity={1}
+              >
+                <MaterialIcons name="edit" size={16} color="#000" />
+              </TouchableOpacity>
+            </Animated.View>
           </View>
           <Text style={styles.userName}>{user?.fullName}</Text>
           <Text style={styles.userEmail}>{user?.email}</Text>
@@ -255,6 +328,7 @@ export default function ProfileScreen() {
                 )?.labelKey || "lang_english"
               )}
               onPress={() => openModal("target")}
+              animKey="target_language"
             />
             <View style={styles.divider} />
 
@@ -267,6 +341,7 @@ export default function ProfileScreen() {
                 )?.labelKey || "lang_turkish"
               )}
               onPress={() => openModal("native")}
+              animKey="native_language"
             />
           </View>
         </View>
@@ -277,6 +352,7 @@ export default function ProfileScreen() {
               icon="book"
               title={t("my_vocabulary")}
               onPress={() => navigation.navigate("Vocabulary")}
+              animKey="vocabulary"
             />
           </View>
         </View>
@@ -302,6 +378,7 @@ export default function ProfileScreen() {
               icon="lock"
               title={t("change_password")}
               onPress={() => navigation.navigate("ForgotPassword")}
+              animKey="change_password"
             />
             <View style={styles.divider} />
             <SettingRow
@@ -310,6 +387,7 @@ export default function ProfileScreen() {
               isDestructive={true}
               showChevron={false}
               onPress={handleLogout}
+              animKey="logout"
             />
             <View style={styles.divider} />
             <SettingRow
@@ -318,6 +396,7 @@ export default function ProfileScreen() {
               isDestructive={true}
               showChevron={false}
               onPress={confirmDeleteAccount}
+              animKey="delete_account"
             />
           </View>
         </View>

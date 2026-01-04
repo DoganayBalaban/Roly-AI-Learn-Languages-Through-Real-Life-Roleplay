@@ -1,6 +1,5 @@
 "use client";
 
-
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef } from "react";
@@ -52,6 +51,10 @@ export default function RolyAILanding() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const phoneRef = useRef<HTMLDivElement | null>(null);
   const heroTextRef = useRef<HTMLDivElement | null>(null);
+  const appStoreBtnRef = useRef<HTMLDivElement | null>(null);
+  const appStoreImgRef = useRef<HTMLImageElement | null>(null);
+  const comingSoonTextRef = useRef<HTMLDivElement | null>(null);
+  const isAnimatingRef = useRef(false);
 
   const featuresRef = useRef<(HTMLDivElement | null)[]>([]);
   const screensRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -143,8 +146,73 @@ export default function RolyAILanding() {
         }
       });
     },
+
     { scope: containerRef }
   );
+
+  const handleClickAppStore = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAnimatingRef.current) return;
+
+    isAnimatingRef.current = true;
+    const btn = appStoreBtnRef.current;
+    const img = appStoreImgRef.current;
+    const text = comingSoonTextRef.current;
+
+    if (!btn || !img || !text) return;
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        isAnimatingRef.current = false;
+      },
+    });
+
+    // Shake ve Coming Soon göster
+    tl.to(btn, {
+      x: -8,
+      duration: 0.08,
+      ease: "power2.inOut",
+    })
+      .to(btn, {
+        x: 8,
+        duration: 0.08,
+        ease: "power2.inOut",
+        repeat: 3,
+        yoyo: true,
+      })
+      .to(btn, {
+        x: 0,
+        duration: 0.08,
+      })
+      .to(
+        img,
+        {
+          opacity: 0,
+          scale: 0.8,
+          duration: 0.3,
+          ease: "power2.in",
+        },
+        "-=0.1"
+      )
+      .to(text, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.4,
+        ease: "back.out(1.7)",
+      })
+      .to(text, {
+        opacity: 0,
+        scale: 0.8,
+        duration: 0.3,
+        delay: 1.5,
+      })
+      .to(img, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: "back.out(1.7)",
+      });
+  };
 
   return (
     <>
@@ -152,7 +220,6 @@ export default function RolyAILanding() {
         ref={containerRef}
         className="relative w-full h-screen overflow-hidden bg-white text-black"
       >
-
         {/* Glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -214,14 +281,50 @@ export default function RolyAILanding() {
             in real-life scenarios.
           </p>
 
-          <Link href="#beta">
-            <Image
-              src="/googleplay.svg"
-              alt="Google Play"
-              width={180}
-              height={180}
-            />
-          </Link>
+          <div className="flex gap-4">
+            <Link href="#beta">
+              <Image
+                src="/googleplay.svg"
+                alt="Google Play"
+                width={180}
+                height={180}
+                className="cursor-pointer hover:-translate-y-1 transition-all duration-300"
+              />
+            </Link>
+            <div
+              ref={appStoreBtnRef}
+              onClick={handleClickAppStore}
+              className="relative w-45 h-13.5 cursor-pointer overflow-hidden rounded-lg hover:-translate-y-1 transition-transform duration-300 "
+            >
+              <Image
+                ref={appStoreImgRef}
+                src="/appstore.svg"
+                alt="App Store"
+                width={180}
+                height={180}
+                className="absolute inset-0 "
+              />
+              <div
+                ref={comingSoonTextRef}
+                className="absolute inset-0 flex items-center justify-center bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 rounded-lg opacity-0 scale-75"
+              >
+                <span className="text-white font-bold text-sm tracking-wide flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 text-green-400 animate-pulse"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Coming Soon
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* FEATURES TEXT */}

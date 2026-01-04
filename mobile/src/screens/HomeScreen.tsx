@@ -1,31 +1,25 @@
-import React, { useState, useCallback } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { Image } from "expo-image";
+import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
   ActivityIndicator,
+  Animated,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-} from "react-native-google-mobile-ads";
-import { Image } from "expo-image";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useAuth } from "../context/AuthContext";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import api from "../services/api";
 import StreakHeader from "../components/StreakHeader";
 import HomeSkeleton from "../components/skeletons/HomeSkeleton";
-import { useTranslation } from "react-i18next";
-const bannerAdUnitId = __DEV__
-  ? TestIds.BANNER
-  : process.env.EXPO_PUBLIC_ADMOB_BANNER_ID;
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+
 const COLORS = {
   primary: "#2bee79",
   backgroundDark: "#102217",
@@ -42,6 +36,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [lastSession, setLastSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const scaleAnimBtn = useRef(new Animated.Value(1)).current;
+  const scaleAnimItem = useRef(new Animated.Value(1)).current;
 
   // Senaryo adını çeviri anahtarına çevir
   const getScenarioTranslationKey = (scenarioName: string): string => {
@@ -117,6 +113,25 @@ export default function HomeScreen() {
   // İlerleme yüzdesini mesaj sayısına göre uyduralım (Örn: 20 mesaj %100 olsun)
   const calculateProgress = (msgCount: number): number => {
     return Math.min(msgCount * 5, 100); // Her mesaj %5 artış
+  };
+
+  // Buton animasyon fonksiyonları
+  const handlePressIn = () => {
+    Animated.spring(scaleAnimBtn, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      friction: 3,
+      tension: 40,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnimBtn, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 3,
+      tension: 40,
+    }).start();
   };
 
   const recommendedScenarios = [
@@ -255,49 +270,66 @@ export default function HomeScreen() {
           )}
 
           {/* --- YENİ PRATİK BAŞLAT (Senaryo Listesine Gider) --- */}
-          <TouchableOpacity
-            style={styles.bigButton}
-            onPress={() => navigation.navigate("ScenarioList")}
-          >
-            <MaterialIcons
-              name="play-arrow"
-              size={24}
-              color={COLORS.backgroundDark}
-            />
-            <Text style={styles.bigButtonText}>{t("new_practice")}</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: scaleAnimBtn }] }}>
+            <TouchableOpacity
+              style={styles.bigButton}
+              onPress={() => navigation.navigate("ScenarioList")}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              activeOpacity={1}
+            >
+              <MaterialIcons
+                name="play-arrow"
+                size={24}
+                color={COLORS.backgroundDark}
+              />
+              <Text style={styles.bigButtonText}>{t("new_practice")}</Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           {/* --- DİĞER KARTLAR --- */}
-          <View style={styles.listContainer}>
-            {recommendedScenarios.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.scenarioCard}
-                onPress={item.action}
-              >
-                <View style={styles.iconBox}>
-                  <MaterialIcons
-                    name={item.icon as any}
-                    size={24}
-                    color={COLORS.primary}
-                  />
-                </View>
-                <View style={styles.textContainer}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardDescription}>{item.description}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-          {!user?.isPremium && (
-            <View style={{ alignItems: "center", marginVertical: 10 }}>
-              <BannerAd
-                unitId={bannerAdUnitId} // <-- ARTIK DİNAMİK
-                size={BannerAdSize.BANNER}
-                requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-              />
+          <Animated.View style={{ transform: [{ scale: scaleAnimItem }] }}>
+            <View style={styles.listContainer}>
+              {recommendedScenarios.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.scenarioCard}
+                  onPress={item.action}
+                  onPressIn={() =>
+                    Animated.spring(scaleAnimItem, {
+                      toValue: 0.95,
+                      useNativeDriver: true,
+                      friction: 3,
+                      tension: 40,
+                    }).start()
+                  }
+                  onPressOut={() =>
+                    Animated.spring(scaleAnimItem, {
+                      toValue: 1,
+                      useNativeDriver: true,
+                      friction: 3,
+                      tension: 40,
+                    }).start()
+                  }
+                  activeOpacity={1}
+                >
+                  <View style={styles.iconBox}>
+                    <MaterialIcons
+                      name={item.icon as any}
+                      size={24}
+                      color={COLORS.primary}
+                    />
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text style={styles.cardTitle}>{item.title}</Text>
+                    <Text style={styles.cardDescription}>
+                      {item.description}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
             </View>
-          )}
+          </Animated.View>
         </ScrollView>
       )}
     </View>

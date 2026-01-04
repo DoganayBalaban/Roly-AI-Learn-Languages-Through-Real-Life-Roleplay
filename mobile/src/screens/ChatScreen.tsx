@@ -1,43 +1,43 @@
-import React, { useState, useEffect, useRef } from "react";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { Audio } from "expo-av";
+import { Image } from "expo-image";
+import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  StatusBar,
-  Animated,
-  Alert,
-  Modal,
-  ScrollView,
+  View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Audio } from "expo-av";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useTranslation } from "react-i18next";
 import {
-  InterstitialAd,
   AdEventType,
+  InterstitialAd,
   TestIds,
 } from "react-native-google-mobile-ads";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import api, {
-  uploadAudio,
-  saveWord,
-  lookupWord,
-  getVoiceAudio,
-  translateSentence,
-} from "../services/api";
-import { COLORS } from "../constants/color";
-import { useAuth } from "../context/AuthContext";
-import { MALE_NAMES_LIST } from "../constants/name";
 import SkeletonItem from "../components/SkeletonItem";
+import { COLORS } from "../constants/color";
+import { MALE_NAMES_LIST } from "../constants/name";
+import { useAuth } from "../context/AuthContext";
+import api, {
+  getVoiceAudio,
+  lookupWord,
+  saveWord,
+  translateSentence,
+  uploadAudio,
+} from "../services/api";
 
 // --- REKLAM BİRİMİ ---
 const adUnitId = __DEV__
@@ -131,7 +131,8 @@ export default function ChatScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const soundRef = useRef<Audio.Sound | null>(null);
-
+  const scaleAnimVoiceBtn = useRef(new Animated.Value(1)).current;
+  const scaleAnimEndSessionBtn = useRef(new Animated.Value(1)).current;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false); // Bot yazıyor mu?
@@ -220,6 +221,12 @@ export default function ChatScreen() {
 
   // --- SES KAYDI ---
   const startRecording = async () => {
+    Animated.spring(scaleAnimVoiceBtn, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      friction: 3,
+      tension: 40,
+    }).start();
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== "granted") {
@@ -267,6 +274,12 @@ export default function ChatScreen() {
   };
 
   const stopRecording = async () => {
+    Animated.spring(scaleAnimVoiceBtn, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 3,
+      tension: 40,
+    }).start();
     if (!recording) return;
     setIsRecording(false);
     await recording.stopAndUnloadAsync();
@@ -574,15 +587,38 @@ export default function ChatScreen() {
         <ScrollView
           style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
         >
-          <TouchableOpacity onPress={endSession} style={styles.endButton}>
-            <Text style={styles.endButtonText}>
-              {loadingFeedback ? (
-                <ActivityIndicator size="small" color={COLORS.textWhite} />
-              ) : (
-                t("chat_end_session")
-              )}
-            </Text>
-          </TouchableOpacity>
+          <Animated.View
+            style={{ transform: [{ scale: scaleAnimEndSessionBtn }] }}
+          >
+            <TouchableOpacity
+              onPress={endSession}
+              style={styles.endButton}
+              onPressIn={() =>
+                Animated.spring(scaleAnimEndSessionBtn, {
+                  toValue: 0.95,
+                  useNativeDriver: true,
+                  friction: 3,
+                  tension: 40,
+                }).start()
+              }
+              onPressOut={() =>
+                Animated.spring(scaleAnimEndSessionBtn, {
+                  toValue: 1,
+                  useNativeDriver: true,
+                  friction: 3,
+                  tension: 40,
+                }).start()
+              }
+            >
+              <Text style={styles.endButtonText}>
+                {loadingFeedback ? (
+                  <ActivityIndicator size="small" color={COLORS.textWhite} />
+                ) : (
+                  t("chat_end_session")
+                )}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
 
           <View style={styles.inputRow}>
             <View style={styles.inputWrapper}>
@@ -605,20 +641,24 @@ export default function ChatScreen() {
                 />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={[
-                styles.micButton,
-                isRecording && { backgroundColor: "#ef4444" },
-              ]}
-              onPressIn={startRecording}
-              onPressOut={stopRecording}
+            <Animated.View
+              style={{ transform: [{ scale: scaleAnimVoiceBtn }] }}
             >
-              <MaterialIcons
-                name={isRecording ? "stop" : "mic"}
-                size={28}
-                color={COLORS.backgroundDark}
-              />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.micButton,
+                  isRecording && { backgroundColor: "#ef4444" },
+                ]}
+                onPressIn={startRecording}
+                onPressOut={stopRecording}
+              >
+                <MaterialIcons
+                  name={isRecording ? "stop" : "mic"}
+                  size={28}
+                  color={COLORS.backgroundDark}
+                />
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

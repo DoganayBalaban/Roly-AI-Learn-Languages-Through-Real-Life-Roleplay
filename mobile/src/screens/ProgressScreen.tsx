@@ -1,10 +1,11 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Animated,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -70,7 +71,18 @@ export default function ProgressScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const scaleAnimTab = useRef(new Animated.Value(1)).current;
+  const scaleAnimClaimBtn = useRef<Map<string, Animated.Value>>(
+    new Map()
+  ).current;
 
+  // Her quest için animasyon değeri al veya oluştur
+  const getClaimAnim = (questId: string) => {
+    if (!scaleAnimClaimBtn.has(questId)) {
+      scaleAnimClaimBtn.set(questId, new Animated.Value(1));
+    }
+    return scaleAnimClaimBtn.get(questId)!;
+  };
   // Helper - Tarihi formatla
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -181,10 +193,28 @@ export default function ProgressScreen() {
       </View>
 
       {/* SEGMENTED CONTROL (TAB) */}
-      <View style={styles.tabContainer}>
+      <Animated.View
+        style={[styles.tabContainer, { transform: [{ scale: scaleAnimTab }] }]}
+      >
         <TouchableOpacity
           style={[styles.tab, activeTab === "progress" && styles.tabActive]}
           onPress={() => setActiveTab("progress")}
+          onPressIn={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
           <Text
             style={[
@@ -199,6 +229,22 @@ export default function ProgressScreen() {
         <TouchableOpacity
           style={[styles.tab, activeTab === "quests" && styles.tabActive]}
           onPress={() => setActiveTab("quests")}
+          onPressIn={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 0.95,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
+          onPressOut={() =>
+            Animated.spring(scaleAnimTab, {
+              toValue: 1,
+              useNativeDriver: true,
+              friction: 3,
+              tension: 40,
+            }).start()
+          }
         >
           <Text
             style={[
@@ -209,7 +255,7 @@ export default function ProgressScreen() {
             {t("daily_quests_tab")}
           </Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -457,22 +503,45 @@ export default function ProgressScreen() {
                         <Text style={styles.claimedText}>{t("claimed")}</Text>
                       </View>
                     ) : quest.isCompleted ? (
-                      <TouchableOpacity
-                        style={styles.claimButton}
-                        onPress={() => handleClaim(quest.id)}
-                        disabled={claimingId === quest.id}
+                      <Animated.View
+                        style={{
+                          transform: [{ scale: getClaimAnim(quest.id) }],
+                        }}
                       >
-                        {claimingId === quest.id ? (
-                          <ActivityIndicator
-                            color={COLORS.background}
-                            size="small"
-                          />
-                        ) : (
-                          <Text style={styles.claimButtonText}>
-                            {t("claim")}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.claimButton}
+                          onPress={() => handleClaim(quest.id)}
+                          disabled={claimingId === quest.id}
+                          onPressIn={() =>
+                            Animated.spring(getClaimAnim(quest.id), {
+                              toValue: 0.95,
+                              useNativeDriver: true,
+                              friction: 3,
+                              tension: 40,
+                            }).start()
+                          }
+                          onPressOut={() =>
+                            Animated.spring(getClaimAnim(quest.id), {
+                              toValue: 1,
+                              useNativeDriver: true,
+                              friction: 3,
+                              tension: 40,
+                            }).start()
+                          }
+                          activeOpacity={1}
+                        >
+                          {claimingId === quest.id ? (
+                            <ActivityIndicator
+                              color={COLORS.background}
+                              size="small"
+                            />
+                          ) : (
+                            <Text style={styles.claimButtonText}>
+                              {t("claim")}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      </Animated.View>
                     ) : (
                       // Bitmemiş görev için boş alan veya 0/3 gibi sayaç (yukarıda eklendi)
                       <View />
