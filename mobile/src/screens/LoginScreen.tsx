@@ -24,6 +24,8 @@ import { useTranslation } from "react-i18next";
 import { COLORS } from "../constants/color";
 import { Image } from "expo-image";
 import { validateCredentials } from "../utils/validation";
+import { useAnalytics } from "../utils/analytics";
+import { ANALYTICS_EVENTS } from "../constants/events";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -40,6 +42,7 @@ export default function LoginScreen() {
   const [fullName, setFullName] = useState("");
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const { login, register, googleLogin } = useAuth();
+  const { track } = useAnalytics();
 
   const navigation = useNavigation<any>();
   const handleOpenLink = async (url: string) => {
@@ -65,6 +68,10 @@ export default function LoginScreen() {
     try {
       if (isRegistering) {
         await register(fullName, email, password);
+        // Track signup completion (no PII - no email, no name)
+        track(ANALYTICS_EVENTS.SIGNUP_COMPLETED, {
+          signup_method: "email",
+        });
       } else {
         await login(email, password);
       }
@@ -79,6 +86,10 @@ export default function LoginScreen() {
   const handleGoogleLogin = async () => {
     try {
       await googleLogin();
+      // Track signup completion for Google signup (no PII)
+      track(ANALYTICS_EVENTS.SIGNUP_COMPLETED, {
+        signup_method: "google",
+      });
     } catch (error) {
       console.log("Google login failed:", error);
       Alert.alert(t("error"), t("google_login_failed"));

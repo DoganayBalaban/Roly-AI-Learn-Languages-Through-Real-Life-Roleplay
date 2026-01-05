@@ -9,6 +9,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -21,6 +22,8 @@ import Purchases, { PurchasesPackage } from "react-native-purchases";
 
 // Renkler
 import { COLORS } from "../constants/color";
+import { useAnalytics } from "../utils/analytics";
+import { ANALYTICS_EVENTS } from "../constants/events";
 
 // FEATURES artık dinamik olacak, component içinde t() ile çeviriyoruz
 
@@ -28,12 +31,14 @@ export default function PaywallScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { user, updateUser } = useAuth();
+  const { track } = useAnalytics();
 
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(null);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true); // Sayfa ilk açılış yüklemesi
+  const hasTrackedView = React.useRef(false);
 
   // 1. Ürünleri RevenueCat'ten Çek
   useEffect(() => {
@@ -59,9 +64,28 @@ export default function PaywallScreen() {
     getOfferings();
   }, []);
 
+  // Track paywall view (only once per screen mount)
+  useEffect(() => {
+    if (!pageLoading && !hasTrackedView.current) {
+      // Determine source - could be enhanced with navigation state
+      track(ANALYTICS_EVENTS.PAYWALL_VIEWED, {
+        source: "unknown", // Could be enhanced to track where paywall was triggered
+        package_count: packages.length,
+      });
+      hasTrackedView.current = true;
+    }
+  }, [pageLoading, packages.length, track]);
+
   // 2. Satın Alma Fonksiyonu
   const handleSubscribe = async () => {
     if (!selectedPackage) return;
+    
+    // Track upgrade click (before purchase attempt)
+    track(ANALYTICS_EVENTS.UPGRADE_CLICKED, {
+      package_identifier: selectedPackage.identifier,
+      package_type: selectedPackage.packageType,
+    });
+    
     setLoading(true);
     try {
       // Satın alımı başlat
@@ -72,6 +96,15 @@ export default function PaywallScreen() {
         typeof customerInfo.entitlements.active["premium_access"] !==
         "undefined"
       ) {
+        // Track purchase completion (no payment details, no card info)
+        track(ANALYTICS_EVENTS.PURCHASE_COMPLETED, {
+          package_identifier: selectedPackage.identifier,
+          package_type: selectedPackage.packageType,
+          price: selectedPackage.product.price,
+          currency: selectedPackage.product.currencyCode,
+          platform: Platform.OS,
+        });
+        
         await activatePremium();
       }
     } catch (e: any) {

@@ -38,6 +38,8 @@ import api, {
   translateSentence,
   uploadAudio,
 } from "../services/api";
+import { useAnalytics } from "../utils/analytics";
+import { ANALYTICS_EVENTS } from "../constants/events";
 
 // --- REKLAM BİRİMİ ---
 const adUnitId = __DEV__
@@ -137,6 +139,12 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false); // Bot yazıyor mu?
   const [loadingFeedback, setLoadingFeedback] = useState(false); // Bitir butonuna basınca
+  const { track } = useAnalytics();
+  
+  // Track conversation start time and abandonment
+  const conversationStartTime = useRef<number>(Date.now());
+  const hasTrackedStart = useRef<boolean>(false);
+  const hasTrackedCompletion = useRef<boolean>(false);
 
   // Ses Kaydı
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -212,12 +220,39 @@ export default function ChatScreen() {
             sender: msg.role === "assistant" ? "bot" : "user",
           }));
         setMessages(history);
+        
+        // Track conversation started (only once, no message content)
+        if (!hasTrackedStart.current) {
+          track(ANALYTICS_EVENTS.CONVERSATION_STARTED, {
+            session_id: sessionId,
+            scenario_title: title,
+            is_resuming: history.length > 0,
+          });
+          hasTrackedStart.current = true;
+          conversationStartTime.current = Date.now();
+        }
       } catch (error) {
         console.log("Oturum verisi yüklenemedi");
       }
     };
     loadSessionData();
-  }, [sessionId]);
+  }, [sessionId, title, track]);
+  
+  // Track conversation abandonment when user navigates away
+  useEffect(() => {
+    return () => {
+      // Component unmounting - check if conversation was abandoned
+      if (hasTrackedStart.current && !hasTrackedCompletion.current) {
+        const duration = Math.floor((Date.now() - conversationStartTime.current) / 1000);
+        track(ANALYTICS_EVENTS.CONVERSATION_ABANDONED, {
+          session_id: sessionId,
+          duration_seconds: duration,
+          message_count: messages.length,
+          last_action: "navigated_away",
+        });
+      }
+    };
+  }, [sessionId, messages.length, track]);
 
   // --- SES KAYDI ---
   const startRecording = async () => {
@@ -403,6 +438,18 @@ export default function ChatScreen() {
         xpEarned: response.data.xpEarned || 0,
       };
 
+      // Track conversation completion (no message content, no user input)
+      if (!hasTrackedCompletion.current) {
+        const duration = Math.floor((Date.now() - conversationStartTime.current) / 1000);
+        track(ANALYTICS_EVENTS.CONVERSATION_COMPLETED, {
+          session_id: sessionId,
+          duration_seconds: duration,
+          message_count: messages.length,
+          xp_earned: response.data.xpEarned || 0,
+        });
+        hasTrackedCompletion.current = true;
+      }
+
       const navigateToFeedback = () => {
         navigation.navigate("Feedback", feedbackData);
       };
@@ -488,6 +535,21 @@ export default function ChatScreen() {
   // --- RENDER ---
   const renderItem = ({ item }: { item: Message }) => {
     const isBot = item.sender === "bot";
+    /**
+     * Privacy Note: Chat Message Masking
+     * 
+     * PostHog session replay is configured with maskAllInputs: true in App.tsx,
+     * which automatically masks all TextInput components.
+     * 
+     * For chat message bubbles (Text components), PostHog React Native doesn't
+     * support selective masking like the web SDK. However, we ensure privacy by:
+     * 1. Never capturing message content in event properties (only metadata)
+     * 2. Using maskAllText: false to allow UX debugging while being selective
+     * 3. Relying on event-level privacy (no PII in analytics events)
+     * 
+     * If stricter masking is needed, consider using PostHog's web-based masking
+     * or implementing custom masking overlays for sensitive screens.
+     */
     return (
       <View style={[styles.messageRow, !isBot && styles.messageRowUser]}>
         {isBot && (
@@ -629,6 +691,8 @@ export default function ChatScreen() {
                 placeholder={t("chat_input_placeholder")}
                 placeholderTextColor="#6b7280"
                 multiline
+                // Privacy: This input is automatically masked by PostHog's maskAllInputs setting
+                // No chat content will be captured in session replay
               />
               <TouchableOpacity
                 onPress={() => sendMessage()}

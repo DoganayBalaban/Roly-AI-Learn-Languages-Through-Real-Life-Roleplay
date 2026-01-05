@@ -1,7 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
-import React, { useCallback, useRef, useState } from "react";
+import { usePostHog } from "posthog-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -19,7 +20,6 @@ import StreakHeader from "../components/StreakHeader";
 import HomeSkeleton from "../components/skeletons/HomeSkeleton";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-
 const COLORS = {
   primary: "#2bee79",
   backgroundDark: "#102217",
@@ -38,6 +38,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const scaleAnimBtn = useRef(new Animated.Value(1)).current;
   const scaleAnimItem = useRef(new Animated.Value(1)).current;
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog.capture("home_screen_loaded");
+  }, []);
 
   // Senaryo adını çeviri anahtarına çevir
   const getScenarioTranslationKey = (scenarioName: string): string => {
