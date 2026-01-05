@@ -2,7 +2,7 @@
   "expo": {
     "name": "RolyAI",
     "slug": "rolyai",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -29,7 +29,7 @@
     },
     "android": {
       "package": "com.doganay.rolyai",
-      "versionCode":9,
+      "versionCode":10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
