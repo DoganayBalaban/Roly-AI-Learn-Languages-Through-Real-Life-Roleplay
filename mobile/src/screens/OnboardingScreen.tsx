@@ -15,11 +15,14 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { COLORS } from "../constants/color";
+import { useAnalytics } from "../utils/analytics";
+import { ANALYTICS_EVENTS } from "../constants/events";
 
 export default function OnboardingScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user, updateUser, setIsNewUser } = useAuth();
+  const { track } = useAnalytics();
 
   // Diller (dinamik çeviri ile)
   const LANGUAGES = [
@@ -64,6 +67,12 @@ export default function OnboardingScreen() {
         if (user) {
           updateUser(response.data);
         }
+
+        // Track onboarding completion (no PII - only language preferences)
+        track(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
+          native_language: nativeLang,
+          target_language: targetLang,
+        });
 
         // Ana sayfaya yönlendir (Stack'i sıfırlayarak, geri dönemesin)
         navigation.reset({

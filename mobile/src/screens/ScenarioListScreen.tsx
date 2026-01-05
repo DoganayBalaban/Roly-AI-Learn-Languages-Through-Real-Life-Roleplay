@@ -19,6 +19,8 @@ import { NAMES } from "../constants/name";
 import { SCENARIOS } from "../constants/scenarios";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { useAnalytics } from "../utils/analytics";
+import { ANALYTICS_EVENTS } from "../constants/events";
 
 export default function ScenarioListScreen() {
   const { t } = useTranslation();
@@ -27,6 +29,7 @@ export default function ScenarioListScreen() {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const { track } = useAnalytics();
   // Her item için ayrı animasyon değerleri tutmak için Map
   const scaleAnims = useRef<Map<string, Animated.Value>>(new Map()).current;
 
@@ -99,6 +102,14 @@ export default function ScenarioListScreen() {
       const response = await api.post("/chat/start", payload);
 
       const sessionId = response.data._id;
+      
+      // Track scenario selection (no scenario content, no user messages)
+      track(ANALYTICS_EVENTS.SCENARIO_SELECTED, {
+        scenario_id: item.id,
+        difficulty_level: item.levelKey,
+        is_premium: item.isPremium || false,
+      });
+
       // Chat ekranına yönlendir
       navigation.navigate("Chat", { sessionId, title: translatedTitle });
     } catch (error) {
