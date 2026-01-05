@@ -278,7 +278,9 @@
   "update_required_title":"Yeni Güncelleme Mevcut",
   "update_required_message":"Uygulamanın yeni bir sürümü mevcut. Devam etmek için lütfen uygulamayı güncelleyin.",
   "update_button":"Güncelle",
-  "update_hint":"Güncelleme yapıldıktan sonra uygulamayı yeniden başlatın"
+  "update_hint":"Güncelleme yapıldıktan sonra uygulamayı yeniden başlatın",
+  "feedback_limit_reached_title":"Günlük Feedback Limiti",
+  "feedback_limit_reached_message":"Günlük 3 feedback görme hakkınızı kullandınız. Daha fazla feedback görmek için Premium üye olmanız gerekiyor."
 
 }
   

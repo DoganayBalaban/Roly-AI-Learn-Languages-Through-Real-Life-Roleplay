@@ -280,7 +280,9 @@
   "update_required_title":"Update Available",
   "update_required_message":"A new version of the app is available. Please update the app to continue.",
   "update_button":"Update",
-  "update_hint":"Restart the app after updating"
+  "update_hint":"Restart the app after updating",
+  "feedback_limit_reached_title":"Daily Feedback Limit",
+  "feedback_limit_reached_message":"You have used your daily limit of 3 feedback views. You need to be a Premium member to view more feedback."
 
 }
   
