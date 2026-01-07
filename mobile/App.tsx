@@ -42,7 +42,7 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const API_KEYS = {
   android: process.env.EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_ANDROID, // RevenueCat Public API Key (Android)
-  ios: process.env.EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_IOS, // RevenueCat Public API Key (iOS)
+  // ios: process.env.EXPO_PUBLIC_REVENUECAT_PUBLIC_API_KEY_IOS, // RevenueCat Public API Key (iOS)
 };
 // --- TAB BAR YAPISI ---
 function MainTabs() {
@@ -247,7 +247,7 @@ export default function App() {
       if (Platform.OS === "android") {
         await Purchases.configure({ apiKey: API_KEYS.android });
       } else if (Platform.OS === "ios") {
-        await Purchases.configure({ apiKey: API_KEYS.ios });
+        //await Purchases.configure({ apiKey: API_KEYS.ios });
       }
     };
 

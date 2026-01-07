@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SkeletonItem from "../components/SkeletonItem";
 import { COLORS } from "../constants/color";
+import { ANALYTICS_EVENTS } from "../constants/events";
 import { MALE_NAMES_LIST } from "../constants/name";
 import { useAuth } from "../context/AuthContext";
 import api, {
@@ -39,7 +40,7 @@ import api, {
   uploadAudio,
 } from "../services/api";
 import { useAnalytics } from "../utils/analytics";
-import { ANALYTICS_EVENTS } from "../constants/events";
+import { checkAndIncrementFeedbackCount } from "../utils/feedbackLimit";
 
 // --- REKLAM BİRİMİ ---
 const adUnitId = __DEV__
@@ -140,7 +141,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(false); // Bot yazıyor mu?
   const [loadingFeedback, setLoadingFeedback] = useState(false); // Bitir butonuna basınca
   const { track } = useAnalytics();
-  
+
   // Track conversation start time and abandonment
   const conversationStartTime = useRef<number>(Date.now());
   const hasTrackedStart = useRef<boolean>(false);
@@ -220,7 +221,7 @@ export default function ChatScreen() {
             sender: msg.role === "assistant" ? "bot" : "user",
           }));
         setMessages(history);
-        
+
         // Track conversation started (only once, no message content)
         if (!hasTrackedStart.current) {
           track(ANALYTICS_EVENTS.CONVERSATION_STARTED, {
@@ -237,13 +238,15 @@ export default function ChatScreen() {
     };
     loadSessionData();
   }, [sessionId, title, track]);
-  
+
   // Track conversation abandonment when user navigates away
   useEffect(() => {
     return () => {
       // Component unmounting - check if conversation was abandoned
       if (hasTrackedStart.current && !hasTrackedCompletion.current) {
-        const duration = Math.floor((Date.now() - conversationStartTime.current) / 1000);
+        const duration = Math.floor(
+          (Date.now() - conversationStartTime.current) / 1000
+        );
         track(ANALYTICS_EVENTS.CONVERSATION_ABANDONED, {
           session_id: sessionId,
           duration_seconds: duration,
@@ -253,6 +256,17 @@ export default function ChatScreen() {
       }
     };
   }, [sessionId, messages.length, track]);
+
+  // Mesajlar değiştiğinde otomatik scroll yap
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Kısa bir gecikme ile scroll yap (render tamamlanana kadar bekle)
+      const timer = setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [messages.length]);
 
   // --- SES KAYDI ---
   const startRecording = async () => {
@@ -403,6 +417,8 @@ export default function ChatScreen() {
       text: userMsgText,
       sender: "user",
     };
+
+    // Mesajı hemen ekle
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
@@ -440,7 +456,9 @@ export default function ChatScreen() {
 
       // Track conversation completion (no message content, no user input)
       if (!hasTrackedCompletion.current) {
-        const duration = Math.floor((Date.now() - conversationStartTime.current) / 1000);
+        const duration = Math.floor(
+          (Date.now() - conversationStartTime.current) / 1000
+        );
         track(ANALYTICS_EVENTS.CONVERSATION_COMPLETED, {
           session_id: sessionId,
           duration_seconds: duration,
@@ -448,6 +466,31 @@ export default function ChatScreen() {
           xp_earned: response.data.xpEarned || 0,
         });
         hasTrackedCompletion.current = true;
+      }
+
+      // Premium olmayan kullanıcılar için günlük feedback limitini kontrol et
+      if (!user?.isPremium) {
+        const feedbackCheck = await checkAndIncrementFeedbackCount();
+
+        if (!feedbackCheck.canView) {
+          // Limit aşıldı, paywall'a yönlendir
+          setLoadingFeedback(false);
+          Alert.alert(
+            t("feedback_limit_reached_title"),
+            t("feedback_limit_reached_message"),
+            [
+              {
+                text: t("cancel"),
+                style: "cancel",
+              },
+              {
+                text: t("go_premium"),
+                onPress: () => navigation.navigate("Paywall"),
+              },
+            ]
+          );
+          return;
+        }
       }
 
       const navigateToFeedback = () => {
@@ -537,16 +580,16 @@ export default function ChatScreen() {
     const isBot = item.sender === "bot";
     /**
      * Privacy Note: Chat Message Masking
-     * 
+     *
      * PostHog session replay is configured with maskAllInputs: true in App.tsx,
      * which automatically masks all TextInput components.
-     * 
+     *
      * For chat message bubbles (Text components), PostHog React Native doesn't
      * support selective masking like the web SDK. However, we ensure privacy by:
      * 1. Never capturing message content in event properties (only metadata)
      * 2. Using maskAllText: false to allow UX debugging while being selective
      * 3. Relying on event-level privacy (no PII in analytics events)
-     * 
+     *
      * If stricter masking is needed, consider using PostHog's web-based masking
      * or implementing custom masking overlays for sensitive screens.
      */
