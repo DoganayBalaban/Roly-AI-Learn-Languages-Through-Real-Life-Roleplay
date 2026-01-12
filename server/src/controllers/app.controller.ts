@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { config } from "../config/env";
 
 /**
  * Uygulama sürüm kontrolü endpoint'i
@@ -6,12 +7,8 @@ import { Request, Response } from "express";
  */
 export const checkAppVersion = async (req: Request, res: Response) => {
   try {
-    // Bu değerleri environment variable'dan veya database'den alabilirsiniz
-    // Şimdilik sabit değerler kullanıyoruz
-    const minimumVersion = process.env.MINIMUM_APP_VERSION || "1.2.4";
-    const minimumVersionCode = process.env.MINIMUM_APP_VERSION_CODE
-      ? parseInt(process.env.MINIMUM_APP_VERSION_CODE, 10)
-      : 9;
+    const minimumVersion = config.minimumAppVersion;
+    const minimumVersionCode = config.minimumAppVersionCode;
 
     // Eğer minimum sürüm belirlenmişse, güncelleme gereklidir
     const requiresUpdate = !!minimumVersion || !!minimumVersionCode;

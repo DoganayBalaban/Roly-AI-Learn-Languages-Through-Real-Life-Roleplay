@@ -1,10 +1,9 @@
 import OpenAI from "openai";
-import dotenv from "dotenv";
 import fs from "fs";
-dotenv.config();
+import { config } from "../config/env";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: config.openaiApiKey,
 });
 
 export const getChatCompletion = async (history: any[]) => {
