@@ -21,13 +21,24 @@ export const protect = async (
       token = req.headers.authorization.split(" ")[1];
       const decoded: any = jwt.verify(token, config.jwtSecret);
       req.user = await User.findById(decoded.id).select("-password");
+      if (!req.user) {
+        return res.status(401).json({ message: "User not found" });
+      }
       next();
-    } catch (error) {
-      res.status(401).json({ message: "Unauthorized" });
+    } catch (error: any) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({
+          message: "Token expired",
+          expiredAt: error.expiredAt,
+        });
+      }
+      if (error.name === "JsonWebTokenError") {
+        return res.status(401).json({ message: "Invalid token" });
+      }
       console.error("Error in protect middleware:", error);
+      return res.status(401).json({ message: "Unauthorized" });
     }
-  }
-  if (!token) {
-    res.status(401).json({ message: "Unauthorized" });
+  } else {
+    return res.status(401).json({ message: "No token provided" });
   }
 };
