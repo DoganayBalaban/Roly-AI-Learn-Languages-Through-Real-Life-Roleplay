@@ -1,17 +1,15 @@
-import { Request, Response } from "express";
-import User from "../models/User";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import type { AuthRequest } from "../middlewares/auth.middleware";
-import dotenv from "dotenv";
-import Session from "../models/Session";
-import { OAuth2Client } from "google-auth-library";
-import appleSignin from "apple-signin-auth";
 import crypto from "crypto";
-import { loginSchema, registerSchema } from "../utils/validation";
+import { Request, Response } from "express";
+import { OAuth2Client } from "google-auth-library";
+import jwt from "jsonwebtoken";
+import { config } from "../config/env";
+import type { AuthRequest } from "../middlewares/auth.middleware";
+import Session from "../models/Session";
+import User from "../models/User";
 import { checkAndResetQuests } from "../services/QuestService";
+import { loginSchema, registerSchema } from "../utils/validation";
 
-dotenv.config();
 const calculateLevel = (xp: number) => {
   // Basit bir seviye sistemi:
   if (xp < 500)
@@ -25,7 +23,7 @@ const calculateLevel = (xp: number) => {
   return { current: "C1", next: "C2", progress: 100 };
 };
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
+const googleClient = new OAuth2Client(config.googleClientId);
 
 export const getUserStats = async (req: AuthRequest, res: Response) => {
   try {
@@ -130,7 +128,7 @@ export const register = async (req: Request, res: Response) => {
       fullName,
     });
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!, {
+    const token = jwt.sign({ id: newUser._id }, config.jwtSecret, {
       expiresIn: "7d",
     });
 
@@ -166,7 +164,7 @@ export const login = async (req: Request, res: Response) => {
     if (!isMatch) {
       return res.status(400).json({ message: "E-posta veya şifre yanlış" });
     }
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
+    const token = jwt.sign({ id: user._id }, config.jwtSecret, {
       expiresIn: "7d",
     });
     res.status(200).json({
@@ -301,7 +299,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     const { idToken } = req.body;
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID!,
+      audience: config.googleClientId,
     });
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {
@@ -327,7 +325,7 @@ export const googleLogin = async (req: Request, res: Response) => {
       {
         id: user._id,
       },
-      process.env.JWT_SECRET!,
+      config.jwtSecret,
       {
         expiresIn: "7d",
       }

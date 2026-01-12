@@ -1,8 +1,7 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import { config } from "../config/env";
 import User from "../models/User";
-dotenv.config();
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -20,7 +19,7 @@ export const protect = async (
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+      const decoded: any = jwt.verify(token, config.jwtSecret);
       req.user = await User.findById(decoded.id).select("-password");
       next();
     } catch (error) {
