@@ -13,7 +13,6 @@ import wordRoutes from "./routes/word.route";
 import { initCronJobs } from "./services/NotificationService";
 const app = express();
 
-// Trust proxy - reverse proxy (nginx, docker, etc.) arkasında çalışırken gerekli
 app.set("trust proxy", true);
 
 app.use(express.json());
