@@ -23,6 +23,7 @@ app.use(
     windowMs: 15 * 60 * 1000,
     limit: 100,
     message: "Too many requests, please try again later.",
+    validate: false, // trust proxy kullanırken bu validasyonu devre dışı bırak
   })
 );
 app.use("/api/app", appRoutes);
